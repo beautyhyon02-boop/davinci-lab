@@ -48,17 +48,29 @@ window.DVL_SESSION = (function () {
                 항상 최신 파싱 객체를 반환. 실패 시 null.
   ──────────────────────────────────────────────── */
   function get(key) {
-    const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
-    return safeParse(raw);
+    try {
+      const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+      return safeParse(raw);
+    } catch(e) {
+      /* localStorage 접근 자체가 막힌 환경(드문 경우) */
+      try { return safeParse(sessionStorage.getItem(key)); } catch { return null; }
+    }
   }
 
   /* ────────────────────────────────────────────────
      save(key, obj) : localStorage + sessionStorage 양쪽에 저장
+     ★ localStorage가 핵심 — 페이지 이동 후에도 세션 유지됨
   ──────────────────────────────────────────────── */
   function save(key, obj) {
     const json = JSON.stringify(obj);
-    try { localStorage.setItem(key, json); }   catch(e) {}
+    try { localStorage.setItem(key, json); }   catch(e) { console.warn('[DVL_SESSION] localStorage 저장 실패:', key, e); }
     try { sessionStorage.setItem(key, json); } catch(e) {}
+    /* 저장 직후 검증 — 실패하면 다시 시도 */
+    try {
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, json);
+      }
+    } catch(e) {}
   }
 
   /* ────────────────────────────────────────────────
@@ -160,7 +172,24 @@ window.DVL_SESSION = (function () {
      - 실패하면 login.html 이동 후 null 반환
   ──────────────────────────────────────────────── */
   function requireAdmin() {
-    const s = getAdmin();
+    let s = getAdmin();
+
+    /* ★ 1차 시도 실패 시 — 폴백 키로 재시도 */
+    if (!s) {
+      const fallbackRaw =
+        localStorage.getItem('dvl_admin_tab_session') ||
+        localStorage.getItem('dvl_user') ||
+        sessionStorage.getItem(KEY_ADMIN) ||
+        sessionStorage.getItem('dvl_admin_tab_session') ||
+        sessionStorage.getItem('dvl_user');
+      const fb = safeParse(fallbackRaw);
+      if (fb && fb.id && (fb.role === 'admin' || fb.role === 'master')) {
+        /* 폴백 세션 복원: 정규 키에 다시 저장 */
+        save(KEY_ADMIN, fb);
+        s = fb;
+      }
+    }
+
     if (!s) {
       location.replace(loginPath());
       return null;
@@ -168,8 +197,10 @@ window.DVL_SESSION = (function () {
     /* 성공 플래그 — admin-common.js 등 후속 코드 호환 */
     window._dvlAdminSessionOK = true;
     window._dvlAdminSession   = s;
-    /* localStorage/sessionStorage 동기화 (구형 코드 호환) */
+    /* localStorage/sessionStorage 완전 동기화 */
     save(KEY_ADMIN, s);
+    try { localStorage.setItem('dvl_admin_tab_session', JSON.stringify(s)); } catch(e) {}
+    try { sessionStorage.setItem('dvl_admin_tab_session', JSON.stringify(s)); } catch(e) {}
     return s;
   }
 
@@ -224,13 +255,28 @@ window.DVL_SESSION = (function () {
      (스크립트 load 시점에 실행 — DOMContentLoaded 불필요)
   ──────────────────────────────────────────────── */
   (function syncOnLoad() {
-    const isAdmin   = location.pathname.includes('/admin/');
-    const isStudent = location.pathname.includes('/student/');
-    const isParent  = location.pathname.includes('/parent/');
+    const path = location.pathname;
+    const isAdmin   = path.includes('/admin/');
+    const isStudent = path.includes('/student/');
+    const isParent  = path.includes('/parent/');
 
     if (isAdmin) {
-      const s = getAdmin();
-      if (s) save(KEY_ADMIN, s); // localStorage ↔ sessionStorage 동기화
+      /* localStorage 우선, 없으면 폴백 키에서 복원 */
+      let s = getAdmin();
+      if (!s) {
+        const raw =
+          localStorage.getItem('dvl_admin_tab_session') ||
+          localStorage.getItem('dvl_user') ||
+          sessionStorage.getItem(KEY_ADMIN) ||
+          sessionStorage.getItem('dvl_admin_tab_session') ||
+          sessionStorage.getItem('dvl_user');
+        const fb = safeParse(raw);
+        if (fb && fb.id && (fb.role === 'admin' || fb.role === 'master')) s = fb;
+      }
+      if (s) {
+        save(KEY_ADMIN, s);
+        try { localStorage.setItem('dvl_admin_tab_session', JSON.stringify(s)); } catch(e) {}
+      }
     } else if (isStudent) {
       const s = getStudent();
       if (s) saveStudent(s);

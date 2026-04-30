@@ -8,13 +8,16 @@
 (async function () {
   if (!('serviceWorker' in navigator)) return;
   try {
-    const cacheKeys = await caches.keys();
-    await Promise.all(cacheKeys.map(k => caches.delete(k)));
+    /* ★ 캐시 삭제는 하지 않음 — localStorage 세션에 영향 없지만
+       불필요한 네트워크/스토리지 작업을 줄여 세션 타이밍 안정화 */
     const regs = await navigator.serviceWorker.getRegistrations();
     await Promise.all(regs.map(r => {
-      if (!r.active?.scriptURL?.includes('sw-admin.js')) r.unregister();
+      /* sw-admin.js 가 아닌 다른 SW만 제거 */
+      if (r.active?.scriptURL && !r.active.scriptURL.includes('sw-admin.js')) {
+        return r.unregister();
+      }
     }));
-    const reg = await navigator.serviceWorker.register('../sw-admin.js');
+    await navigator.serviceWorker.register('../sw-admin.js');
     if (Notification.permission === 'granted') {
       navigator.serviceWorker.ready.then(r => r.active?.postMessage({ type: 'START_POLL' }));
     } else if (Notification.permission !== 'denied') {

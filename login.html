@@ -181,30 +181,35 @@ function setLoading(on) {
 
 /* ─────────────────────────────────────────────────────
    세션 저장 헬퍼
-   - 관리자: sessionStorage 전용 (localStorage 저장 안 함 → 자동로그인 없음)
-   - 학생/학부모: localStorage + sessionStorage 저장
+   - 관리자/학생/학부모: localStorage + sessionStorage 양쪽에 저장
+   ★ 반드시 localStorage에 저장해야 페이지 이동 후에도 세션 유지됨
 ───────────────────────────────────────────────────── */
 function saveAdminSession(data) {
   const u = {
     id:    data.id    || '',
     name:  data.name  || '',
     role:  data.role  || 'admin',
-    title: data.title || '',
+    title: data.title || (data.role === 'master' ? '총괄 관리자' : '관리자'),
     school:'다빈치랩',
     grade: '', gradeNum: 0, stage: '', child: '', childName: '',
   };
   const json = JSON.stringify(u);
-  /* ── localStorage: 페이지 이동 후에도 읽을 수 있도록 ── */
-  localStorage.setItem('dvl_admin_session', json);
-  /* ── 이전 학생/학부모 세션 잔재 제거 ── */
-  ['dvl_admin_tab_session','dvl_admin_id',
-   'dvl_user','dvl_session',
-   'dvl_student_session','dvl_parent_session'].forEach(k => localStorage.removeItem(k));
+  /* ── 이전 학생/학부모 세션만 제거 (admin 키는 건드리지 않음) ── */
+  ['dvl_student_session','dvl_parent_session'].forEach(k => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
+  /* ── localStorage: 페이지 이동 후에도 세션 유지 ── */
+  localStorage.setItem('dvl_admin_session',     json);
+  localStorage.setItem('dvl_admin_tab_session', json); /* 폴백 호환 */
+  localStorage.setItem('dvl_user',              json);
+  localStorage.setItem('dvl_session',           json);
   /* ── sessionStorage: 현재 탭 ── */
-  sessionStorage.setItem('dvl_admin_session', json);
-  sessionStorage.setItem('dvl_user',          json);
-  sessionStorage.setItem('dvl_session',       json);
-  sessionStorage.setItem('dvSession',         json);
+  sessionStorage.setItem('dvl_admin_session',     json);
+  sessionStorage.setItem('dvl_admin_tab_session', json);
+  sessionStorage.setItem('dvl_user',              json);
+  sessionStorage.setItem('dvl_session',           json);
+  sessionStorage.setItem('dvSession',             json);
 }
 
 function saveStudentSession(data) {
@@ -219,9 +224,16 @@ function saveStudentSession(data) {
     title: '', child: '', childName: '',
   };
   const json = JSON.stringify(u);
+  /* ── 이전 관리자/학부모 세션 제거 ── */
+  ['dvl_admin_session','dvl_admin_tab_session','dvl_parent_session'].forEach(k => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
+  /* ── localStorage + sessionStorage 양쪽 저장 ── */
   localStorage.setItem('dvl_student_session', json);
   localStorage.setItem('dvl_user',            json);
   localStorage.setItem('dvl_session',         json);
+  sessionStorage.setItem('dvl_student_session', json);
   sessionStorage.setItem('dvl_user',    json);
   sessionStorage.setItem('dvl_session', json);
   sessionStorage.setItem('dvSession',   json);
@@ -243,9 +255,16 @@ function saveParentSession(data) {
     school: '', grade: '', gradeNum: 0, stage: '', title: '',
   };
   const json = JSON.stringify(u);
+  /* ── 이전 관리자/학생 세션 제거 ── */
+  ['dvl_admin_session','dvl_admin_tab_session','dvl_student_session'].forEach(k => {
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  });
+  /* ── localStorage + sessionStorage 양쪽 저장 ── */
   localStorage.setItem('dvl_parent_session',  json);
   localStorage.setItem('dvl_user',            json);
   localStorage.setItem('dvl_session',         json);
+  sessionStorage.setItem('dvl_parent_session', json);
   sessionStorage.setItem('dvl_user',    json);
   sessionStorage.setItem('dvl_session', json);
   sessionStorage.setItem('dvSession',   json);
@@ -311,7 +330,9 @@ async function doLogin() {
             role:  acc.role === 'master' ? 'master' : 'admin',
             title: acc.title || '',
           });
-          window.location.href = 'admin/dashboard.html';
+          /* 저장 완전히 반영된 뒤 이동 */
+          await new Promise(r => setTimeout(r, 80));
+          window.location.replace('admin/dashboard.html');
           return;
         }
       }
@@ -329,7 +350,8 @@ async function doLogin() {
       const hard = HARD_ADMINS.find(a => a.id === id);
       if (hard && inputHash === masterHash) {
         saveAdminSession({ id: hard.id, name: hard.name, role: hard.role, title: hard.title });
-        window.location.href = 'admin/dashboard.html';
+        await new Promise(r => setTimeout(r, 80));
+        window.location.replace('admin/dashboard.html');
         return;
       }
     }
@@ -360,7 +382,8 @@ async function doLogin() {
             child:     parent.child_id   || parent.child_ids || '',
             childName: parent.child_name || '',
           });
-          window.location.href = 'parent/dashboard.html';
+          await new Promise(r => setTimeout(r, 80));
+          window.location.replace('parent/dashboard.html');
           return;
         }
       }
@@ -410,7 +433,8 @@ async function doLogin() {
         gradeNum: student.grade_num || 0,
         stage:    student.stage     || '',
       });
-      window.location.href = 'student/dashboard.html';
+      await new Promise(r => setTimeout(r, 80));
+      window.location.replace('student/dashboard.html');
       return;
     }
 
@@ -428,12 +452,13 @@ async function doLogin() {
         showErr('비밀번호가 올바르지 않습니다.');
         return;
       }
+      await new Promise(r => setTimeout(r, 80));
       if (testAcc.role === 'student') {
         saveStudentSession(testAcc);
-        window.location.href = 'student/dashboard.html';
+        window.location.replace('student/dashboard.html');
       } else {
         saveParentSession(testAcc);
-        window.location.href = 'parent/dashboard.html';
+        window.location.replace('parent/dashboard.html');
       }
       return;
     }

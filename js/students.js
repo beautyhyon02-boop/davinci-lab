@@ -112,7 +112,14 @@ function openApproveModal(dbId, studentId) {
   el('apv-id').textContent    = s.id || '-';
   el('apv-school').value      = s.school || '';
   el('apv-grade').value       = s.grade  || '';
-  el('apv-stage').value       = (s.stage || '').includes('컨설팅') ? '재원+컨설팅' : '재원';
+  /* DB 스키마 options: 1단계|2단계|3단계|3단계+컨설팅 */
+  const curStage = s.stage || '1단계';
+  const apvEl = el('apv-stage');
+  if (apvEl) {
+    // 기존 stage 값이 있으면 그대로 선택, 없으면 기본값
+    apvEl.value = curStage;
+    if (!apvEl.value) apvEl.value = '1단계'; // 매칭 실패 시 기본값
+  }
 
   el('approveModal').classList.add('open');
 }
@@ -149,8 +156,9 @@ async function confirmApprove() {
     }
 
     const payload = {
-      status: '재원',
-      stage,
+      status:     '재원',
+      stage,                            // DB 스키마 options: 1단계|2단계|3단계|3단계+컨설팅
+      consulting: stage.includes('컨설팅'), // bool 필드
       ...(school && { school }),
       ...(grade  && { grade  }),
     };
@@ -716,18 +724,20 @@ document.getElementById('stepModalSubmit')?.addEventListener('click', async () =
   const radio = document.querySelector('input[name="newStep"]:checked');
   if (!radio || !currentStudent) return;
   const isCon   = radio.value === 'con';
-  const newStage = isCon ? '재원+컨설팅' : '재원';
+  /* DB 스키마 stage options: 1단계|2단계|3단계|3단계+컨설팅 */
+  const newStage = isCon ? '3단계+컨설팅' : '3단계';
   const label    = isCon ? '컨설팅 포함' : '일반 수강';
 
   /* API 업데이트 */
   if (currentStudent._id) {
     try {
-      await fetch(`../tables/${TABLE_PROFILES}/${currentStudent._id}`, {
+      const patchRes = await fetch(`../tables/${TABLE_PROFILES}/${currentStudent._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage, consulting: isCon }),
       });
-    } catch(e) { console.warn('컨설팅 변경 API 실패:', e); }
+      if (!patchRes.ok) console.warn('컨설팅 변경 API 실패:', patchRes.status);
+    } catch(e) { console.warn('컨설팅 변경 API 오류:', e); }
   }
 
   /* 로컬 데이터 업데이트 */
@@ -794,19 +804,28 @@ document.getElementById('addStudentSubmit')?.addEventListener('click', async () 
   /* ── 비밀번호: 입력값 우선, 없으면 기본값 ── */
   const newPw = inputPw || 'dvl2024!';
 
+  /* ── grade 값은 이미 "고1", "중1" 형태로 옴 ── */
+  const gradeVal   = grade; // 예: "고1", "중1"
+  const gradeNum   = parseInt(grade.replace(/[^0-9]/g, '')) || 0;
+  const isConsult  = step === 'con';
+  /* DB 스키마 stage options: 1단계 | 2단계 | 3단계 | 3단계+컨설팅 */
+  const stageVal   = isConsult ? '3단계+컨설팅' : '1단계';
+  const parentPhone = (document.getElementById('newParentPhone')?.value || '').trim();
+
   const newProfile = {
-    student_id:  newId,
+    student_id:   newId,
     name,
-    school:      school.includes('고') || school.includes('중') ? school : school,
-    grade:       grade.includes('고') || grade.includes('중') ? grade : '고' + grade,
-    grade_num:   parseInt(grade.replace(/[^0-9]/g,'')),
-    class_num:   1,
-    student_num: 1,
-    stage:       step === 'con' ? '재원+컨설팅' : '재원',
-    consulting:  step === 'con',
-    status:      '재원',
-    password:    newPw,   // 입력한 비밀번호 사용
-    memo,
+    school,
+    grade:        gradeVal,
+    grade_num:    gradeNum,
+    class_num:    1,
+    student_num:  1,
+    stage:        stageVal,        // DB 스키마 options에 맞는 값
+    consulting:   isConsult,       // bool 필드
+    status:       '재원',          // DB 스키마 options: 재원|휴원|졸업|대기|pending
+    password:     newPw,
+    parent_phone: parentPhone,
+    memo:         memo || '',
   };
 
   try {
@@ -815,35 +834,45 @@ document.getElementById('addStudentSubmit')?.addEventListener('click', async () 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newProfile),
     });
-    if (!res.ok) throw new Error('등록 실패');
+
+    /* 실패 시 서버 오류 메시지까지 표시 */
+    if (!res.ok) {
+      let errMsg = `서버 오류 (${res.status})`;
+      try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch(e) {}
+      throw new Error(errMsg);
+    }
     const created = await res.json();
 
+    /* 로컬 배열에 추가 (화면 즉시 반영) */
     allStudents.push({
-      _id:      created.id,
-      id:       newId,
-      name, school: newProfile.school, grade: newProfile.grade,
-      gradeNum: parseInt(grade),
-      stage:    newProfile.stage,
-      status:   '재원',
-      memo,
-      consulting: step === 'con',
-      attend:   'attend',
-      plan:'-', assess:'-',
-      manager: '박소현 대표',
-      joinDate: new Date().toLocaleDateString('ko-KR'),
+      _id:        created.id,
+      id:         newId,
+      name,
+      school,
+      grade:      gradeVal,
+      gradeNum,
+      stage:      stageVal,
+      status:     '재원',
+      memo:       memo || '',
+      consulting: isConsult,
+      attend:     'attend',
+      plan:       '-',
+      assess:     '-',
+      manager:    '박소현 대표',
+      joinDate:   new Date().toLocaleDateString('ko-KR'),
     });
 
     updateSummaryBar();
     renderTable();
     document.getElementById('addStudentModal').classList.remove('open');
-    ['newName','newSchool','newParent','newParentPhone','newMemo','newStudentId','newStudentPw'].forEach(id => {
+    ['newName','newSchool','newParentPhone','newMemo','newStudentId','newStudentPw'].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.value = '';
+      if (el) el.value = id === 'newStudentPw' ? 'davinci1!' : '';
     });
     showToast(`✅ ${name} 학생 등록 완료! 아이디: ${newId} / 비밀번호: ${newPw}`);
   } catch(err) {
-    showToast('❌ 학생 등록 중 오류가 발생했습니다.', 'warn');
-    console.error(err);
+    showToast(`❌ 학생 등록 실패: ${err.message}`, 'warn');
+    console.error('[addStudent] 오류:', err);
   }
 });
 
