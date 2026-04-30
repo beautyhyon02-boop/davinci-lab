@@ -295,7 +295,7 @@
 
   async function loadNotices() {
     try {
-      const res = await fetch(`../tables/${TABLE_NOTICES}?limit=200`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTICES}?limit=200`);
       const data = await res.json();
       allNotices = (data.data || []).filter(n => n.status !== '삭제')
         .sort((a, b) => {
@@ -409,13 +409,13 @@
 
     try {
       if (editingId) {
-        await fetch(`../tables/${TABLE_NOTICES}/${editingId}`, {
+        await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTICES}/${editingId}`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
         showToast('✅ 공지가 수정되었습니다!');
       } else {
-        await fetch(`../tables/${TABLE_NOTICES}`, {
+        await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTICES}`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
@@ -431,7 +431,7 @@
     const n = allNotices.find(x => x.id === id);
     if (!n) return;
     try {
-      await fetch(`../tables/${TABLE_NOTICES}/${id}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTICES}/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_pinned: !n.is_pinned }),
       });
@@ -444,7 +444,7 @@
   async function deleteNotice(id) {
     if (!confirm('이 공지를 삭제할까요?')) return;
     try {
-      await fetch(`../tables/${TABLE_NOTICES}/${id}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTICES}/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: '삭제' }),
       });

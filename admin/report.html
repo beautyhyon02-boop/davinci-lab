@@ -386,7 +386,7 @@
     /* ── 학생 목록 로드 ── */
     async function loadStudents() {
       try {
-        const r = await fetch(`../tables/${T_STU}?limit=200`);
+        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${T_STU}?limit=200`);
         ALL_STU = ((await r.json()).data||[]).filter(s=>s.status!=='inactive');
       } catch(e) { ALL_STU=[]; }
       filteredStu = [...ALL_STU];
@@ -431,11 +431,11 @@
 
       // 병렬 로드
       const [attR, assR, schR, mockR, planR] = await Promise.allSettled([
-        fetch(`../tables/${T_ATT}?limit=300&search=${sid}`),
-        fetch(`../tables/${T_ASSESS}?limit=100&search=${sid}`),
-        fetch(`../tables/${T_SCH}?limit=200&search=${sid}`),
-        fetch(`../tables/${T_MOCK}?limit=50&search=${sid}`),
-        fetch(`../tables/${T_PLAN}?limit=300&search=${sid}`),
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${T_ATT}?limit=300&search=${sid}`),
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${T_ASSESS}?limit=100&search=${sid}`),
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${T_SCH}?limit=200&search=${sid}`),
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${T_MOCK}?limit=50&search=${sid}`),
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${T_PLAN}?limit=300&search=${sid}`),
       ]);
 
       const getData = async (r) => {

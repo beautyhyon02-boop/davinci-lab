@@ -9,6 +9,7 @@ function _initAssessmentAdmin() {
   (async () => {
 
 /* ─── 전역 변수 ─── */
+const _API = 'https://ueygjubz.gensparkspace.com/tables'; /* ★ Genspark DB 절대 URL */
 const TABLE_ASSESS = 'assessments';
 const TABLE_STU_A  = 'student_profiles';
 
@@ -67,7 +68,7 @@ function nowKR() {
 //   fetch('tables/assessments') → /api/code_sandbox_light/preview/{id}/admin/tables/assessments (❌ 잘못됨)
 //   fetch('../tables/assessments') → /api/code_sandbox_light/preview/{id}/tables/assessments (✅ 올바름)
 // 따라서 admin 페이지에서는 ../tables/ 경로를 사용해야 함
-const API = '../tables/';
+const API = 'https://ueygjubz.gensparkspace.com/tables/';
 
 /* ─── 세션 확인: admin-common.js + DVL_SESSION 에서 이미 처리 ─── */
 function checkSession() {

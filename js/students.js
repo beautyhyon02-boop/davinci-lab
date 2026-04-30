@@ -3,6 +3,9 @@
    완전 DB 연동 / 하드코딩 데이터 제거
    ============================================= */
 
+/* ★ Genspark DB API — Vercel 배포 환경에서도 동작 */
+const _API = 'https://ueygjubz.gensparkspace.com/tables';
+
 const TABLE_PROFILES = 'student_profiles';
 
 const attendLabels = { attend:'등원', absent:'미등원', late:'지각', '-':'-' };
@@ -27,7 +30,7 @@ function isConsulting(r) {
 async function loadStudentsFromAPI() {
   try {
     showLoadingState();
-    const res = await fetch(`../tables/${TABLE_PROFILES}?limit=500`);
+    const res = await fetch(`${_API}/${TABLE_PROFILES}?limit=500`);
     if (!res.ok) throw new Error(`API 오류 (${res.status})`);
     const data = await res.json();
     const rows = data.data || [];
@@ -146,7 +149,7 @@ async function confirmApprove() {
     // DB 레코드 ID(_id) 확보 — 없으면 student_id로 재검색
     let dbId = _approveTarget._id;
     if (!dbId || dbId === 'null' || dbId === 'undefined') {
-      const res  = await fetch(`../tables/${TABLE_PROFILES}?search=${encodeURIComponent(_approveTarget.id)}&limit=10`);
+      const res  = await fetch(`${_API}/${TABLE_PROFILES}?search=${encodeURIComponent(_approveTarget.id)}&limit=10`);
       const data = await res.json();
       const found = (data.data || []).find(r =>
         r.student_id === _approveTarget.id || r.id === _approveTarget.id
@@ -163,7 +166,7 @@ async function confirmApprove() {
       ...(grade  && { grade  }),
     };
 
-    const res = await fetch(`../tables/${TABLE_PROFILES}/${dbId}`, {
+    const res = await fetch(`${_API}/${TABLE_PROFILES}/${dbId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -195,13 +198,13 @@ async function rejectStudent(dbId, studentId) {
   try {
     let targetId = dbId;
     if (!targetId || targetId === 'null' || targetId === 'undefined') {
-      const res  = await fetch(`../tables/${TABLE_PROFILES}?search=${encodeURIComponent(studentId)}&limit=10`);
+      const res  = await fetch(`${_API}/${TABLE_PROFILES}?search=${encodeURIComponent(studentId)}&limit=10`);
       const data = await res.json();
       const found = (data.data || []).find(r => r.student_id === studentId || r.id === studentId);
       if (!found) { showToast('학생 정보를 찾을 수 없습니다.', 'warn'); return; }
       targetId = found.id;
     }
-    await fetch(`../tables/${TABLE_PROFILES}/${targetId}`, { method: 'DELETE' });
+    await fetch(`${_API}/${TABLE_PROFILES}/${targetId}`, { method: 'DELETE' });
     showToast(`${name} 가입 신청이 거절되었습니다.`, 'ok');
     await loadStudentsFromAPI();
   } catch(e) {
@@ -495,7 +498,7 @@ window.openDetail = (id) => {
   (async () => {
     try {
       const thisMonth = new Date().toISOString().slice(0,7); // YYYY-MM
-      const res  = await fetch(`../tables/attendance?limit=100&search=${s.id}`);
+      const res  = await fetch(`${_API}/attendance?limit=100&search=${s.id}`);
       const data = await res.json();
       const rows = (data.data || []).filter(r => r.student_id === s.id);
       const monthly = rows.filter(r => (r.att_date||'').startsWith(thisMonth));
@@ -584,7 +587,7 @@ window.adminLoginAsStudent = async (studentId) => {
 
   try {
     /* DB에서 비밀번호 포함 전체 프로필 조회 */
-    const res  = await fetch(`../tables/${TABLE_PROFILES}?limit=500`);
+    const res  = await fetch(`${_API}/${TABLE_PROFILES}?limit=500`);
     const data = await res.json();
     const profile = (data.data || []).find(r => r.student_id === studentId);
 
@@ -677,7 +680,7 @@ document.getElementById('deleteStudentBtn')?.addEventListener('click', async () 
 
   try {
     if (currentStudent._id) {
-      await fetch(`../tables/${TABLE_PROFILES}/${currentStudent._id}`, {
+      await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
         method: 'DELETE'
       });
     }
@@ -731,7 +734,7 @@ document.getElementById('stepModalSubmit')?.addEventListener('click', async () =
   /* API 업데이트 */
   if (currentStudent._id) {
     try {
-      const patchRes = await fetch(`../tables/${TABLE_PROFILES}/${currentStudent._id}`, {
+      const patchRes = await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stage: newStage, consulting: isCon }),
@@ -791,7 +794,7 @@ document.getElementById('addStudentSubmit')?.addEventListener('click', async () 
   } else {
     /* 아이디 중복 체크 */
     try {
-      const dupRes = await fetch(`../tables/${TABLE_PROFILES}?search=${encodeURIComponent(newId)}&limit=5`);
+      const dupRes = await fetch(`${_API}/${TABLE_PROFILES}?search=${encodeURIComponent(newId)}&limit=5`);
       const dupData = await dupRes.json();
       const dup = (dupData.data || []).find(r => r.student_id === newId);
       if (dup) {
@@ -829,7 +832,7 @@ document.getElementById('addStudentSubmit')?.addEventListener('click', async () 
   };
 
   try {
-    const res = await fetch(`../tables/${TABLE_PROFILES}`, {
+    const res = await fetch(`${_API}/${TABLE_PROFILES}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newProfile),
@@ -885,7 +888,7 @@ document.getElementById('saveMemoBtn')?.addEventListener('click', async () => {
 
   if (currentStudent._id) {
     try {
-      await fetch(`../tables/${TABLE_PROFILES}/${currentStudent._id}`, {
+      await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memo }),
@@ -955,7 +958,7 @@ async function archiveStudent(dbId, localId, statusVal = '졸업') {
   try {
     // student_profiles에서 status 필드를 '졸업'으로 업데이트
     if (dbId) {
-      await fetch(`../tables/${TABLE_PROFILES}/${dbId}`, {
+      await fetch(`${_API}/${TABLE_PROFILES}/${dbId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: statusVal }),
@@ -1038,7 +1041,7 @@ function updateArchiveList() {
 window.restoreStudent = async function(dbId, localId) {
   try {
     if (dbId) {
-      await fetch(`../tables/${TABLE_PROFILES}/${dbId}`, {
+      await fetch(`${_API}/${TABLE_PROFILES}/${dbId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: '재원' }),
@@ -1061,7 +1064,7 @@ document.getElementById('breakBtn')?.addEventListener('click', async () => {
   if (!confirm(`${currentStudent.name} 학생을 휴원 처리하시겠습니까?`)) return;
   try {
     if (currentStudent._id) {
-      await fetch(`../tables/${TABLE_PROFILES}/${currentStudent._id}`, {
+      await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: '휴원' }),

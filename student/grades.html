@@ -1121,7 +1121,7 @@
       const sem  = document.getElementById('schoolSemester').value;
       const gl   = getGradeLevel();
       try {
-        const res = await fetch(`../tables/grades_school?limit=200&search=${STUDENT_ID}`);
+        const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/grades_school?limit=200&search=${STUDENT_ID}`);
         if (res.ok) {
           const data = await res.json();
           schoolGrades = (data.data || []).filter(r =>
@@ -1331,7 +1331,7 @@
       try {
         for (const g of schoolGrades) {
           if (!g._saved) {
-            await fetch('../tables/grades_school', {
+            await fetch('https://ueygjubz.gensparkspace.com/tables/grades_school', {
               method: 'POST',
               headers: {'Content-Type':'application/json'},
               body: JSON.stringify({ student_id: STUDENT_ID, year, semester: sem, gradeLevel: gl, ...g })
@@ -1418,7 +1418,7 @@
     ───────────────────────────────────────── */
     async function loadMockGrades() {
       try {
-        const res = await fetch(`../tables/grades_mock?limit=100&search=${STUDENT_ID}`);
+        const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/grades_mock?limit=100&search=${STUDENT_ID}`);
         if (res.ok) {
           const data = await res.json();
           mockGrades = (data.data || []).filter(r => r.student_id === STUDENT_ID);
@@ -1489,7 +1489,7 @@
       if (!confirm('해당 모의고사 성적을 삭제할까요?')) return;
       const rec = mockGrades[idx];
       if (rec && rec.id && rec._saved !== false) {
-        try { await fetch(`../tables/grades_mock/${rec.id}`, { method:'DELETE' }); } catch(e) {}
+        try { await fetch(`https://ueygjubz.gensparkspace.com/tables/grades_mock/${rec.id}`, { method:'DELETE' }); } catch(e) {}
       }
       mockGrades.splice(idx, 1);
       localStorage.setItem('dvl_grades_mock', JSON.stringify(mockGrades));
@@ -1605,7 +1605,7 @@
       };
       if (!m.examDate) { alert('시험 날짜를 입력해주세요.'); return; }
       try {
-        const res = await fetch('../tables/grades_mock', {
+        const res = await fetch('https://ueygjubz.gensparkspace.com/tables/grades_mock', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify(m)

@@ -438,7 +438,7 @@
   // ===== 학생 목록 불러오기 =====
   async function loadStudents() {
     try {
-      const res = await fetch(`../tables/${TABLE_PROFILES}?limit=200&sort=student_id`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PROFILES}?limit=200&sort=student_id`);
       const data = await res.json();
       allStudents = (data.data || []).filter(s => s.status !== '졸업');
     } catch(e) { allStudents = []; }
@@ -469,7 +469,7 @@
   // ===== 플래너 목록 불러오기 =====
   async function loadPlanners() {
     try {
-      const res = await fetch(`../tables/${TABLE_PLANNERS}?limit=500`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}?limit=500`);
       const data = await res.json();
       allPlanners = data.data || [];
     } catch(e) { allPlanners = []; }
@@ -557,7 +557,7 @@
 
     // tasks 불러오기
     try {
-      const res = await fetch(`../tables/${TABLE_TASKS}?search=${currentDetailPlanner.student_id}&limit=500`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}?search=${currentDetailPlanner.student_id}&limit=500`);
       const data = await res.json();
       detailTasks = (data.data || []).filter(t =>
         t.student_id === currentDetailPlanner.student_id &&
@@ -802,7 +802,7 @@
   async function removeDetailTask(taskId, btn) {
     if (!confirm('이 할 일을 삭제할까요?')) return;
     try {
-      await fetch(`../tables/${TABLE_TASKS}/${taskId}`, { method: 'DELETE' });
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${taskId}`, { method: 'DELETE' });
       detailTasks = detailTasks.filter(t => t.id !== taskId);
       btn.closest('.task-edit-row').remove();
       showToast('🗑️ 삭제되었습니다.');
@@ -823,7 +823,7 @@
         const dateInput = row.querySelector('.dp-task-date');
         const taskDate  = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
         promises.push(
-          fetch(`../tables/${TABLE_TASKS}`, {
+          fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               planner_id: currentDetailPlanner.id,
@@ -836,7 +836,7 @@
         );
       } else {
         promises.push(
-          fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+          fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${taskId}`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               task_content: content, subject, subject_type: type,
@@ -860,7 +860,7 @@
     const subjects  = subjectsRaw.split(',').map(s => s.trim()).filter(Boolean);
 
     try {
-      const res = await fetch(`../tables/${TABLE_PLANNERS}/${currentDetailPlanner.id}`, {
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}/${currentDetailPlanner.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exam_type: examType, status, exam_start_date: startDate, exam_end_date: endDate, subjects }),
       });
@@ -877,7 +877,7 @@
   async function saveAdminComment() {
     const comment = document.getElementById('dpAdminComment').value;
     try {
-      await fetch(`../tables/${TABLE_PLANNERS}/${currentDetailPlanner.id}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}/${currentDetailPlanner.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scope: comment }),
       });
@@ -930,7 +930,7 @@
         created_by: sessionStorage.getItem('userId') || 'admin',
         year, semester,
       };
-      const res = await fetch(`../tables/${TABLE_PLANNERS}`, {
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
@@ -975,7 +975,7 @@
     }
     for (let i = 0; i < tasks.length; i += 20) {
       await Promise.all(tasks.slice(i, i + 20).map(t =>
-        fetch(`../tables/${TABLE_TASKS}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(t) })
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(t) })
       ));
     }
   }
@@ -984,7 +984,7 @@
   async function deletePlanner(id, name) {
     if (!confirm(`${name}의 플래너를 삭제할까요?\n관련 할 일도 모두 삭제됩니다.`)) return;
     try {
-      await fetch(`../tables/${TABLE_PLANNERS}/${id}`, { method: 'DELETE' });
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}/${id}`, { method: 'DELETE' });
       allPlanners = allPlanners.filter(p => p.id !== id);
       filteredPlanners = filteredPlanners.filter(p => p.id !== id);
       renderSummary(); renderTable();

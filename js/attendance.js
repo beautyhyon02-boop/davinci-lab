@@ -5,8 +5,8 @@
 const TABLE_ATT = 'attendance';
 const TABLE_STU = 'student_profiles';
 
-/* ─── API 경로 prefix (admin/ 하위에서 로드되므로 ../tables/) ─── */
-const API = '../tables';
+/* ─── API Base URL: Genspark DB (Vercel 배포 환경 포함) ─── */
+const API = 'https://ueygjubz.gensparkspace.com/tables';
 
 let session       = null;
 let allStudents   = [];   // student_profiles

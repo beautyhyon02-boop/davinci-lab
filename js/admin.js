@@ -3,6 +3,9 @@
    (공통 기능은 admin-common.js 에서 처리)
    ============================================= */
 
+/* ★ Genspark DB API — Vercel 배포 환경에서도 동작 */
+const _API = 'https://ueygjubz.gensparkspace.com/tables';
+
 document.addEventListener('DOMContentLoaded', async () => {
   /* ── 테이블 상수 ── */
   const TABLE_STUDENTS    = 'student_profiles';
@@ -61,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (assessId) {
       try {
-        await fetch(`../tables/${TABLE_ASSESSMENTS}/${assessId}`, {
+        await fetch(`${_API}/${TABLE_ASSESSMENTS}/${assessId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ feedback: text, status: 'feedback', feedback_type: '종합' })
@@ -208,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── 학생 목록 로드 ── */
   async function loadStudents() {
-    const res  = await fetch(`../tables/${TABLE_STUDENTS}?limit=200`);
+    const res  = await fetch(`${_API}/${TABLE_STUDENTS}?limit=200`);
     const data = await res.json();
     allStudents = (data.data || []).filter(s =>
       s.status === '재원' || s.status === 'active'
@@ -217,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── 오늘 출결 로드 ── */
   async function loadTodayAttendance(dateStr) {
-    const res  = await fetch(`../tables/${TABLE_ATTENDANCE}?limit=300&search=${dateStr}`);
+    const res  = await fetch(`${_API}/${TABLE_ATTENDANCE}?limit=300&search=${dateStr}`);
     const data = await res.json();
     const recs = (data.data || []).filter(r => r.att_date === dateStr);
     todayAttendMap = {};
@@ -226,14 +229,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── 수행평가 로드 ── */
   async function loadAssessments() {
-    const res  = await fetch(`../tables/${TABLE_ASSESSMENTS}?limit=300`);
+    const res  = await fetch(`${_API}/${TABLE_ASSESSMENTS}?limit=300`);
     const data = await res.json();
     allAssessments = data.data || [];
   }
 
   /* ── 상담 신청 로드 ── */
   async function loadConsultRequests() {
-    const res  = await fetch(`../tables/${TABLE_CONSULT}?limit=100`);
+    const res  = await fetch(`${_API}/${TABLE_CONSULT}?limit=100`);
     const data = await res.json();
     consultReqs = (data.data || []).filter(r => r.status === 'pending' || r.status === 'submitted');
   }
@@ -759,7 +762,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ══════════════════════════════════════════ */
   async function loadArchiveCount() {
     try {
-      const res  = await fetch(`../tables/${TABLE_STUDENTS}?limit=200`);
+      const res  = await fetch(`${_API}/${TABLE_STUDENTS}?limit=200`);
       const data = await res.json();
       const all  = data.data || [];
 
@@ -884,7 +887,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setInterval(async () => {
     try {
       // 수행평가 폴링
-      const aRes  = await fetch(`../tables/${TABLE_ASSESSMENTS}?limit=300`);
+      const aRes  = await fetch(`${_API}/${TABLE_ASSESSMENTS}?limit=300`);
       const aData = await aRes.json();
       const aList = aData.data || [];
       const newUnreadIds = new Set(aList.filter(a => a.unread_admin).map(a => a.id));
@@ -908,7 +911,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       _prevAssessUnread = newUnreadIds;
 
       // 상담 신청 폴링
-      const cRes  = await fetch(`../tables/${TABLE_CONSULT}?limit=200`);
+      const cRes  = await fetch(`${_API}/${TABLE_CONSULT}?limit=200`);
       const cData = await cRes.json();
       const cList = cData.data || [];
       const newPendingIds = new Set(cList.filter(c => c.status === 'pending').map(c => c.id));

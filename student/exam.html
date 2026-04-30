@@ -1050,7 +1050,7 @@
       if (!STUDENT_ID) { console.error('[loadPlanner] STUDENT_ID 없음'); showSetup(); return; }
       console.log(`[loadPlanner] 시작 - STUDENT_ID: "${STUDENT_ID}"`);
       // limit을 200으로 늘려 전체 데이터 확보 후 클라이언트 필터링
-      const res = await fetch(`../tables/${TABLE_PLANNERS}?limit=200`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}?limit=200`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       // student_id가 정확히 일치하고 완료되지 않은 플래너만 필터
@@ -1072,7 +1072,7 @@
           const todayDateStr = toLocalDateStr(todayLocal);
 
           // 1) DB planner 시작일 업데이트
-          await fetch(`../tables/${TABLE_PLANNERS}/${currentPlanner.id}`, {
+          await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}/${currentPlanner.id}`, {
             method:  'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ plan_start_date: todayDateStr }),
@@ -1085,7 +1085,7 @@
           const futureTasks = allTasks.filter(t => t.task_date > todayDateStr);
           if (futureTasks.length > 0) {
             await Promise.all(futureTasks.map(t =>
-              fetch(`../tables/${TABLE_TASKS}/${t.id}`, { method: 'DELETE' })
+              fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${t.id}`, { method: 'DELETE' })
             ));
           }
 
@@ -1196,7 +1196,7 @@
     };
 
     try {
-      const res = await fetch(`../tables/${TABLE_PLANNERS}`, {
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(plannerData),
@@ -1317,7 +1317,7 @@
       const batch = tasks.slice(i, i + 10);
       try {
         const results = await Promise.all(batch.map(t =>
-          fetch(`../tables/${TABLE_TASKS}`, {
+          fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(t),
           })
@@ -1335,7 +1335,7 @@
     try {
       if (!currentPlanner?.id) { allTasks = []; return; }
       // limit을 충분히 크게 설정하여 전체 태스크 조회
-      const res = await fetch(`../tables/${TABLE_TASKS}?limit=1000`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}?limit=1000`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       allTasks = (data.data || []).filter(t =>
@@ -1353,7 +1353,7 @@
   async function loadSchedules() {
     try {
       if (!currentPlanner?.id) { allSchedules = []; return; }
-      const res = await fetch(`../tables/${TABLE_SCHEDULES}?limit=200`);
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_SCHEDULES}?limit=200`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       allSchedules = (data.data || []).filter(s =>
@@ -1519,7 +1519,7 @@
 
     // DB 저장
     try {
-      await fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ student_memo: memo }),
@@ -1566,7 +1566,7 @@
 
     // DB 업데이트
     try {
-      await fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_done: task.is_done }),
@@ -1742,7 +1742,7 @@
       exam_order: parseInt(document.getElementById('schedOrder').value) || 1,
     };
     try {
-      const res = await fetch(`../tables/${TABLE_SCHEDULES}`, {
+      const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_SCHEDULES}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(schedData),
       });
@@ -1758,7 +1758,7 @@
   async function deleteSchedule(id) {
     if (!confirm('이 시험 일정을 삭제할까요?')) return;
     try {
-      await fetch(`../tables/${TABLE_SCHEDULES}/${id}`, { method: 'DELETE' });
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_SCHEDULES}/${id}`, { method: 'DELETE' });
       allSchedules = allSchedules.filter(s => s.id !== id);
       renderExamDayList();
       renderWeekCalendar();
@@ -1883,7 +1883,7 @@
     const mins    = Math.round(seconds / 60);
     const today   = todayStr();  // ← UTC 오프셋 버그 수정
     try {
-      await fetch('../tables/student_logs', {
+      await fetch('https://ueygjubz.gensparkspace.com/tables/student_logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2026,7 +2026,7 @@
     renderTodayTasks(); renderProgressCards(); updateDdayBanner();
 
     try {
-      await fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${taskId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_done: task.is_done }),
       });
@@ -2054,7 +2054,7 @@
       if (bookVal) savedCount++;
 
       promises.push(
-        fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${taskId}`, {
           method: 'PATCH', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ student_memo: memo }),
         })
@@ -2151,7 +2151,7 @@
     if (!startDate || !endDate) { showToast('⚠️ 날짜를 입력해주세요.'); return; }
     const subjects = subjectsRaw.split(',').map(s => s.trim()).filter(Boolean);
     try {
-      await fetch(`../tables/${TABLE_PLANNERS}/${currentPlanner.id}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}/${currentPlanner.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exam_start_date: startDate, exam_end_date: endDate, subjects }),
       });
@@ -2183,7 +2183,7 @@
       // 기존 태스크 전체 삭제
       const oldTasks = [...allTasks];
       await Promise.all(oldTasks.map(t =>
-        fetch(`../tables/${TABLE_TASKS}/${t.id}`, { method: 'DELETE' })
+        fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}/${t.id}`, { method: 'DELETE' })
       ));
       allTasks = [];
 
@@ -2192,7 +2192,7 @@
       const examStart = parseLocalDate(startDate);  // UTC 오프셋 버그 방지
 
       // 플래너 업데이트
-      await fetch(`../tables/${TABLE_PLANNERS}/${currentPlanner.id}`, {
+      await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}/${currentPlanner.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           exam_start_date: startDate,

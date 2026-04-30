@@ -159,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadPendingBadge() {
     try {
       const [resS, resP] = await Promise.all([
-        fetch('../tables/student_profiles?limit=500'),
-        fetch('../tables/parent_profiles?limit=500')
+        fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=500'),
+        fetch('https://ueygjubz.gensparkspace.com/tables/parent_profiles?limit=500')
       ]);
       const dataS = await resS.json();
       const dataP = await resP.json();

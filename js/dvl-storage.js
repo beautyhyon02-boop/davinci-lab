@@ -32,11 +32,13 @@ const DvlStorage = (function () {
     }
   }
 
+  const _STORAGE_API = 'https://ueygjubz.gensparkspace.com/tables';
+
   /* ── REST API: 해당 학생+섹션 레코드 검색 ── */
   async function apiFind(studentId, section) {
     try {
       const res = await fetch(
-        `tables/${TABLE}?search=${encodeURIComponent(studentId)}&limit=200`
+        `${_STORAGE_API}/${TABLE}?search=${encodeURIComponent(studentId)}&limit=200`
       );
       if (!res.ok) return null;
       const data = await res.json();
@@ -51,7 +53,7 @@ const DvlStorage = (function () {
   async function apiFindAll(studentId) {
     try {
       const res = await fetch(
-        `tables/${TABLE}?search=${encodeURIComponent(studentId)}&limit=500`
+        `${_STORAGE_API}/${TABLE}?search=${encodeURIComponent(studentId)}&limit=500`
       );
       if (!res.ok) return [];
       const data = await res.json();
@@ -74,13 +76,13 @@ const DvlStorage = (function () {
 
       let res;
       if (existing) {
-        res = await fetch(`tables/${TABLE}/${existing.id}`, {
+        res = await fetch(`${_STORAGE_API}/${TABLE}/${existing.id}`, {
           method:  'PUT',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(body),
         });
       } else {
-        res = await fetch(`tables/${TABLE}`, {
+        res = await fetch(`${_STORAGE_API}/${TABLE}`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(body),

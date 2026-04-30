@@ -880,7 +880,7 @@
       sel.innerHTML = '<option value="">학생 선택…</option>';
       histSel.innerHTML = '<option value="">전체 학생</option>';
       try {
-        const r = await fetch('../tables/student_profiles?limit=100');
+        const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=100');
         const d = await r.json();
         const students = d.data || [];
         students.forEach(s => {
@@ -907,7 +907,7 @@
     // ─── 상담 데이터 로드 ───
     async function loadConsults() {
       try {
-        const r = await fetch(`../tables/${TABLE_CONSULTATIONS}?limit=200&sort=scheduled_date`);
+        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_CONSULTATIONS}?limit=200&sort=scheduled_date`);
         const d = await r.json();
         allConsults = d.data || [];
         updateStats();
@@ -916,7 +916,7 @@
 
     async function loadRequests() {
       try {
-        const r = await fetch(`../tables/${TABLE_REQUESTS}?limit=200`);
+        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_REQUESTS}?limit=200`);
         const d = await r.json();
         allRequests = d.data || [];
         const pending = allRequests.filter(x => x.status === 'pending').length;
@@ -1263,11 +1263,11 @@
       try {
         let r;
         if (editingId) {
-          r = await fetch(`../tables/${TABLE_CONSULTATIONS}/${editingId}`, {
+          r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_CONSULTATIONS}/${editingId}`, {
             method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
           });
         } else {
-          r = await fetch(`../tables/${TABLE_CONSULTATIONS}`, {
+          r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_CONSULTATIONS}`, {
             method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
           });
         }
@@ -1283,7 +1283,7 @@
     async function deleteConsult(id) {
       if (!confirm('이 상담 기록을 삭제하시겠습니까?')) return;
       try {
-        await fetch(`../tables/${TABLE_CONSULTATIONS}/${id}`, { method: 'DELETE' });
+        await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_CONSULTATIONS}/${id}`, { method: 'DELETE' });
         showToast('삭제되었습니다.');
         await loadConsults();
         renderCalendar();
@@ -1310,7 +1310,7 @@
       const msg  = document.getElementById('replyMsg').value;
 
       try {
-        await fetch(`../tables/${TABLE_REQUESTS}/${replyingReqId}`, {
+        await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_REQUESTS}/${replyingReqId}`, {
           method: 'PATCH',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify({ status: newStatus, confirmed_date: date, confirmed_time: time, admin_reply: msg, is_read: true })
@@ -1318,7 +1318,7 @@
 
         // 확정 시 상담 자동 등록
         if (newStatus === 'confirmed') {
-          await fetch(`../tables/${TABLE_CONSULTATIONS}`, {
+          await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_CONSULTATIONS}`, {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
@@ -1424,7 +1424,7 @@
       document.getElementById('notesMonthLabel').textContent = `${notesYear}년 ${notesMonth}월`;
       document.getElementById('notesList').innerHTML = `<div style="text-align:center;color:#94a3b8;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>`;
       try {
-        const res  = await fetch(`../tables/${TABLE_NOTES}?limit=200&sort=note_date`);
+        const res  = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTES}?limit=200&sort=note_date`);
         const data = await res.json();
         allNotes = (data.data || []).filter(n =>
           n.note_year === notesYear && n.note_month === notesMonth
@@ -1562,7 +1562,7 @@
     async function deleteNote(id) {
       if (!confirm('이 상담 노트를 삭제하시겠습니까?')) return;
       try {
-        await fetch(`../tables/${TABLE_NOTES}/${id}`, { method: 'DELETE' });
+        await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_NOTES}/${id}`, { method: 'DELETE' });
         showToast('삭제되었습니다.');
         await loadNotes();
       } catch(e) { showToast('삭제 중 오류가 발생했습니다.'); }

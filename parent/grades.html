@@ -777,7 +777,7 @@
       // 1. 자녀 ID 목록
       let childIds = [];
       try {
-        const r = await fetch(`../tables/parent_profiles?limit=200&search=${PID}`);
+        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/parent_profiles?limit=200&search=${PID}`);
         const d = await r.json();
         const p = (d.data||[]).find(x => x.parent_id===PID || x.id===PID);
         if (p) {
@@ -791,7 +791,7 @@
       // 2. 학생 프로필
       let ALL_STU = [];
       try {
-        const r = await fetch('../tables/student_profiles?limit=200');
+        const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=200');
         ALL_STU = (await r.json()).data || [];
       } catch(e) {}
 
@@ -812,8 +812,8 @@
       // 3. 성적 일괄 로드
       try {
         const [sgR, mkR] = await Promise.allSettled([
-          fetch('../tables/grades_school?limit=500'),
-          fetch('../tables/grades_mock?limit=500')
+          fetch('https://ueygjubz.gensparkspace.com/tables/grades_school?limit=500'),
+          fetch('https://ueygjubz.gensparkspace.com/tables/grades_mock?limit=500')
         ]);
         if (sgR.status==='fulfilled' && sgR.value.ok) {
           const d = await sgR.value.json();

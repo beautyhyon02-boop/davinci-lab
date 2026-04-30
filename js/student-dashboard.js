@@ -2,6 +2,9 @@
    다빈치랩 학생 대시보드 JS – v16 DB 연동
    ============================================= */
 
+/* ★ Genspark DB API — Vercel 배포 환경 포함 */
+const _API = 'https://ueygjubz.gensparkspace.com/tables';
+
 /* ── 테이블 상수 ── */
 const TABLE_STUDENTS    = 'student_profiles';
 const TABLE_ATTENDANCE  = 'attendance';
@@ -91,7 +94,7 @@ let attendMap   = {}; // YYYY-MM-DD → status
   ═══════════════════════════════════════════ */
   async function loadStudentProfile() {
     try {
-      const res  = await fetch(`../tables/${TABLE_STUDENTS}?limit=200`);
+      const res  = await fetch(`${_API}/${TABLE_STUDENTS}?limit=200`);
       const data = await res.json();
       const prof = (data.data || []).find(s => s.student_id === studentId);
       if (prof) {
@@ -139,7 +142,7 @@ let attendMap   = {}; // YYYY-MM-DD → status
   ═══════════════════════════════════════════ */
   async function loadAttendance() {
     try {
-      const res  = await fetch(`../tables/${TABLE_ATTENDANCE}?limit=300`);
+      const res  = await fetch(`${_API}/${TABLE_ATTENDANCE}?limit=300`);
       const data = await res.json();
       const recs = (data.data || []).filter(r => r.student_id === studentId);
 
@@ -261,7 +264,7 @@ let attendMap   = {}; // YYYY-MM-DD → status
   ═══════════════════════════════════════════ */
   async function loadAssessments() {
     try {
-      const res  = await fetch(`../tables/${TABLE_ASSESSMENTS}?limit=200`);
+      const res  = await fetch(`${_API}/${TABLE_ASSESSMENTS}?limit=200`);
       const data = await res.json();
       const list = (data.data || []).filter(a => a.student_id === studentId);
 
@@ -398,8 +401,8 @@ let attendMap   = {}; // YYYY-MM-DD → status
   async function loadNotices() {
     try {
       const [noticeRes, readRes] = await Promise.all([
-        fetch(`../tables/${TABLE_NOTICES}?limit=20&sort=created_at`),
-        fetch(`../tables/${TABLE_NOTICE_READ}?limit=200`)
+        fetch(`${_API}/${TABLE_NOTICES}?limit=20&sort=created_at`),
+        fetch(`${_API}/${TABLE_NOTICE_READ}?limit=200`)
       ]);
       const noticeData = await noticeRes.json();
       const readData   = await readRes.json();
@@ -475,7 +478,7 @@ let attendMap   = {}; // YYYY-MM-DD → status
   ═══════════════════════════════════════════ */
   async function loadPlannerTasks() {
     try {
-      const res  = await fetch(`../tables/${TABLE_TASKS}?limit=200`);
+      const res  = await fetch(`${_API}/${TABLE_TASKS}?limit=200`);
       const data = await res.json();
       const all  = (data.data || []).filter(t => t.student_id === studentId);
 
@@ -624,7 +627,7 @@ let attendMap   = {}; // YYYY-MM-DD → status
   ═══════════════════════════════════════════ */
   async function loadFeedbacks() {
     try {
-      const res  = await fetch(`../tables/${TABLE_ASSESSMENTS}?limit=200`);
+      const res  = await fetch(`${_API}/${TABLE_ASSESSMENTS}?limit=200`);
       const data = await res.json();
       const list = (data.data || [])
         .filter(a => a.student_id === studentId && a.feedback)
