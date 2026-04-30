@@ -3,7 +3,7 @@
    ============================================= */
 
 /* ★ Genspark DB API — Vercel 배포 환경 포함 */
-const _API = 'tables';
+const _API = '/tables';
 
 /* ── 테이블 상수 ── */
 const TABLE_STUDENTS    = 'student_profiles';

@@ -444,7 +444,7 @@
     async function loadRecords() {
       const sid = session.id || session.username;
       try {
-        const r = await fetch(`tables/${TABLE_ATT}?limit=500`);
+        const r = await fetch(`/tables/${TABLE_ATT}?limit=500`);
         const d = await r.json();
         myRecords = (d.data || []).filter(x => x.student_id === sid);
         updateSummary();

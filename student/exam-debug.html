@@ -63,7 +63,7 @@ async function run() {
   // 2. exam_planners 조회
   log('=== 2. exam_planners 조회 ===');
   try {
-    const r = await fetch(`tables/exam_planners?search=${encodeURIComponent(SID)}&limit=50`);
+    const r = await fetch(`/tables/exam_planners?search=${encodeURIComponent(SID)}&limit=50`);
     log(`응답 상태: ${r.status}`, r.ok ? 'ok' : 'err');
     const d = await r.json();
     log(`전체 레코드 수: ${(d.data||[]).length}`);
@@ -90,7 +90,7 @@ async function run() {
 
         // 3. planner_tasks 조회
         log('=== 3. planner_tasks 조회 ===');
-        const tr = await fetch(`tables/planner_tasks?search=${encodeURIComponent(SID)}&limit=1000`);
+        const tr = await fetch(`/tables/planner_tasks?search=${encodeURIComponent(SID)}&limit=1000`);
         log(`응답 상태: ${tr.status}`, tr.ok ? 'ok' : 'err');
         const td = await tr.json();
         const allTasks = (td.data||[]).filter(t => t.student_id === SID);

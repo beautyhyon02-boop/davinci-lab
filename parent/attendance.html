@@ -334,7 +334,7 @@
     /* ── 1. 자녀 ID ── */
     let childIds = [];
     try {
-      const r = await fetch(`tables/parent_profiles?limit=200&search=${PID}`);
+      const r = await fetch(`/tables/parent_profiles?limit=200&search=${PID}`);
       const d = await r.json();
       const p = (d.data||[]).find(x=>x.parent_id===PID||x.id===PID);
       if (p) {
@@ -348,7 +348,7 @@
     /* ── 2. 학생 프로필 ── */
     let ALL_STU=[];
     try {
-      const r=await fetch('tables/student_profiles?limit=200');
+      const r=await fetch('/tables/student_profiles?limit=200');
       ALL_STU=(await r.json()).data||[];
     } catch(e) {}
 
@@ -374,7 +374,7 @@
       document.getElementById('attLoading').style.display='';
       document.getElementById('attContent').style.display='none';
       try {
-        const r=await fetch(`tables/attendance?limit=500&search=${cid}`);
+        const r=await fetch(`/tables/attendance?limit=500&search=${cid}`);
         const d=await r.json();
         ALL_ATTEND=(d.data||[])
           .filter(a=>a.student_id===cid||a.studentId===cid)

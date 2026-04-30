@@ -241,7 +241,7 @@
 
   async function loadParents() {
     try {
-      const res = await fetch(`tables/${TABLE_PARENTS}?limit=200&sort=parent_id`);
+      const res = await fetch(`/tables/${TABLE_PARENTS}?limit=200&sort=parent_id`);
       const data = await res.json();
       allParents = data.data || [];
       filtered = [...allParents];
@@ -373,7 +373,7 @@
   async function approveParent(recordId, name) {
     if (!confirm(`'${name}' 학부모 가입을 승인하시겠습니까?`)) return;
     try {
-      const res = await fetch(`tables/parent_profiles/${recordId}`, {
+      const res = await fetch(`/tables/parent_profiles/${recordId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: '활성' }),
@@ -389,7 +389,7 @@
   async function rejectParent(recordId, name) {
     if (!confirm(`'${name}' 학부모 가입 신청을 거절하시겠습니까?\n해당 계정이 삭제됩니다.`)) return;
     try {
-      const res = await fetch(`tables/parent_profiles/${recordId}`, { method: 'DELETE' });
+      const res = await fetch(`/tables/parent_profiles/${recordId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
       showToast(`${name} 학부모 가입 신청이 거절되었습니다.`);
       await loadParents();
@@ -435,7 +435,7 @@
     if (newPw) patch.password = newPw;
 
     try {
-      await fetch(`tables/${TABLE_PARENTS}/${id}`, {
+      await fetch(`/tables/${TABLE_PARENTS}/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       });

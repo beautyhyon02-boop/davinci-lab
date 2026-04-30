@@ -6,7 +6,7 @@ const TABLE_ATT = 'attendance';
 const TABLE_STU = 'student_profiles';
 
 /* ─── API Base URL: Genspark DB (Vercel 배포 환경 포함) ─── */
-const API = 'tables';
+const API = '/tables';
 
 let session       = null;
 let allStudents   = [];   // student_profiles

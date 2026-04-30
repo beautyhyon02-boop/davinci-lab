@@ -5,27 +5,17 @@
 
 /* ──────────────────────────────────────────────────────────────
    ★ API Base URL
-   Genspark 내장 API는 항상 루트 기준 'tables/' 로 접근
-   (Genspark 프리뷰/Vercel 모두 동일하게 동작)
+   /tables/ (절대경로) — 어느 폴더 깊이에서도 항상 루트 기준으로 동작
+   Vercel의 vercel.json rewrites → Genspark API로 프록시
 ────────────────────────────────────────────────────────────── */
 (function () {
-  /**
-   * window.DVL_API(tableName)
-   * 예: window.DVL_API('student_profiles') → 'tables/student_profiles'
-   */
   window.DVL_API = function (tableName) {
-    return 'tables/' + tableName;
+    return '/tables/' + tableName;
   };
-
-  /**
-   * window.DVL_API_RECORD(tableName, id)
-   * 예: window.DVL_API_RECORD('student_profiles', 'abc-123') → 'tables/student_profiles/abc-123'
-   */
   window.DVL_API_RECORD = function (tableName, id) {
-    return 'tables/' + tableName + '/' + id;
+    return '/tables/' + tableName + '/' + id;
   };
-
-  console.log('[DVL] API Base: tables/ (루트 기준 상대경로)');
+  console.log('[DVL] API Base: /tables/ (절대경로)');
 })();
 
 /* ──────────────────────────────────────────────────────────────

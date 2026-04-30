@@ -505,7 +505,7 @@
     ═══════════════════════════════ */
     let childIds = [];
     try {
-      const r = await fetch(`tables/parent_profiles?limit=200&search=${PID}`);
+      const r = await fetch(`/tables/parent_profiles?limit=200&search=${PID}`);
       const d = await r.json();
       const p = (d.data||[]).find(x => x.parent_id===PID || x.id===PID);
       if (p) {
@@ -521,7 +521,7 @@
     ═══════════════════════════════ */
     let ALL_STU = [];
     try {
-      const r = await fetch('tables/student_profiles?limit=200');
+      const r = await fetch('/tables/student_profiles?limit=200');
       ALL_STU = (await r.json()).data || [];
     } catch(e) {}
 
@@ -584,8 +584,8 @@
 
       try {
         const [pR, tR] = await Promise.all([
-          fetch(`tables/exam_planners?limit=50&search=${cid}`),
-          fetch(`tables/planner_tasks?limit=500&search=${cid}`),
+          fetch(`/tables/exam_planners?limit=50&search=${cid}`),
+          fetch(`/tables/planner_tasks?limit=500&search=${cid}`),
         ]);
         if (pR.ok) {
           const d = await pR.json();

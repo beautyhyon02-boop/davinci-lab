@@ -4,7 +4,7 @@
    ============================================= */
 
 /* ★ Genspark DB API — 루트 기준 상대경로 사용 */
-const _API = 'tables';
+const _API = '/tables';
 
 const TABLE_PROFILES = 'student_profiles';
 

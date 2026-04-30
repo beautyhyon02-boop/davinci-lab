@@ -513,7 +513,7 @@ async function handleLogin(e) {
     /* ── 1순위: DB에서 계정 조회 ── */
     let acc = null;
     try {
-      const res  = await fetch(`tables/admin_accounts?limit=100`);
+      const res  = await fetch(`/tables/admin_accounts?limit=100`);
       if (res.ok) {
         const data = await res.json();
         acc = (data.data || []).find(a => a.admin_id === id) || null;
@@ -539,7 +539,7 @@ async function handleLogin(e) {
       }
       /* 성공 */
       try {
-        await fetch(`tables/admin_accounts/${acc.id}`, {
+        await fetch(`/tables/admin_accounts/${acc.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ last_login: new Date().toISOString() }),

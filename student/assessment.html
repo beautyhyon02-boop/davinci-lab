@@ -740,7 +740,7 @@
   /* ─────────────── DB 로드 ─────────────── */
   async function loadRecords() {
     try {
-      const res = await fetch(`tables/${TABLE}?limit=200`);
+      const res = await fetch(`/tables/${TABLE}?limit=200`);
       const d   = await res.json();
       const all = d.data || [];
       console.log('[loadRecords] 전체 레코드 수:', all.length, '| studentId:', studentId);
@@ -902,7 +902,7 @@
   /* ─────────────── 미읽음 → 읽음 ─────────────── */
   async function markRead(id) {
     try {
-      await fetch(`tables/${TABLE}/${id}`, {
+      await fetch(`/tables/${TABLE}/${id}`, {
         method: 'PATCH', headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({ unread_student: false })
       });
@@ -985,7 +985,7 @@
 
       console.log('[제출] studentId:', studentId, '| subject:', subject, '| payload size:', JSON.stringify(payload).length);
 
-      const res = await fetch(`tables/${TABLE}`, {
+      const res = await fetch(`/tables/${TABLE}`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(payload),
@@ -1074,7 +1074,7 @@
 
       console.log('[재제출] id:', resubmitTarget.id, '| patch size:', JSON.stringify(patchData).length);
 
-      const res = await fetch(`tables/${TABLE}/${resubmitTarget.id}`, {
+      const res = await fetch(`/tables/${TABLE}/${resubmitTarget.id}`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(patchData),

@@ -32,7 +32,7 @@ const DvlStorage = (function () {
     }
   }
 
-  const _STORAGE_API = 'tables';
+  const _STORAGE_API = '/tables';
 
   /* ── REST API: 해당 학생+섹션 레코드 검색 ── */
   async function apiFind(studentId, section) {

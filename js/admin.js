@@ -4,7 +4,7 @@
    ============================================= */
 
 /* ★ Genspark DB API — Vercel 배포 환경에서도 동작 */
-const _API = 'tables';
+const _API = '/tables';
 
 document.addEventListener('DOMContentLoaded', async () => {
   /* ── 테이블 상수 ── */

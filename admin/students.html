@@ -643,7 +643,7 @@
 
   async function loadAdminAccounts() {
     try {
-      const res = await fetch(`tables/${TABLE_ADMIN_ACC}?limit=100`);
+      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}?limit=100`);
       if (!res.ok) throw new Error();
       const data = await res.json();
       ALL_ADMIN_ACCOUNTS = data.data || [];
@@ -762,7 +762,7 @@
     if (!confirm('이 관리자 신청을 승인하시겠습니까?')) return;
     const masterId = getCurrentAdminId();
     try {
-      const res = await fetch(`tables/${TABLE_ADMIN_ACC}/${recordId}`, {
+      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, {
         method: 'PATCH',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -783,7 +783,7 @@
   async function rejectAdmin(recordId) {
     if (!confirm('이 가입 신청을 거절하고 삭제하시겠습니까?')) return;
     try {
-      const res = await fetch(`tables/${TABLE_ADMIN_ACC}/${recordId}`, { method: 'DELETE' });
+      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, { method: 'DELETE' });
       if (res.ok || res.status === 204) {
         await loadAdminAccounts();
         showAdmToast('가입 신청이 거절되었습니다.');
@@ -797,7 +797,7 @@
   async function deactivateAdmin(recordId) {
     if (!confirm('이 관리자 계정을 비활성화하시겠습니까?\n해당 관리자는 로그인할 수 없게 됩니다.')) return;
     try {
-      const res = await fetch(`tables/${TABLE_ADMIN_ACC}/${recordId}`, {
+      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, {
         method: 'PATCH',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ status: 'inactive' })
@@ -814,7 +814,7 @@
   async function reactivateAdmin(recordId) {
     if (!confirm('이 계정을 다시 활성화하시겠습니까?')) return;
     try {
-      const res = await fetch(`tables/${TABLE_ADMIN_ACC}/${recordId}`, {
+      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, {
         method: 'PATCH',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ status: 'active' })

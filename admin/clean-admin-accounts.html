@@ -69,7 +69,7 @@ async function loadAccounts() {
   tableEl.innerHTML = '<p style="color:#94a3b8;font-size:13px;">불러오는 중...</p>';
   
   try {
-    const res = await fetch('tables/admin_accounts?limit=100');
+    const res = await fetch('/tables/admin_accounts?limit=100');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     allAccounts = data.data || [];
@@ -138,7 +138,7 @@ async function deleteFakeAccounts() {
   
   for (const acc of toDelete) {
     try {
-      const res = await fetch(`tables/admin_accounts/${acc.id}`, { method: 'DELETE' });
+      const res = await fetch(`/tables/admin_accounts/${acc.id}`, { method: 'DELETE' });
       if (res.ok || res.status === 204) {
         appendLog('deleteLog', `✅ 삭제 완료: ${acc.admin_id} (${acc.name || '이름없음'})`, 'ok');
         successCount++;
@@ -168,7 +168,7 @@ async function activateParkJuhan() {
   }
   
   try {
-    const res = await fetch(`tables/admin_accounts/${parkJuhanId}`, {
+    const res = await fetch(`/tables/admin_accounts/${parkJuhanId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'active' })

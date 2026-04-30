@@ -207,7 +207,7 @@
 
   async function loadNotices() {
     try {
-      const res  = await fetch(`tables/${TABLE_NOTICES}?limit=200`);
+      const res  = await fetch(`/tables/${TABLE_NOTICES}?limit=200`);
       const data = await res.json();
       allNotices = (data.data || [])
         .filter(n => n.status === '발행' && (n.target === '전체' || n.target === '학생' || n.target === '특정학생'))
@@ -291,7 +291,7 @@
     document.getElementById('detailModal').classList.add('open');
 
     // 조회수 증가
-    fetch(`tables/notices/${id}`, {
+    fetch(`/tables/notices/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ view_count: (n.view_count || 0) + 1 }),
     }).catch(() => {});
