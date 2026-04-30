@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>로그인 – 다빈치랩</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <link rel="apple-touch-icon" href="images/icon-180.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --green-900: #163A33;
+      --green-800: #1e4d42;
+      --green-700: #245A4E;
+      --font: 'Noto Sans KR', -apple-system, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: linear-gradient(145deg, #ffffff 0%, #f0f6f3 60%, #e4f0eb 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 20px;
+    }
+    .card {
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(22,58,51,.14);
+      padding: 40px 36px; width: 100%; max-width: 420px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; margin-bottom: 24px; justify-content: center;
+    }
+    .logo-icon { font-size: 24px; color: var(--green-700); }
+    .logo-text  { font-size: 22px; font-weight: 800; color: var(--green-900); }
+    h2 { text-align: center; font-size: 22px; font-weight: 700; color: var(--green-900); margin-bottom: 6px; }
+    .subtitle { text-align: center; font-size: 13px; color: #6B7280; margin-bottom: 28px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #d1fae5;
+      border-radius: 10px; font-size: 15px; font-family: var(--font);
+      color: #1F2937; background: #f9fafb; margin-bottom: 16px;
+      transition: border-color .2s; outline: none;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-color: var(--green-700); background: #fff;
+    }
+    #loginBtn {
+      width: 100%; padding: 14px; background: var(--green-900); color: #fff;
+      border: none; border-radius: 50px; font-size: 16px; font-weight: 700;
+      font-family: var(--font); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s; margin-top: 4px;
+    }
+    #loginBtn:hover  { background: var(--green-800); }
+    #loginBtn:disabled { opacity: .6; cursor: not-allowed; }
+    #errMsg {
+      display: none; margin-top: 12px; padding: 11px 14px;
+      background: #fef2f2; border: 1px solid #fca5a5;
+      border-radius: 8px; color: #b91c1c; font-size: 13.5px; font-weight: 500;
+    }
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 24px 0; }
+    .signup-box {
+      background: #f0f6f3; border: 1px solid #cde6d9;
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .signup-box p { font-size: 13px; color: #374151; margin-bottom: 12px; }
+    .signup-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .signup-btns a {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 10px; font-size: 13px;
+      font-weight: 700; text-decoration: none; color: #fff;
+    }
+    .btn-student { background: linear-gradient(135deg,#163A33,#2e7061); }
+    .btn-parent  { background: linear-gradient(135deg,#5b21b6,#7c3aed); }
+    .back-link {
+      display: block; text-align: center; margin-top: 16px;
+      font-size: 13px; color: var(--green-700); text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <a href="index.html" class="logo">
+    <span class="logo-icon">◈</span>
+    <span class="logo-text">다빈치랩</span>
+  </a>
+
+  <h2>로그인</h2>
+  <p class="subtitle" id="subtitle">학생, 학부모, 관리자 계정으로 로그인하세요</p>
+
+  <div>
+    <label for="userId">아이디</label>
+    <input type="text" id="userId" placeholder="아이디를 입력하세요" autocomplete="username" />
+
+    <label for="password">비밀번호</label>
+    <input type="password" id="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password" />
+
+    <button type="button" id="loginBtn">
+      <i class="fas fa-sign-in-alt"></i> 로그인
+    </button>
+
+    <div id="errMsg"></div>
+  </div>
+
+  <hr class="divider" />
+
+  <div class="signup-box">
+    <p>아직 계정이 없으신가요?</p>
+    <div class="signup-btns">
+      <a href="register.html" class="btn-student">
+        <i class="fas fa-user-graduate"></i> 학생 회원가입
+      </a>
+      <a href="register.html" class="btn-parent" onclick="sessionStorage.setItem('reg_role','parent')">
+        <i class="fas fa-user-tie"></i> 학부모 회원가입
+      </a>
+    </div>
+  </div>
+
+  <a href="index.html" class="back-link">
+    <i class="fas fa-arrow-left"></i> 홈페이지로 돌아가기
+  </a>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   다빈치랩 로그인 스크립트
+   - 관리자: admin_accounts DB 조회 + 마스터 계정 폴백
+   - 학부모: parent_profiles DB 조회
+   - 학생:   student_profiles DB 조회
+   ★ base href 없음 – 모든 fetch는 상대 경로(tables/...)로 동작
+══════════════════════════════════════════════════════ */
+
+/* ── 서비스워커 제거 (캐시 충돌 방지) ── */
+(async function() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map(r => r.unregister()));
+  } catch(e) {}
+})();
+
+/* ── SHA-256 ── */
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ── 에러 표시 ── */
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = msg; el.style.display = 'block';
+}
+function clearErr() {
+  const el = document.getElementById('errMsg');
+  el.textContent = ''; el.style.display = 'none';
+}
+
+/* ── 버튼 상태 ── */
+function setLoading(on) {
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? '<i class="fas fa-spinner fa-spin"></i> 로그인 중...'
+    : '<i class="fas fa-sign-in-alt"></i> 로그인';
+}
+
+/* ─────────────────────────────────────────────────────
+   세션 저장 헬퍼
+   - 관리자: sessionStorage 전용 (localStorage 저장 안 함 → 자동로그인 없음)
+   - 학생/학부모: localStorage + sessionStorage 저장
+───────────────────────────────────────────────────── */
+function saveAdminSession(data) {
+  const u = {
+    id:    data.id    || '',
+    name:  data.name  || '',
+    role:  data.role  || 'admin',
+    title: data.title || '',
+    school:'다빈치랩',
+    grade: '', gradeNum: 0, stage: '', child: '', childName: '',
+  };
+  const json = JSON.stringify(u);
+  /* ── localStorage: 페이지 이동 후에도 읽을 수 있도록 ── */
+  localStorage.setItem('dvl_admin_session', json);
+  /* ── 이전 학생/학부모 세션 잔재 제거 ── */
+  ['dvl_admin_tab_session','dvl_admin_id',
+   'dvl_user','dvl_session',
+   'dvl_student_session','dvl_parent_session'].forEach(k => localStorage.removeItem(k));
+  /* ── sessionStorage: 현재 탭 ── */
+  sessionStorage.setItem('dvl_admin_session', json);
+  sessionStorage.setItem('dvl_user',          json);
+  sessionStorage.setItem('dvl_session',       json);
+  sessionStorage.setItem('dvSession',         json);
+}
+
+function saveStudentSession(data) {
+  const u = {
+    id:       data.id       || '',
+    name:     data.name     || '',
+    role:     'student',
+    school:   data.school   || '',
+    grade:    data.grade    || '',
+    gradeNum: data.gradeNum || 0,
+    stage:    data.stage    || '',
+    title: '', child: '', childName: '',
+  };
+  const json = JSON.stringify(u);
+  localStorage.setItem('dvl_student_session', json);
+  localStorage.setItem('dvl_user',            json);
+  localStorage.setItem('dvl_session',         json);
+  sessionStorage.setItem('dvl_user',    json);
+  sessionStorage.setItem('dvl_session', json);
+  sessionStorage.setItem('dvSession',   json);
+  sessionStorage.setItem('userId',      u.id);
+  sessionStorage.setItem('userName',    u.name);
+  sessionStorage.setItem('userRole',    u.role);
+  sessionStorage.setItem('userSchool',  u.school);
+  sessionStorage.setItem('userGrade',   u.grade);
+  sessionStorage.setItem('userStage',   u.stage);
+}
+
+function saveParentSession(data) {
+  const u = {
+    id:        data.id        || '',
+    name:      data.name      || '',
+    role:      'parent',
+    child:     data.child     || '',
+    childName: data.childName || '',
+    school: '', grade: '', gradeNum: 0, stage: '', title: '',
+  };
+  const json = JSON.stringify(u);
+  localStorage.setItem('dvl_parent_session',  json);
+  localStorage.setItem('dvl_user',            json);
+  localStorage.setItem('dvl_session',         json);
+  sessionStorage.setItem('dvl_user',    json);
+  sessionStorage.setItem('dvl_session', json);
+  sessionStorage.setItem('dvSession',   json);
+  sessionStorage.setItem('userId',      u.id);
+  sessionStorage.setItem('userName',    u.name);
+  sessionStorage.setItem('userRole',    u.role);
+}
+
+/* ─────────────────────────────────────────────────────
+   메인 로그인 함수
+───────────────────────────────────────────────────── */
+async function doLogin() {
+  clearErr();
+  const id = (document.getElementById('userId').value || '').trim();
+  const pw =  document.getElementById('password').value || '';
+
+  if (!id || !pw) { showErr('아이디와 비밀번호를 모두 입력해주세요.'); return; }
+  if (document.getElementById('loginBtn').disabled) return;
+
+  setLoading(true);
+
+  try {
+    /* ════════════════════════════════
+       1. 관리자 로그인
+    ════════════════════════════════ */
+    const inputHash = await sha256(pw);
+    const masterHash = await sha256('dvlAdmin!');
+
+    // 1-A. DB에서 관리자 계정 조회
+    let adminFound = false;
+    try {
+      const aRes = await fetch('tables/admin_accounts?limit=100');
+      if (aRes.ok) {
+        const aData = await aRes.json();
+        const acc = (aData.data || []).find(r => r.admin_id === id);
+        if (acc) {
+          adminFound = true;
+          if (acc.status === 'pending') {
+            setLoading(false);
+            showErr('승인 대기 중입니다. 마스터 관리자 승인 후 로그인 가능합니다.');
+            return;
+          }
+          if (acc.status === 'inactive') {
+            setLoading(false);
+            showErr('비활성화된 계정입니다. 관리자에게 문의하세요.');
+            return;
+          }
+          if (inputHash !== acc.pw_hash) {
+            setLoading(false);
+            showErr('비밀번호가 올바르지 않습니다.');
+            return;
+          }
+          try {
+            await fetch('tables/admin_accounts/' + acc.id, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ last_login: new Date().toISOString() }),
+            });
+          } catch(e) {}
+          saveAdminSession({
+            id:    acc.admin_id,
+            name:  acc.name,
+            role:  acc.role === 'master' ? 'master' : 'admin',
+            title: acc.title || '',
+          });
+          window.location.href = 'admin/dashboard.html';
+          return;
+        }
+      }
+    } catch(e) { /* DB 조회 실패 → 하드코딩 폴백 */ }
+
+    // 1-B. 하드코딩 폴백 (DB 조회 실패 또는 계정 미등록 시)
+    if (!adminFound) {
+      const HARD_ADMINS = [
+        { id:'admin',  name:'박소현', role:'master', title:'총괄 관리자' },
+        { id:'admin1', name:'관리자1', role:'admin',  title:'관리자' },
+        { id:'admin2', name:'관리자2', role:'admin',  title:'관리자' },
+        { id:'admin3', name:'관리자3', role:'admin',  title:'관리자' },
+        { id:'admin4', name:'관리자4', role:'admin',  title:'관리자' },
+      ];
+      const hard = HARD_ADMINS.find(a => a.id === id);
+      if (hard && inputHash === masterHash) {
+        saveAdminSession({ id: hard.id, name: hard.name, role: hard.role, title: hard.title });
+        window.location.href = 'admin/dashboard.html';
+        return;
+      }
+    }
+
+    /* ════════════════════════════════
+       2. 학부모 로그인
+    ════════════════════════════════ */
+    try {
+      const pRes = await fetch('tables/parent_profiles?search=' + encodeURIComponent(id) + '&limit=20');
+      if (pRes.ok) {
+        const pData = await pRes.json();
+        const parent = (pData.data || []).find(r => r.parent_id === id || r.id === id);
+        if (parent) {
+          if (parent.status === 'pending') {
+            setLoading(false);
+            showErr('관리자 승인 대기 중입니다. 승인 후 로그인 가능합니다.');
+            return;
+          }
+          const storedPw = (parent.password || 'dvlParent!').trim();
+          if (pw.trim() !== storedPw) {
+            setLoading(false);
+            showErr('비밀번호가 올바르지 않습니다.');
+            return;
+          }
+          saveParentSession({
+            id:        parent.parent_id || parent.id,
+            name:      parent.parent_name || parent.name || id,
+            child:     parent.child_id   || parent.child_ids || '',
+            childName: parent.child_name || '',
+          });
+          window.location.href = 'parent/dashboard.html';
+          return;
+        }
+      }
+    } catch(e) {}
+
+    /* ════════════════════════════════
+       3. 학생 로그인
+    ════════════════════════════════ */
+    // 3-A. search 파라미터로 빠른 조회
+    let student = null;
+    try {
+      const sRes = await fetch('tables/student_profiles?search=' + encodeURIComponent(id) + '&limit=50');
+      if (sRes.ok) {
+        const sData = await sRes.json();
+        student = (sData.data || []).find(r => r.student_id === id || r.id === id) || null;
+      }
+    } catch(e) {}
+
+    // 3-B. 전체 조회 폴백 (search가 누락할 경우)
+    if (!student) {
+      try {
+        const sAll = await fetch('tables/student_profiles?limit=300');
+        if (sAll.ok) {
+          const sAllData = await sAll.json();
+          student = (sAllData.data || []).find(r => r.student_id === id || r.id === id) || null;
+        }
+      } catch(e) {}
+    }
+
+    if (student) {
+      if (student.status === 'pending') {
+        setLoading(false);
+        showErr('관리자 승인 대기 중입니다. 승인 후 로그인 가능합니다.');
+        return;
+      }
+      const storedPw = (student.password || 'dvl2024!').trim();
+      if (pw.trim() !== storedPw) {
+        setLoading(false);
+        showErr('비밀번호가 올바르지 않습니다.');
+        return;
+      }
+      saveStudentSession({
+        id:       student.student_id || student.id,
+        name:     student.name || id,
+        school:   student.school    || '',
+        grade:    student.grade     || '',
+        gradeNum: student.grade_num || 0,
+        stage:    student.stage     || '',
+      });
+      window.location.href = 'student/dashboard.html';
+      return;
+    }
+
+    /* ════════════════════════════════
+       4. 테스트 계정 (개발용)
+    ════════════════════════════════ */
+    const TEST = [
+      { id:'s001', pw:'xhadoswp-77', role:'student', name:'테스트학생', stage:'1단계', school:'', grade:'', gradeNum:0 },
+      { id:'p001', pw:'xhadoswp-77', role:'parent',  name:'테스트학부모', child:'s001', childName:'테스트학생' },
+    ];
+    const testAcc = TEST.find(a => a.id === id);
+    if (testAcc) {
+      if (testAcc.pw !== pw) {
+        setLoading(false);
+        showErr('비밀번호가 올바르지 않습니다.');
+        return;
+      }
+      if (testAcc.role === 'student') {
+        saveStudentSession(testAcc);
+        window.location.href = 'student/dashboard.html';
+      } else {
+        saveParentSession(testAcc);
+        window.location.href = 'parent/dashboard.html';
+      }
+      return;
+    }
+
+    // 일치 없음
+    setLoading(false);
+    showErr('등록되지 않은 아이디입니다. 관리자에게 문의하세요.');
+
+  } catch(err) {
+    console.error('[login] 오류:', err);
+    setLoading(false);
+    showErr('서버 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }
+}
+
+/* ── 이벤트 바인딩 ── */
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('password').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('userId').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+window.addEventListener('pageshow', function() { setLoading(false); });
+
+/* ── URL 파라미터 ?role= 처리 ── */
+(function() {
+  const role = new URLSearchParams(location.search).get('role');
+  const map = { student:'학생 계정으로 로그인하세요', parent:'학부모 계정으로 로그인하세요', admin:'관리자 계정으로 로그인하세요' };
+  if (map[role]) document.getElementById('subtitle').textContent = map[role];
+})();
+</script>
+</body>
+</html>

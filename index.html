@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>다빈치랩 – 관리형 스터디랩</title>
+  <base href="https://ueygjubz.gensparkspace.com/">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <style>
+/* =============================================
+   다빈치랩 – 메인 스타일 (인라인)
+   ============================================= */
+:root {
+  --green-950: #0d2318;
+  --green-900: #163A33;
+  --green-800: #1e4d42;
+  --green-700: #245A4E;
+  --green-600: #2e7061;
+  --green-500: #3d8c7a;
+  --mint-400:  #5fbfa8;
+  --mint-300:  #7FC8A9;
+  --mint-200:  #a8ddd0;
+  --teal-400:  #4a9d8e;
+  --teal-300:  #6bbcaf;
+  --bg-base:   #F7FAF8;
+  --bg-card:   #FFFFFF;
+  --bg-section: #f0f5f3;
+  --text-900:  #1F2937;
+  --text-700:  #374151;
+  --text-500:  #6B7280;
+  --text-300:  #9CA3AF;
+  --border:    #e4ede9;
+  --shadow-sm: 0 1px 4px rgba(22,58,51,.06);
+  --shadow-md: 0 4px 20px rgba(22,58,51,.10);
+  --shadow-lg: 0 8px 40px rgba(22,58,51,.14);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --transition: 0.25s ease;
+  --font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--font); color: var(--text-900); background: var(--bg-base); line-height: 1.6; overflow-x: hidden; }
+a { text-decoration: none; color: inherit; }
+ul, ol { list-style: none; }
+img { max-width: 100%; }
+button { cursor: pointer; border: none; background: none; font-family: var(--font); }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 40px; }
+@media (max-width: 768px) { .container { padding: 0 20px; } }
+.section-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint-400); margin-bottom: 12px; }
+.section-title { font-size: clamp(26px, 4vw, 40px); font-weight: 800; line-height: 1.25; color: var(--green-900); margin-bottom: 20px; }
+.section-desc { font-size: 17px; color: var(--text-500); line-height: 1.8; max-width: 560px; margin: 0 auto; }
+.section-header { text-align: center; margin-bottom: 64px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; border-radius: 999px; font-size: 15px; font-weight: 600; font-family: var(--font); transition: all var(--transition); cursor: pointer; white-space: nowrap; }
+.btn-primary { background: var(--green-900); color: #fff; border: 2px solid var(--green-900); }
+.btn-primary:hover { background: var(--green-800); border-color: var(--green-800); box-shadow: 0 4px 18px rgba(22,58,51,.28); transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--green-900); border: 2px solid var(--green-900); }
+.btn-outline:hover { background: var(--green-900); color: #fff; transform: translateY(-1px); }
+.btn-lg { padding: 16px 36px; font-size: 16px; }
+.btn-block { width: 100%; justify-content: center; }
+[data-animate] { opacity: 1; transform: none; }
+[data-animate].is-visible { opacity: 1; transform: none; }
+.header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(247,250,248,.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid transparent; transition: border-color 0.3s, box-shadow 0.3s; }
+.header.scrolled { border-bottom-color: var(--border); box-shadow: var(--shadow-sm); }
+.header-inner { display: flex; align-items: center; gap: 40px; height: 68px; }
+.logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.logo-icon { font-size: 22px; color: var(--green-700); }
+.logo-text { font-size: 20px; font-weight: 800; color: var(--green-900); letter-spacing: -0.02em; }
+.nav { display: flex; align-items: center; gap: 4px; flex: 1; }
+.nav-link { padding: 8px 14px; font-size: 14.5px; font-weight: 500; color: var(--text-700); border-radius: var(--radius-sm); transition: all var(--transition); }
+.nav-link:hover { color: var(--green-900); background: rgba(22,58,51,.07); }
+.header-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.consult-btn-wrap, .hero-consult-wrap { position: relative; }
+.consult-dropdown { position: absolute; top: calc(100% + 10px); right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; overflow: hidden; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity 0.2s, transform 0.2s; z-index: 200; }
+.consult-dropdown.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+.consult-dropdown-hero { left: 0; right: auto; }
+.consult-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; font-size: 14px; font-weight: 500; color: var(--text-700); transition: background var(--transition); }
+.consult-item:hover { background: var(--bg-section); }
+.consult-item-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.consult-item-icon.kakao { background: #FEE500; color: #3C1E1E; }
+.consult-item-icon.phone { background: var(--green-900); color: #fff; }
+.consult-item-icon.naver { background: #03C75A; color: #fff; }
+.consult-item-icon.blog { background: #e8f5f1; color: var(--green-700); }
+.hamburger { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; font-size: 18px; color: var(--green-900); border-radius: var(--radius-sm); transition: background var(--transition); }
+.hamburger:hover { background: var(--bg-section); }
+.hero { min-height: 100vh; display: flex; align-items: center; padding: 120px 0 80px; background: linear-gradient(145deg, #ffffff 0%, #f0f6f3 60%, #e4f0eb 100%); position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; top: -120px; right: -80px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(127,200,169,.15) 0%, transparent 70%); pointer-events: none; }
+.hero::after { content: ''; position: absolute; bottom: -60px; left: -40px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(22,58,51,.06) 0%, transparent 70%); pointer-events: none; }
+.hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; position: relative; z-index: 1; }
+.hero-content { max-width: 540px; }
+.hero-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.1em; color: var(--mint-400); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.hero-eyebrow::before { content: ''; display: inline-block; width: 24px; height: 2px; background: var(--mint-400); }
+.hero-title { font-size: clamp(22px, 3vw, 36px); font-weight: 800; line-height: 1.45; color: var(--green-900); letter-spacing: -0.025em; margin-bottom: 24px; }
+.hero-title em { font-style: normal; color: var(--green-700); position: relative; }
+.hero-title em::after { content: ''; position: absolute; left: 0; bottom: 2px; width: 100%; height: 3px; background: var(--mint-300); border-radius: 999px; }
+.hero-sub { font-size: 17px; color: var(--text-500); line-height: 1.9; margin-bottom: 40px; }
+.hero-cta { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; flex-wrap: wrap; }
+.hero-badges { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(22,58,51,.08); color: var(--green-700); border-radius: 999px; font-size: 13px; font-weight: 500; }
+.hero-visual { display: flex; justify-content: flex-end; }
+.dashboard-preview { background: var(--bg-card); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 28px; width: 100%; max-width: 420px; border: 1px solid var(--border); }
+.dp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.dp-logo { font-size: 15px; font-weight: 700; color: var(--green-900); }
+.dp-date { font-size: 12px; color: var(--text-300); background: var(--bg-section); padding: 4px 10px; border-radius: 999px; }
+.dp-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.dp-card { border-radius: var(--radius-md); padding: 14px 12px; text-align: center; }
+.dp-card--green { background: rgba(22,58,51,.07); }
+.dp-card--mint { background: rgba(127,200,169,.15); }
+.dp-card--teal { background: rgba(74,157,142,.12); }
+.dp-card-label { font-size: 11px; color: var(--text-500); margin-bottom: 6px; line-height: 1.3; }
+.dp-card-value { font-size: 24px; font-weight: 800; color: var(--green-900); line-height: 1; }
+.dp-card-unit { font-size: 13px; font-weight: 600; }
+.dp-card-sub { font-size: 10px; color: var(--text-300); margin-top: 4px; }
+.dp-recent-title { font-size: 12px; font-weight: 600; color: var(--text-500); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+.dp-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.dp-item:last-child { border-bottom: none; }
+.dp-item-badge { padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+.dp-badge-green { background: rgba(22,58,51,.1); color: var(--green-700); }
+.dp-badge-mint { background: rgba(127,200,169,.2); color: var(--mint-400); }
+.dp-badge-teal { background: rgba(74,157,142,.15); color: var(--teal-400); }
+.dp-item-text { color: var(--text-700); }
+.hero-scroll-indicator { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: var(--text-300); letter-spacing: 0.1em; animation: scrollBounce 2s infinite; }
+@keyframes scrollBounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(6px); } }
+.values { padding: 120px 0; background: var(--bg-card); }
+.values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.value-card { background: var(--bg-base); border-radius: var(--radius-lg); padding: 40px 32px; border: 1px solid var(--border); transition: all var(--transition); }
+.value-card:hover { border-color: var(--mint-300); box-shadow: var(--shadow-md); transform: translateY(-4px); }
+.value-icon { width: 56px; height: 56px; background: linear-gradient(135deg, var(--green-900), var(--green-700)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; margin-bottom: 24px; }
+.value-card h3 { font-size: 19px; font-weight: 700; color: var(--green-900); margin-bottom: 14px; }
+.value-card p { font-size: 15px; color: var(--text-500); line-height: 1.8; }
+.programs { padding: 120px 0; background: var(--bg-section); }
+.programs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: start; }
+.program-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 36px 30px; border: 2px solid var(--border); position: relative; transition: all var(--transition); }
+.program-card:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); }
+.program-card--featured { border-color: var(--green-700); box-shadow: 0 0 0 4px rgba(36,90,78,.1); }
+.program-card--premium { border-color: var(--mint-300); }
+.program-badge { display: inline-flex; padding: 4px 12px; background: rgba(22,58,51,.08); color: var(--green-700); border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 20px; letter-spacing: 0.04em; }
+.program-badge-popular { position: absolute; top: 20px; right: 20px; background: var(--green-900); color: #fff; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.program-price { font-size: 44px; font-weight: 800; color: var(--green-900); line-height: 1; margin-bottom: 6px; letter-spacing: -0.03em; }
+.program-price span { font-size: 20px; font-weight: 600; }
+.program-price sub { font-size: 14px; font-weight: 400; color: var(--text-500); vertical-align: baseline; position: relative; bottom: 0; }
+.program-name { font-size: 17px; font-weight: 700; color: var(--text-700); margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.program-features { margin-bottom: 28px; display: flex; flex-direction: column; gap: 12px; }
+.program-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--text-700); line-height: 1.5; }
+.program-features li i { color: var(--mint-400); font-size: 14px; flex-shrink: 0; margin-top: 3px; }
+.programs-note { text-align: center; margin-top: 36px; font-size: 13.5px; color: var(--text-300); }
+.consulting { padding: 120px 0; background: var(--bg-card); }
+.consulting-flow { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-bottom: 60px; flex-wrap: wrap; }
+.flow-step { flex: 1; min-width: 180px; max-width: 220px; text-align: center; padding: 0 16px; }
+.flow-step-num { font-size: 12px; font-weight: 700; color: var(--text-300); letter-spacing: 0.1em; margin-bottom: 16px; }
+.flow-step-icon { width: 68px; height: 68px; background: linear-gradient(135deg, var(--green-900), var(--green-700)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; margin: 0 auto 20px; box-shadow: 0 4px 16px rgba(22,58,51,.25); }
+.flow-step h4 { font-size: 16px; font-weight: 700; color: var(--green-900); margin-bottom: 10px; }
+.flow-step p { font-size: 13.5px; color: var(--text-500); line-height: 1.7; }
+.flow-arrow { display: flex; align-items: center; padding-top: 40px; color: var(--mint-300); font-size: 20px; flex-shrink: 0; }
+.consulting-extra { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.extra-card { display: flex; align-items: flex-start; gap: 20px; background: var(--bg-section); border-radius: var(--radius-lg); padding: 28px; border: 1px solid var(--border); transition: all var(--transition); }
+.extra-card:hover { border-color: var(--mint-300); box-shadow: var(--shadow-md); }
+.extra-card-icon { width: 48px; height: 48px; background: linear-gradient(135deg, var(--green-900), var(--green-700)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; flex-shrink: 0; }
+.extra-card-content h4 { font-size: 16px; font-weight: 700; color: var(--green-900); margin-bottom: 8px; }
+.extra-card-content p { font-size: 14px; color: var(--text-500); line-height: 1.75; }
+.operations { padding: 120px 0; background: linear-gradient(160deg, var(--green-900) 0%, var(--green-800) 100%); color: #fff; }
+.operations .section-eyebrow { color: var(--mint-300); }
+.operations .section-title { color: #fff; }
+.operations-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.op-card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: var(--radius-lg); padding: 36px 24px; text-align: center; transition: all var(--transition); backdrop-filter: blur(6px); }
+.op-card:hover { background: rgba(255,255,255,.14); transform: translateY(-4px); }
+.op-icon { width: 56px; height: 56px; background: rgba(255,255,255,.15); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--mint-300); margin: 0 auto 20px; }
+.op-card h4 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 12px; }
+.op-card p { font-size: 13.5px; color: rgba(255,255,255,.65); line-height: 1.75; }
+.parents { padding: 120px 0; background: var(--bg-section); }
+.parents-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+.parents-content .section-title { text-align: left; }
+.parents-content .section-eyebrow { display: block; }
+.parents-content p { font-size: 16px; color: var(--text-500); line-height: 1.85; margin-bottom: 28px; }
+.parents-features { display: flex; flex-direction: column; gap: 12px; }
+.parents-features li { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-700); font-weight: 500; }
+.parents-features li i { color: var(--mint-400); font-size: 16px; }
+.parents-visual { display: flex; justify-content: center; }
+.parents-phone { background: var(--bg-card); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); padding: 24px; width: 320px; border: 1px solid var(--border); }
+.phone-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.phone-logo { font-size: 14px; font-weight: 700; color: var(--green-900); }
+.phone-tag { font-size: 11px; background: rgba(127,200,169,.2); color: var(--mint-400); padding: 3px 10px; border-radius: 999px; font-weight: 600; }
+.phone-child-info { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.phone-avatar { width: 42px; height: 42px; background: rgba(22,58,51,.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--green-700); flex-shrink: 0; }
+.phone-child-name { font-size: 15px; font-weight: 700; color: var(--green-900); }
+.phone-child-step { font-size: 12px; color: var(--text-500); }
+.phone-status-badge { margin-left: auto; padding: 4px 10px; background: rgba(63,191,168,.15); color: var(--mint-400); border-radius: 999px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.phone-items { display: flex; flex-direction: column; gap: 0; }
+.phone-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.phone-item:last-child { border-bottom: none; }
+.phone-item-label { color: var(--text-500); }
+.phone-item-val { font-weight: 700; font-size: 13.5px; }
+.phone-item-val.green { color: var(--green-700); }
+.phone-item-val.mint { color: var(--mint-400); }
+.phone-item-val.teal { color: var(--teal-400); }
+.notice-section { padding: 100px 0; background: var(--bg-card); }
+.notice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.notice-card { background: var(--bg-base); border-radius: var(--radius-md); padding: 28px; border: 1px solid var(--border); transition: all var(--transition); }
+.notice-card:hover { border-color: var(--mint-300); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.notice-tag { display: inline-block; padding: 3px 10px; background: rgba(22,58,51,.08); color: var(--green-700); border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
+.notice-card h4 { font-size: 16px; font-weight: 700; color: var(--green-900); margin-bottom: 10px; line-height: 1.4; }
+.notice-card p { font-size: 13.5px; color: var(--text-500); line-height: 1.75; margin-bottom: 16px; }
+.notice-date { font-size: 12px; color: var(--text-300); }
+.cta-section { padding: 120px 0; background: linear-gradient(145deg, var(--green-900), var(--green-800)); }
+.cta-inner { text-align: center; }
+.cta-inner h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 20px; }
+.cta-inner p { font-size: 17px; color: rgba(255,255,255,.65); margin-bottom: 48px; }
+.cta-channels { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.cta-channel { display: flex; align-items: center; gap: 10px; padding: 16px 28px; border-radius: 999px; font-size: 15px; font-weight: 600; transition: all var(--transition); }
+.cta-channel:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.cta-kakao { background: #FEE500; color: #3C1E1E; }
+.cta-phone { background: #fff; color: var(--green-900); }
+.cta-naver { background: #03C75A; color: #fff; }
+.cta-blog { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.3); }
+.footer { background: #0d2318; color: rgba(255,255,255,.7); }
+.footer-inner { display: grid; grid-template-columns: 1fr 2fr; gap: 80px; padding-top: 72px; padding-bottom: 56px; }
+.footer .logo-icon { color: var(--mint-300); }
+.footer .logo-text { color: #fff; }
+.footer-desc { margin-top: 16px; font-size: 14px; line-height: 1.9; color: rgba(255,255,255,.45); }
+.footer-links { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.footer-col h5 { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.9); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 16px; }
+.footer-col a { display: block; font-size: 14px; color: rgba(255,255,255,.45); margin-bottom: 10px; transition: color var(--transition); }
+.footer-col a:hover { color: var(--mint-300); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding: 20px 0; }
+.footer-bottom .container { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.footer-bottom p { font-size: 13px; color: rgba(255,255,255,.3); }
+.floating-consult { position: fixed; right: 28px; bottom: 80px; z-index: 500; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.float-btn { width: 56px; height: 56px; background: var(--green-900); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px rgba(22,58,51,.35); transition: all var(--transition); position: relative; z-index: 2; }
+.float-btn:hover { background: var(--green-800); box-shadow: 0 6px 28px rgba(22,58,51,.45); }
+.float-menu { display: flex; flex-direction: column; gap: 8px; opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.9); transform-origin: bottom right; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.float-menu.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+.float-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-md); transition: all var(--transition); justify-content: flex-end; }
+.float-item:hover { transform: scale(1.04); }
+.float-kakao { background: #FEE500; color: #3C1E1E; }
+.float-phone { background: var(--green-900); color: #fff; }
+.float-naver { background: #03C75A; color: #fff; }
+.float-blog { background: var(--bg-card); color: var(--green-900); border: 1px solid var(--border); }
+.scroll-top { position: fixed; right: 28px; bottom: 20px; width: 42px; height: 42px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--green-700); box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transform: translateY(10px); transition: all var(--transition); z-index: 499; }
+.scroll-top.visible { opacity: 1; pointer-events: all; transform: translateY(0); }
+.mobile-nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.mobile-nav-overlay.open { opacity: 1; pointer-events: all; }
+.mobile-nav { position: absolute; top: 0; right: 0; bottom: 0; width: 300px; background: var(--bg-card); padding: 24px; transform: translateX(100%); transition: transform 0.3s ease; overflow-y: auto; display: flex; flex-direction: column; }
+.mobile-nav-overlay.open .mobile-nav { transform: translateX(0); }
+.mobile-nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.mobile-nav-close { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--text-700); border-radius: var(--radius-sm); transition: background var(--transition); }
+.mobile-nav-close:hover { background: var(--bg-section); }
+.mobile-nav-links { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.mobile-nav-link { padding: 12px 14px; font-size: 16px; font-weight: 500; color: var(--text-700); border-radius: var(--radius-sm); transition: all var(--transition); }
+.mobile-nav-link:hover { background: var(--bg-section); color: var(--green-900); }
+.mobile-nav-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+.mobile-consult-channels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mobile-channel { display: flex; align-items: center; gap: 6px; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; justify-content: center; }
+.mobile-kakao { background: #FEE500; color: #3C1E1E; }
+.mobile-phone { background: var(--green-900); color: #fff; }
+.mobile-naver { background: #03C75A; color: #fff; }
+.mobile-blog { background: var(--bg-section); color: var(--green-900); border: 1px solid var(--border); }
+@media (max-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 60px; text-align: center; }
+  .hero-content { max-width: 100%; }
+  .hero-eyebrow { justify-content: center; }
+  .hero-cta { justify-content: center; }
+  .hero-badges { justify-content: center; }
+  .hero-visual { justify-content: center; }
+  .dashboard-preview { max-width: 500px; }
+  .values-grid { grid-template-columns: 1fr; }
+  .programs-grid { grid-template-columns: 1fr; max-width: 520px; margin: 0 auto; }
+  .operations-grid { grid-template-columns: repeat(2, 1fr); }
+  .parents-inner { grid-template-columns: 1fr; text-align: center; }
+  .parents-content .section-title { text-align: center; }
+  .parents-features { align-items: center; }
+  .parents-visual { order: -1; }
+  .consulting-extra { grid-template-columns: 1fr; }
+  .notice-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-inner { grid-template-columns: 1fr; gap: 40px; }
+  .footer-links { grid-template-columns: repeat(3, 1fr); }
+  .nav { display: none; }
+  .hamburger { display: flex; }
+}
+@media (max-width: 680px) {
+  .consulting-flow { flex-direction: column; align-items: center; gap: 20px; }
+  .flow-arrow { transform: rotate(90deg); padding-top: 0; }
+  .notice-grid { grid-template-columns: 1fr; }
+  .operations-grid { grid-template-columns: 1fr 1fr; }
+  .cta-channels { flex-direction: column; align-items: center; }
+  .footer-links { grid-template-columns: 1fr 1fr; }
+  .dp-cards { grid-template-columns: 1fr; }
+  .hero-cta { flex-direction: column; align-items: center; }
+  .footer-bottom .container { flex-direction: column; text-align: center; }
+}
+@media (max-width: 480px) {
+  .operations-grid { grid-template-columns: 1fr; }
+  .footer-links { grid-template-columns: 1fr; }
+}
+  </style>
+  <link rel="manifest" href="https://ueygjubz.gensparkspace.com/manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <link rel="apple-touch-icon" href="images/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="images/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="images/icon-512.png" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header id="header" class="header">
+    <div class="container header-inner">
+      <a href="#" class="logo">
+        <span class="logo-icon">◈</span>
+        <span class="logo-text">다빈치랩</span>
+      </a>
+      <nav class="nav" id="nav">
+        <a href="#studylab" class="nav-link">스터디랩</a>
+        <a href="#programs" class="nav-link">수강료 안내</a>
+        <a href="#consulting" class="nav-link">학생부 컨설팅</a>
+        <a href="#parents" class="nav-link">학부모 안내</a>
+        <a href="#notice" class="nav-link">공지</a>
+      </nav>
+      <div class="header-actions">
+        <div class="consult-btn-wrap" id="consultBtnWrap">
+          <button class="btn btn-primary" id="consultToggle">
+            상담하기 <i class="fas fa-chevron-down" id="consultChevron"></i>
+          </button>
+          <div class="consult-dropdown" id="consultDropdown">
+            <a href="http://pf.kakao.com/_xfxhhZX/chat" target="_blank" class="consult-item">
+              <span class="consult-item-icon kakao"><i class="fas fa-comment"></i></span>
+              <span>카카오톡 상담</span>
+            </a>
+            <a href="tel:01086910594" class="consult-item">
+              <span class="consult-item-icon phone"><i class="fas fa-phone"></i></span>
+              <span>전화 상담</span>
+            </a>
+            <a href="https://smartplace.naver.com/" target="_blank" class="consult-item">
+              <span class="consult-item-icon naver"><i class="fas fa-comment-dots"></i></span>
+              <span>네이버 톡톡</span>
+            </a>
+            <a href="https://blog.naver.com/" target="_blank" class="consult-item">
+              <span class="consult-item-icon blog"><i class="fas fa-book-open"></i></span>
+              <span>네이버 블로그</span>
+            </a>
+          </div>
+        </div>
+        <a href="https://ueygjubz.gensparkspace.com/login.html" target="_blank" rel="noopener" class="btn btn-outline">로그인</a>
+        <button class="hamburger" id="hamburger" aria-label="메뉴 열기">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="container hero-inner">
+      <div class="hero-content" data-animate>
+        <p class="hero-eyebrow">관리형 스터디랩 · 학생부 컨설팅</p>
+        <h1 class="hero-title">
+          출결부터 수행평가까지,<br />
+          <em>다빈치랩</em>이<br />
+          학생의 공부를<br />
+          체계적으로 관리합니다.
+        </h1>
+        <p class="hero-sub">
+          관리형 스터디랩 운영, 학생별 학습 플랜,<br />
+          수행평가 피드백, 학부모 공유까지 한 번에.
+        </p>
+        <div class="hero-cta">
+          <div class="hero-consult-wrap" id="heroConsultWrap">
+            <button class="btn btn-primary btn-lg" id="heroConsultToggle">
+              상담하기 <i class="fas fa-chevron-down" id="heroChevron"></i>
+            </button>
+            <div class="consult-dropdown consult-dropdown-hero" id="heroConsultDropdown">
+              <a href="http://pf.kakao.com/_xfxhhZX/chat" target="_blank" class="consult-item">
+                <span class="consult-item-icon kakao"><i class="fas fa-comment"></i></span>
+                <span>카카오톡 상담</span>
+              </a>
+              <a href="tel:01086910594" class="consult-item">
+                <span class="consult-item-icon phone"><i class="fas fa-phone"></i></span>
+                <span>전화 상담</span>
+              </a>
+              <a href="https://smartplace.naver.com/" target="_blank" class="consult-item">
+                <span class="consult-item-icon naver"><i class="fas fa-comment-dots"></i></span>
+                <span>네이버 톡톡</span>
+              </a>
+              <a href="https://blog.naver.com/" target="_blank" class="consult-item">
+                <span class="consult-item-icon blog"><i class="fas fa-book-open"></i></span>
+                <span>네이버 블로그</span>
+              </a>
+            </div>
+          </div>
+          <a href="#programs" class="btn btn-outline btn-lg">프로그램 보기</a>
+        </div>
+        <div class="hero-badges">
+          <span class="badge"><i class="fas fa-clock"></i> 24시간 운영</span>
+          <span class="badge"><i class="fas fa-user-tie"></i> 교사 상주</span>
+          <span class="badge"><i class="fas fa-mobile-alt"></i> 스마트기기 수거</span>
+        </div>
+      </div>
+      <div class="hero-visual" data-animate data-delay="200">
+        <div class="dashboard-preview">
+          <div class="dp-header">
+            <span class="dp-logo">◈ 다빈치랩</span>
+            <span class="dp-date">관리자 대시보드</span>
+          </div>
+          <div class="dp-cards">
+            <div class="dp-card dp-card--green">
+              <div class="dp-card-label">오늘 등원</div>
+              <div class="dp-card-value">18<span class="dp-card-unit">명</span></div>
+              <div class="dp-card-sub">전체 24명 중</div>
+            </div>
+            <div class="dp-card dp-card--mint">
+              <div class="dp-card-label">학습 플랜 완료율</div>
+              <div class="dp-card-value">87<span class="dp-card-unit">%</span></div>
+              <div class="dp-card-sub">이번 주 기준</div>
+            </div>
+            <div class="dp-card dp-card--teal">
+              <div class="dp-card-label">수행평가 알림</div>
+              <div class="dp-card-value">3<span class="dp-card-unit">건</span></div>
+              <div class="dp-card-sub">피드백 대기 중</div>
+            </div>
+          </div>
+          <div class="dp-recent">
+            <div class="dp-recent-title">최근 활동</div>
+            <div class="dp-item">
+              <span class="dp-item-badge dp-badge-green">출결</span>
+              <span class="dp-item-text">김○○ 오후 2:30 등원</span>
+            </div>
+            <div class="dp-item">
+              <span class="dp-item-badge dp-badge-mint">피드백</span>
+              <span class="dp-item-text">박○○ 수행평가 피드백 완료</span>
+            </div>
+            <div class="dp-item">
+              <span class="dp-item-badge dp-badge-teal">플랜</span>
+              <span class="dp-item-text">이○○ 오늘 학습 플랜 확인</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <span>스크롤</span>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </section>
+
+  <!-- ===== CORE VALUES ===== -->
+  <section class="values" id="studylab">
+    <div class="container">
+      <div class="section-header" data-animate>
+        <p class="section-eyebrow">핵심 서비스</p>
+        <h2 class="section-title">하나의 시스템으로 학생 관리의<br />모든 것을 연결합니다</h2>
+      </div>
+      <div class="values-grid">
+        <div class="value-card" data-animate data-delay="0">
+          <div class="value-icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <h3>출결 · 학습 관리</h3>
+          <p>등하원 관리부터 학원 입출입 체크까지 빠짐없이 기록합니다. 학생별 개인 학습 플랜과 일일 진행 상황을 체계적으로 공유합니다.</p>
+        </div>
+        <div class="value-card" data-animate data-delay="100">
+          <div class="value-icon">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <h3>수행평가 · 피드백</h3>
+          <p>학생이 수행평가 공지를 업로드하면 관리자가 즉시 알림을 받고 피드백을 제공합니다. 심화탐구보고서도 함께 관리됩니다.</p>
+        </div>
+        <div class="value-card" data-animate data-delay="200">
+          <div class="value-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>학부모 공유 시스템</h3>
+          <p>출결 현황, 학습 플랜, 일일 학습 공유, 수행평가 현황을 학부모가 언제든지 직접 확인할 수 있습니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROGRAMS ===== -->
+  <section class="programs" id="programs">
+    <div class="container">
+      <div class="section-header" data-animate>
+        <p class="section-eyebrow">수강료 안내</p>
+        <h2 class="section-title">모든 과정을 하나의 요금으로,<br />다빈치랩 통합 수강료</h2>
+        <p class="section-desc">단계 구분 없이 모든 프로그램을 동일하게 이용하실 수 있습니다. 선납 기간에 따라 더욱 합리적인 혜택을 받으세요.</p>
+      </div>
+      <div class="programs-grid">
+
+        <!-- 월 단위 -->
+        <div class="program-card" data-animate data-delay="0">
+          <div class="program-badge">월 단위 수강</div>
+          <div class="program-all-badge">
+            <i class="fas fa-infinity"></i>
+            모든 과정 이용 가능
+          </div>
+          <div class="program-unit-desc">월 수강료</div>
+          <div class="program-price">70<span>만원</span><sub>/월</sub></div>
+          <h3 class="program-name">다빈치랩 전체 과정 포함</h3>
+          <ul class="program-features">
+            <li><i class="fas fa-check"></i> 등하원 출결 관리</li>
+            <li><i class="fas fa-check"></i> 학생 개인별 학습 플랜</li>
+            <li><i class="fas fa-check"></i> 매일 학습 진행 상황 공유</li>
+            <li><i class="fas fa-check"></i> 수행평가 피드백 관리</li>
+            <li><i class="fas fa-check"></i> 심화탐구보고서 지도</li>
+            <li><i class="fas fa-check"></i> 시험 준비 플래너</li>
+            <li><i class="fas fa-check"></i> 학부모 전용 앱 열람</li>
+          </ul>
+          <a href="#" class="btn btn-primary btn-block consult-open">상담 신청하기</a>
+        </div>
+
+        <!-- 3개월 선납 -->
+        <div class="program-card program-card--featured" data-animate data-delay="100">
+          <div class="program-badge">3개월 선납</div>
+          <div class="program-badge-popular">추천</div>
+          <div class="program-all-badge">
+            <i class="fas fa-infinity"></i>
+            모든 과정 이용 가능
+          </div>
+          <div class="program-price-origin">210만원 → 10만원 할인</div>
+          <div class="program-price">200<span>만원</span></div>
+          <div class="program-save-tag"><i class="fas fa-tag"></i> 10만원 절약 · 월 환산 약 66.7만원</div>
+          <h3 class="program-name">3개월 선납 특가</h3>
+          <ul class="program-features">
+            <li><i class="fas fa-check"></i> 월 단위 전체 과정 동일 포함</li>
+            <li><i class="fas fa-check"></i> 3개월 선납 시 <strong>10만원 할인</strong></li>
+            <li><i class="fas fa-check"></i> 안정적인 학습 환경 보장</li>
+          </ul>
+          <a href="#" class="btn btn-primary btn-block consult-open">상담 신청하기</a>
+        </div>
+
+        <!-- 6개월 선납 -->
+        <div class="program-card program-card--prepay" data-animate data-delay="200">
+          <div class="program-badge">6개월 선납</div>
+          <div class="program-badge-save">최대 할인</div>
+          <div class="program-all-badge">
+            <i class="fas fa-infinity"></i>
+            모든 과정 이용 가능
+          </div>
+          <div class="program-price-origin">420만원 → 6% 할인</div>
+          <div class="program-price">380<span>만원</span></div>
+          <div class="program-save-tag"><i class="fas fa-tag"></i> 40만원 절약 · 월 환산 약 63.3만원</div>
+          <h3 class="program-name">6개월 선납 특가</h3>
+          <ul class="program-features">
+            <li><i class="fas fa-check"></i> 월 단위 전체 과정 동일 포함</li>
+            <li><i class="fas fa-check"></i> 6개월 선납 시 <strong>6% 할인</strong> (40만원↓)</li>
+            <li><i class="fas fa-check"></i> 장기 집중 학습 관리 최적</li>
+          </ul>
+          <a href="#" class="btn btn-primary btn-block consult-open">상담 신청하기</a>
+        </div>
+
+      </div>
+      <p class="programs-note">※ 모든 수강 과정은 동일한 서비스를 제공합니다 &nbsp;|&nbsp; 자세한 사항은 문의 부탁드립니다.</p>
+    </div>
+  </section>
+
+  <!-- ===== CONSULTING ===== -->
+  <section class="consulting" id="consulting">
+    <div class="container">
+      <div class="section-header" data-animate>
+        <p class="section-eyebrow">학생부 컨설팅</p>
+        <h2 class="section-title">수행평가부터 심화탐구까지<br />체계적인 학생부 관리</h2>
+        <p class="section-desc">과정형 평가의 흐름에 맞춰, 공지가 올라오는 순간부터 최종 제출까지 함께 준비합니다.</p>
+      </div>
+      <div class="consulting-flow" data-animate>
+        <div class="flow-step">
+          <div class="flow-step-num">01</div>
+          <div class="flow-step-icon"><i class="fas fa-camera"></i></div>
+          <h4>공지 업로드</h4>
+          <p>학생이 수행평가 공지를 스마트폰으로 촬영하여 업로드합니다</p>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-step">
+          <div class="flow-step-num">02</div>
+          <div class="flow-step-icon"><i class="fas fa-bell"></i></div>
+          <h4>관리자 알림</h4>
+          <p>관리자(원장님)에게 즉시 알림이 발송됩니다</p>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-step">
+          <div class="flow-step-num">03</div>
+          <div class="flow-step-icon"><i class="fas fa-comment-alt"></i></div>
+          <h4>관리자 피드백</h4>
+          <p>공지를 확인하고 준비 방향, 과제, 주의사항을 피드백합니다</p>
+        </div>
+        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+        <div class="flow-step">
+          <div class="flow-step-num">04</div>
+          <div class="flow-step-icon"><i class="fas fa-check-circle"></i></div>
+          <h4>학생 확인</h4>
+          <p>학생에게 알림이 발송되고 피드백을 확인한 후 준비를 진행합니다</p>
+        </div>
+      </div>
+      <div class="consulting-extra" data-animate>
+        <div class="extra-card">
+          <div class="extra-card-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="extra-card-content">
+            <h4>심화탐구보고서</h4>
+            <p>학생과 희망진로, 학업 역량에 맞는 보고서 주제로 함께 작성 지도 합니다.</p>
+          </div>
+        </div>
+        <div class="extra-card">
+          <div class="extra-card-icon"><i class="fas fa-calendar-alt"></i></div>
+          <div class="extra-card-content">
+            <h4>시험 준비 플래너</h4>
+            <p>학생별 시험 일정과 범위를 등록하고, 월간 플래너 형태로 관리합니다. 체계적인 시험 준비를 지원합니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OPERATIONS ===== -->
+  <section class="operations" id="operations">
+    <div class="container">
+      <div class="section-header" data-animate>
+        <p class="section-eyebrow">운영 방식</p>
+        <h2 class="section-title">엄격하고 체계적인<br />공부 환경을 제공합니다</h2>
+      </div>
+      <div class="operations-grid">
+        <div class="op-card" data-animate data-delay="0">
+          <div class="op-icon"><i class="fas fa-clock"></i></div>
+          <h4>24시간 Open</h4>
+          <p>언제든 자유롭게 이용 가능한 24시간 운영 시스템</p>
+        </div>
+        <div class="op-card" data-animate data-delay="80">
+          <div class="op-icon"><i class="fas fa-user-tie"></i></div>
+          <h4>교사 상주시간 운영</h4>
+          <p>오후 4시부터 마지막 학생 퇴실 시까지 교사가 상주합니다</p>
+        </div>
+        <div class="op-card" data-animate data-delay="160">
+          <div class="op-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h4>스마트기기 수거</h4>
+          <p>꼭 필요한 인강 수강 시에만 감독하에 반입 허용합니다</p>
+        </div>
+        <div class="op-card" data-animate data-delay="240">
+          <div class="op-icon"><i class="fas fa-stopwatch"></i></div>
+          <h4>70분 학습 · 10분 휴식</h4>
+          <p>입실 세션 엄격 관리로 집중력 높은 학습 환경을 유지합니다</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PARENTS ===== -->
+  <section class="parents" id="parents">
+    <div class="container">
+      <div class="parents-inner">
+        <div class="parents-content" data-animate>
+          <p class="section-eyebrow">학부모 안내</p>
+          <h2 class="section-title">자녀의 하루를<br />언제 어디서나 확인하세요</h2>
+          <p>다빈치랩의 학부모 전용 화면에서 자녀의 출결 현황, 개인별 학습 플랜, 매일 학습 진행 공유, 수행평가 현황을 한눈에 확인하실 수 있습니다.</p>
+          <ul class="parents-features">
+            <li><i class="fas fa-check-circle"></i> 등하원 실시간 알림</li>
+            <li><i class="fas fa-check-circle"></i> 학생별 학습 플랜 열람</li>
+            <li><i class="fas fa-check-circle"></i> 매일 학습 진행 상황 공유</li>
+            <li><i class="fas fa-check-circle"></i> 수행평가 피드백 현황 확인</li>
+            <li><i class="fas fa-check-circle"></i> 심화탐구보고서 열람</li>
+            <li><i class="fas fa-check-circle"></i> 상담 신청 및 공지 확인</li>
+          </ul>
+        </div>
+        <div class="parents-visual" data-animate data-delay="200">
+          <div class="parents-phone">
+            <div class="phone-header">
+              <span class="phone-logo">◈ 다빈치랩</span>
+              <span class="phone-tag">학부모 화면</span>
+            </div>
+            <div class="phone-child-info">
+              <div class="phone-avatar"><i class="fas fa-user-graduate"></i></div>
+              <div>
+                <div class="phone-child-name">홍○○ 학생</div>
+                <div class="phone-child-step">다빈치랩 수강 중</div>
+              </div>
+              <span class="phone-status-badge">등원 완료</span>
+            </div>
+            <div class="phone-items">
+              <div class="phone-item">
+                <span class="phone-item-label">오늘 학습 플랜</span>
+                <span class="phone-item-val green">확인됨</span>
+              </div>
+              <div class="phone-item">
+                <span class="phone-item-label">수행평가 피드백</span>
+                <span class="phone-item-val mint">완료 1건</span>
+              </div>
+              <div class="phone-item">
+                <span class="phone-item-label">심화탐구보고서</span>
+                <span class="phone-item-val teal">신규 1건</span>
+              </div>
+              <div class="phone-item">
+                <span class="phone-item-label">이번 주 학습률</span>
+                <span class="phone-item-val green">92%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== NOTICE PREVIEW ===== -->
+  <section class="notice-section" id="notice">
+    <div class="container">
+      <div class="section-header" data-animate>
+        <p class="section-eyebrow">공지사항</p>
+        <h2 class="section-title">다빈치랩 소식</h2>
+      </div>
+      <div class="notice-grid" data-animate>
+        <div class="notice-card">
+          <span class="notice-tag">공지</span>
+          <h4>3월 모의고사 일정 안내</h4>
+          <p>다빈치랩 학생 대상 월간 모의고사 일정을 안내드립니다. 자세한 내용은 로그인 후 확인하세요.</p>
+          <span class="notice-date">2026.03.20</span>
+        </div>
+        <div class="notice-card">
+          <span class="notice-tag">안내</span>
+          <h4>학부모 입시 콘서트 개최</h4>
+          <p>박인오 소장님 진행의 학부모 입시 콘서트가 예정되어 있습니다. 일정 및 신청은 문의 부탁드립니다.</p>
+          <span class="notice-date">2026.03.15</span>
+        </div>
+        <div class="notice-card">
+          <span class="notice-tag">운영</span>
+          <h4>봄 방학 특별 운영 안내</h4>
+          <p>봄 방학 기간 운영 시간 및 특별 학습 플랜 운영에 대해 안내드립니다.</p>
+          <span class="notice-date">2026.03.10</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FINAL CTA ===== -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-inner" data-animate>
+        <h2>우리 아이에게 맞는<br />관리형 학습 시스템을 상담해보세요</h2>
+        <p>다빈치랩 전문 관리자와 함께 자녀의 학습 환경을 만들어드립니다</p>
+        <div class="cta-channels">
+          <a href="http://pf.kakao.com/_xfxhhZX/chat" target="_blank" class="cta-channel cta-kakao">
+            <i class="fas fa-comment"></i>
+            <span>카카오톡 상담</span>
+          </a>
+          <a href="tel:01086910594" class="cta-channel cta-phone">
+            <i class="fas fa-phone"></i>
+            <span>전화 상담</span>
+          </a>
+          <a href="https://smartplace.naver.com/" target="_blank" class="cta-channel cta-naver">
+            <i class="fas fa-comment-dots"></i>
+            <span>네이버 톡톡</span>
+          </a>
+          <a href="https://blog.naver.com/" target="_blank" class="cta-channel cta-blog">
+            <i class="fas fa-book-open"></i>
+            <span>네이버 블로그</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <a href="#" class="logo">
+          <span class="logo-icon">◈</span>
+          <span class="logo-text">다빈치랩</span>
+        </a>
+        <p class="footer-desc">관리형 스터디랩 · 학생부 컨설팅<br />출결부터 수행평가까지 체계적인 학생 관리</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>서비스</h5>
+          <a href="#studylab">스터디랩 소개</a>
+          <a href="#programs">수강료 안내</a>
+          <a href="#consulting">학생부 컨설팅</a>
+          <a href="#parents">학부모 안내</a>
+        </div>
+        <div class="footer-col">
+          <h5>운영</h5>
+          <a href="#operations">운영 방식</a>
+          <a href="#notice">공지사항</a>
+          <a href="https://ueygjubz.gensparkspace.com/login.html" target="_blank" rel="noopener">로그인</a>
+        </div>
+        <div class="footer-col">
+          <h5>상담</h5>
+          <a href="http://pf.kakao.com/_xfxhhZX/chat" target="_blank">카카오톡 상담</a>
+          <a href="tel:01086910594">전화 상담</a>
+          <a href="https://smartplace.naver.com/" target="_blank">네이버 톡톡</a>
+          <a href="https://blog.naver.com/" target="_blank">네이버 블로그</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>© 2026 다빈치랩. All rights reserved.</p>
+        <p>운영시간 : 24시간 Open · 교사 상주 PM 4:00 ~ 마지막 학생 퇴실 시</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== FLOATING CONSULT BUTTON ===== -->
+  <div class="floating-consult" id="floatingConsult">
+    <button class="float-btn" id="floatBtnToggle" aria-label="상담하기">
+      <i class="fas fa-comment-alt"></i>
+    </button>
+    <div class="float-menu" id="floatMenu">
+      <a href="http://pf.kakao.com/_xfxhhZX/chat" target="_blank" class="float-item float-kakao">
+        <i class="fas fa-comment"></i>
+        <span>카카오톡</span>
+      </a>
+      <a href="tel:01086910594" class="float-item float-phone">
+        <i class="fas fa-phone"></i>
+        <span>전화</span>
+      </a>
+      <a href="https://smartplace.naver.com/" target="_blank" class="float-item float-naver">
+        <i class="fas fa-comment-dots"></i>
+        <span>네이버 톡톡</span>
+      </a>
+      <a href="https://blog.naver.com/" target="_blank" class="float-item float-blog">
+        <i class="fas fa-book-open"></i>
+        <span>블로그</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ===== SCROLL TO TOP ===== -->
+  <button class="scroll-top" id="scrollTop" aria-label="맨 위로">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <!-- ===== MOBILE NAV OVERLAY ===== -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay">
+    <div class="mobile-nav" id="mobileNav">
+      <div class="mobile-nav-header">
+        <a href="#" class="logo">
+          <span class="logo-icon">◈</span>
+          <span class="logo-text">다빈치랩</span>
+        </a>
+        <button class="mobile-nav-close" id="mobileNavClose"><i class="fas fa-times"></i></button>
+      </div>
+      <nav class="mobile-nav-links">
+        <a href="#studylab" class="mobile-nav-link">스터디랩</a>
+        <a href="#programs" class="mobile-nav-link">수강료 안내</a>
+        <a href="#consulting" class="mobile-nav-link">학생부 컨설팅</a>
+        <a href="#parents" class="mobile-nav-link">학부모 안내</a>
+        <a href="#notice" class="mobile-nav-link">공지</a>
+      </nav>
+      <div class="mobile-nav-actions">
+        <a href="https://ueygjubz.gensparkspace.com/login.html" target="_blank" rel="noopener" class="btn btn-outline btn-block">로그인</a>
+        <div class="mobile-consult-channels">
+          <a href="http://pf.kakao.com/_xfxhhZX/chat" target="_blank" class="mobile-channel mobile-kakao"><i class="fas fa-comment"></i> 카카오톡</a>
+          <a href="tel:01086910594" class="mobile-channel mobile-phone"><i class="fas fa-phone"></i> 전화</a>
+          <a href="https://smartplace.naver.com/" target="_blank" class="mobile-channel mobile-naver"><i class="fas fa-comment-dots"></i> 네이버 톡톡</a>
+          <a href="https://blog.naver.com/" target="_blank" class="mobile-channel mobile-blog"><i class="fas fa-book-open"></i> 블로그</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+/* =============================================
+   다빈치랩 – Main JavaScript (인라인)
+   ============================================= */
+document.addEventListener('DOMContentLoaded', () => {
+  const header = document.getElementById('header');
+  const onScroll = () => {
+    if (window.scrollY > 30) header?.classList.add('scrolled');
+    else header?.classList.remove('scrolled');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const scrollTopBtn = document.getElementById('scrollTop');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) scrollTopBtn?.classList.add('visible');
+    else scrollTopBtn?.classList.remove('visible');
+  }, { passive: true });
+  scrollTopBtn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  const consultToggle   = document.getElementById('consultToggle');
+  const consultDropdown = document.getElementById('consultDropdown');
+  const consultChevron  = document.getElementById('consultChevron');
+  const consultBtnWrap  = document.getElementById('consultBtnWrap');
+  const heroConsultToggle   = document.getElementById('heroConsultToggle');
+  const heroConsultDropdown = document.getElementById('heroConsultDropdown');
+  const heroChevron         = document.getElementById('heroChevron');
+
+  consultToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = consultDropdown?.classList.toggle('open');
+    consultChevron?.style.setProperty('transform', open ? 'rotate(180deg)' : 'rotate(0deg)');
+    heroConsultDropdown?.classList.remove('open');
+    heroChevron?.style.setProperty('transform', 'rotate(0deg)');
+  });
+
+  heroConsultToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = heroConsultDropdown?.classList.toggle('open');
+    heroChevron?.style.setProperty('transform', open ? 'rotate(180deg)' : 'rotate(0deg)');
+    consultDropdown?.classList.remove('open');
+    consultChevron?.style.setProperty('transform', 'rotate(0deg)');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!consultBtnWrap?.contains(e.target)) {
+      consultDropdown?.classList.remove('open');
+      consultChevron?.style.setProperty('transform', 'rotate(0deg)');
+    }
+    const heroWrap = document.getElementById('heroConsultWrap');
+    if (!heroWrap?.contains(e.target)) {
+      heroConsultDropdown?.classList.remove('open');
+      heroChevron?.style.setProperty('transform', 'rotate(0deg)');
+    }
+  });
+
+  const floatBtnToggle = document.getElementById('floatBtnToggle');
+  const floatMenu      = document.getElementById('floatMenu');
+  floatBtnToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    floatMenu?.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    const floatingConsult = document.getElementById('floatingConsult');
+    if (!floatingConsult?.contains(e.target)) floatMenu?.classList.remove('open');
+  });
+
+  const hamburger        = document.getElementById('hamburger');
+  const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+  const mobileNavClose   = document.getElementById('mobileNavClose');
+  const mobileNavLinks   = document.querySelectorAll('.mobile-nav-link');
+  const openMobileNav  = () => { mobileNavOverlay?.classList.add('open');    document.body.style.overflow = 'hidden'; };
+  const closeMobileNav = () => { mobileNavOverlay?.classList.remove('open'); document.body.style.overflow = ''; };
+  hamburger?.addEventListener('click', openMobileNav);
+  mobileNavClose?.addEventListener('click', closeMobileNav);
+  mobileNavOverlay?.addEventListener('click', (e) => { if (e.target === mobileNavOverlay) closeMobileNav(); });
+  mobileNavLinks.forEach(link => link.addEventListener('click', closeMobileNav));
+
+  document.querySelectorAll('.consult-open').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const cta = document.querySelector('.cta-section');
+      if (cta) {
+        cta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cta.style.transition = 'box-shadow 0.3s';
+        cta.style.boxShadow = '0 0 0 4px rgba(127,200,169,.4)';
+        setTimeout(() => { cta.style.boxShadow = ''; }, 1200);
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-animate]').forEach(el => el.classList.add('is-visible'));
+
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', (e) => {
+      const href = anchor.getAttribute('href');
+      if (!href || href === '#') return;
+      const target = document.querySelector(href);
+      if (!target) return;
+      e.preventDefault();
+      const headerH = header?.offsetHeight || 68;
+      const top = target.getBoundingClientRect().top + window.scrollY - headerH - 20;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  });
+
+  if (consultChevron) consultChevron.style.transition = 'transform 0.25s ease';
+  if (heroChevron)    heroChevron.style.transition    = 'transform 0.25s ease';
+});
+  </script>
+  <script>
+    // ── 서비스워커 완전 비활성화 (SW가 네비게이션을 가로채는 문제 방지) ──
+    (async function() {
+      if (!('serviceWorker' in navigator)) return;
+      try {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map(k => caches.delete(k)));
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+        // SW 재등록 없음
+      } catch(e) {}
+    })();
+  </script>
+
+<!-- ───────────────────────────────────────
+     PWA 설치 배너 (Android Chrome)
+─────────────────────────────────────────── -->
+<div id="pwaInstallBanner" style="display:none; position:fixed; bottom:0; left:0; right:0;
+  background:#163A33; color:#fff; padding:16px 20px;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));
+  z-index:9999; animation:pwaSlideUp .35s ease;
+  border-top:1px solid rgba(79,195,161,.25); box-shadow:0 -4px 20px rgba(0,0,0,.2);">
+  <div style="display:flex; align-items:center; gap:14px; max-width:480px; margin:0 auto;">
+    <img src="images/icon-192.png" alt="다빈치랩"
+         style="width:46px; height:46px; border-radius:12px; flex-shrink:0;">
+    <div style="flex:1; min-width:0;">
+      <strong style="display:block; font-size:14px; font-weight:700; margin-bottom:2px;">다빈치랩 앱 설치</strong>
+      <span style="font-size:12px; opacity:.8; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">홈화면에 추가하면 앱처럼 빠르게 접속할 수 있어요</span>
+    </div>
+    <div style="display:flex; gap:8px; flex-shrink:0;">
+      <button id="pwaInstallBtn"
+        style="background:#4fc3a1; color:#111; border:none; padding:9px 16px;
+               border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;
+               white-space:nowrap; min-height:40px;">
+        설치
+      </button>
+      <button id="pwaDismissBtn"
+        style="background:rgba(255,255,255,.15); color:#fff; border:none;
+               padding:9px 12px; border-radius:20px; font-size:13px;
+               cursor:pointer; min-height:40px;">
+        닫기
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ───────────────────────────────────────
+     iOS 홈화면 추가 안내 팝업
+─────────────────────────────────────────── -->
+<div id="iosBanner" style="display:none; position:fixed; bottom:28px; left:50%;
+  transform:translateX(-50%); background:#fff; color:#1e293b;
+  padding:22px 24px; border-radius:20px;
+  box-shadow:0 8px 40px rgba(0,0,0,.28);
+  z-index:9999; width:min(300px, 90vw); text-align:center;
+  animation:pwaPopIn .35s ease; font-family:'Noto Sans KR',sans-serif;">
+  <div style="position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
+              width:0; height:0; border-left:10px solid transparent;
+              border-right:10px solid transparent; border-top:10px solid #fff;"></div>
+  <img src="images/icon-192.png" alt="다빈치랩"
+       style="width:54px; height:54px; border-radius:14px; margin-bottom:10px;">
+  <h4 style="font-size:15px; font-weight:700; margin:0 0 8px; color:#163A33;">홈화면에 바로가기 추가</h4>
+  <p style="font-size:12.5px; color:#64748b; line-height:1.65; margin:0 0 14px;">
+    Safari 하단의 <strong style="color:#163A33;">공유 버튼 <i class="fas fa-share-square"></i></strong>을 누른 뒤<br>
+    <strong style="color:#163A33;">"홈 화면에 추가"</strong>를 선택하세요.
+  </p>
+  <button onclick="document.getElementById('iosBanner').style.display='none';
+                   sessionStorage.setItem('dvl_ios_hint_dismissed','1');"
+    style="background:#163A33; color:#fff; border:none; padding:9px 22px;
+           border-radius:20px; font-size:13px; font-weight:600; cursor:pointer;">
+    확인
+  </button>
+</div>
+
+<style>
+  @keyframes pwaSlideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+  @keyframes pwaPopIn {
+    from { transform:translateX(-50%) scale(.9); opacity:0; }
+    to   { transform:translateX(-50%) scale(1);  opacity:1; }
+  }
+</style>
+
+<script>
+(function initIndexPWA() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+
+  if (isIOS) {
+    const dismissed = sessionStorage.getItem('dvl_ios_hint_dismissed');
+    if (!dismissed) {
+      // 페이지 로드 후 2.5초 뒤 안내
+      setTimeout(function() {
+        document.getElementById('iosBanner').style.display = 'block';
+      }, 2500);
+    }
+  } else {
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      deferredPrompt = e;
+      const dismissed = localStorage.getItem('dvl_pwa_dismissed');
+      if (!dismissed) {
+        setTimeout(function() {
+          document.getElementById('pwaInstallBanner').style.display = 'block';
+        }, 1500);
+      }
+    });
+
+    document.getElementById('pwaInstallBtn')?.addEventListener('click', async function() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('pwaInstallBanner').style.display = 'none';
+      if (outcome === 'accepted') localStorage.removeItem('dvl_pwa_dismissed');
+    });
+
+    document.getElementById('pwaDismissBtn')?.addEventListener('click', function() {
+      document.getElementById('pwaInstallBanner').style.display = 'none';
+      localStorage.setItem('dvl_pwa_dismissed', '1');
+    });
+  }
+})();
+</script>
+</body>
+</html>

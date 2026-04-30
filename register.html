@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>회원가입 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Noto Sans KR', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0d2318 0%, #163A33 50%, #1e4d42 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .reg-wrap {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    /* 로고 */
+    .reg-logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .reg-logo a {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      font-size: 28px;
+      color: #5fbfa8;
+    }
+    .logo-text {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .reg-logo p {
+      color: rgba(255,255,255,.55);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    /* 역할 선택 탭 */
+    .role-tabs {
+      display: flex;
+      background: rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 20px;
+      gap: 4px;
+    }
+    .role-tab {
+      flex: 1;
+      padding: 10px 6px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: rgba(255,255,255,.5);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .role-tab i { font-size: 16px; }
+    .role-tab.active {
+      background: #fff;
+      color: #163A33;
+      box-shadow: 0 2px 12px rgba(0,0,0,.2);
+    }
+    .role-tab.active.parent { color: #7c3aed; }
+
+    /* 카드 */
+    .reg-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+
+    .reg-card h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1F2937;
+      margin-bottom: 4px;
+    }
+    .reg-card .reg-sub {
+      font-size: 13px;
+      color: #6B7280;
+      margin-bottom: 24px;
+    }
+
+    /* 폼 */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-group label .req {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: 'Noto Sans KR', sans-serif;
+      color: #1F2937;
+      background: #fff;
+      transition: border-color .2s;
+      outline: none;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #163A33;
+    }
+    .form-group .hint {
+      font-size: 11.5px;
+      color: #9CA3AF;
+      margin-top: 5px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* 비밀번호 강도 */
+    .pw-strength {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .pw-bar {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: #e5e7eb;
+      transition: background .3s;
+    }
+    .pw-bar.weak   { background: #ef4444; }
+    .pw-bar.medium { background: #f59e0b; }
+    .pw-bar.strong { background: #22c55e; }
+    .pw-strength-text {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-top: 4px;
+    }
+
+    /* 구분선 */
+    .divider {
+      border: none;
+      border-top: 1px solid #f3f4f6;
+      margin: 20px 0;
+    }
+
+    /* 제출 버튼 */
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #163A33, #2e7061);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .2s, transform .15s;
+      margin-top: 4px;
+    }
+    .btn-submit:hover { opacity: .92; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+    .btn-submit.parent-btn {
+      background: linear-gradient(135deg, #5b21b6, #7c3aed);
+    }
+
+    /* 에러 */
+    .error-box {
+      display: none;
+      padding: 11px 14px;
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      color: #b91c1c;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+    .error-box.show { display: block; }
+
+    /* 성공 */
+    .success-box {
+      display: none;
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .success-box .s-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 32px;
+      color: #065f46;
+    }
+    .success-box h3 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1F2937;
+      margin-bottom: 8px;
+    }
+    .success-box p {
+      font-size: 13.5px;
+      color: #6B7280;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    .success-box .s-id {
+      display: inline-block;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 8px 20px;
+      border-radius: 10px;
+      margin: 10px 0 20px;
+      letter-spacing: 1px;
+    }
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #163A33, #2e7061);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    /* 하단 링크 */
+    .reg-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: rgba(255,255,255,.55);
+    }
+    .reg-footer a {
+      color: #5fbfa8;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* 섹션 타이틀 */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9CA3AF;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    /* 약관 */
+    .terms-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+    .terms-check input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      accent-color: #163A33;
+      cursor: pointer;
+    }
+    .terms-check label {
+      font-size: 12.5px;
+      color: #4B5563;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .terms-check label a {
+      color: #163A33;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    /* 학부모 전용 — 학생 연결 */
+    .child-connect-box {
+      background: #f5f3ff;
+      border: 1.5px solid #ddd6fe;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .child-connect-box .cc-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #7c3aed;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .child-connect-box p {
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 1.5;
+    }
+
+    /* 모바일 */
+    @media (max-width: 480px) {
+      body { padding: 16px; align-items: flex-start; padding-top: 24px; }
+      .reg-card { padding: 24px 18px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="reg-wrap">
+
+    <!-- 로고 -->
+    <div class="reg-logo">
+      <a href="index.html">
+        <span class="logo-icon">◈</span>
+        <span class="logo-text">다빈치랩</span>
+      </a>
+      <p>회원가입하고 다빈치랩 서비스를 이용하세요</p>
+    </div>
+
+    <!-- 역할 탭 -->
+    <div class="role-tabs">
+      <button class="role-tab active" id="tabStudent" onclick="switchRole('student')">
+        <i class="fas fa-user-graduate"></i>학생
+      </button>
+      <button class="role-tab" id="tabParent" onclick="switchRole('parent')">
+        <i class="fas fa-user-tie"></i>학부모
+      </button>
+    </div>
+
+    <!-- 카드 -->
+    <div class="reg-card">
+      <div class="error-box" id="errorBox"></div>
+
+      <!-- ── 성공 화면 ── -->
+      <div class="success-box" id="successBox">
+        <div class="s-icon"><i class="fas fa-check"></i></div>
+        <h3 id="successTitle">가입 완료!</h3>
+        <p id="successMsg"></p>
+        <div class="s-id" id="successId"></div>
+        <p style="font-size:12px; color:#9CA3AF;">위 아이디로 로그인하세요</p>
+        <button class="btn-login" onclick="window.location.href='login.html'">
+          <i class="fas fa-sign-in-alt"></i> 로그인하러 가기
+        </button>
+      </div>
+
+      <!-- ── 학생 폼 ── -->
+      <form id="studentForm" onsubmit="submitStudent(event)">
+        <h2><i class="fas fa-user-graduate" style="color:#163A33;margin-right:8px;font-size:18px;"></i>학생 회원가입</h2>
+        <p class="reg-sub">정확한 정보를 입력해주세요. 담당 선생님이 확인 후 승인합니다.</p>
+
+        <div class="section-label">기본 정보</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>이름 <span class="req">*</span></label>
+            <input type="text" id="stu_name" placeholder="홍길동" required />
+          </div>
+          <div class="form-group">
+            <label>연락처 <span class="req">*</span></label>
+            <input type="tel" id="stu_phone" placeholder="010-0000-0000" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>학교명 <span class="req">*</span></label>
+            <input type="text" id="stu_school" placeholder="○○고등학교" required />
+          </div>
+          <div class="form-group">
+            <label>학년 <span class="req">*</span></label>
+            <select id="stu_grade" required>
+              <option value="">선택</option>
+              <optgroup label="고등학교">
+                <option value="고1">고1</option>
+                <option value="고2">고2</option>
+                <option value="고3">고3</option>
+              </optgroup>
+              <optgroup label="중학교">
+                <option value="중1">중1</option>
+                <option value="중2">중2</option>
+                <option value="중3">중3</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+
+        <hr class="divider" />
+        <div class="section-label">계정 설정</div>
+
+        <div class="form-group">
+          <label>아이디 <span class="req">*</span></label>
+          <input type="text" id="stu_id" placeholder="영문+숫자 6~20자" required
+            oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')" />
+          <p class="hint"><i class="fas fa-info-circle"></i> 영문, 숫자, 언더바(_)만 사용 가능 / 가입 후 변경 불가</p>
+        </div>
+
+        <div class="form-group">
+          <label>비밀번호 <span class="req">*</span></label>
+          <input type="password" id="stu_pw" placeholder="8자 이상 입력"
+            oninput="checkPwStrength(this.value)" required />
+          <div class="pw-strength">
+            <div class="pw-bar" id="pw-bar-1"></div>
+            <div class="pw-bar" id="pw-bar-2"></div>
+            <div class="pw-bar" id="pw-bar-3"></div>
+          </div>
+          <p class="pw-strength-text" id="pw-strength-text">비밀번호를 입력해주세요</p>
+        </div>
+
+        <div class="form-group">
+          <label>비밀번호 확인 <span class="req">*</span></label>
+          <input type="password" id="stu_pw2" placeholder="비밀번호 재입력" required />
+        </div>
+
+        <div class="form-group">
+          <label>학부모 연락처</label>
+          <input type="tel" id="stu_parent_phone" placeholder="010-0000-0000 (선택)" />
+          <p class="hint"><i class="fas fa-info-circle"></i> 학부모가 나중에 연동할 때 사용됩니다</p>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="terms-check">
+          <input type="checkbox" id="stu_terms" required />
+          <label for="stu_terms">
+            <a href="#" onclick="return false;">이용약관</a> 및
+            <a href="#" onclick="return false;">개인정보처리방침</a>에 동의합니다. <span style="color:#ef4444;">*</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-submit" id="stuSubmitBtn" style="margin-top:16px;">
+          <i class="fas fa-user-plus"></i> 학생 회원가입
+        </button>
+      </form>
+
+      <!-- ── 학부모 폼 ── -->
+      <form id="parentForm" style="display:none;" onsubmit="submitParent(event)">
+        <h2><i class="fas fa-user-tie" style="color:#7c3aed;margin-right:8px;font-size:18px;"></i>학부모 회원가입</h2>
+        <p class="reg-sub">자녀 정보를 함께 등록하시면 학습 현황을 확인하실 수 있습니다.</p>
+
+        <div class="section-label">학부모 정보</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>이름 <span class="req">*</span></label>
+            <input type="text" id="par_name" placeholder="홍길동" required />
+          </div>
+          <div class="form-group">
+            <label>연락처 <span class="req">*</span></label>
+            <input type="tel" id="par_phone" placeholder="010-0000-0000" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>자녀와의 관계 <span class="req">*</span></label>
+          <select id="par_rel" required>
+            <option value="">선택</option>
+            <option value="부">부(아버지)</option>
+            <option value="모">모(어머니)</option>
+            <option value="조부">조부</option>
+            <option value="조모">조모</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+
+        <hr class="divider" />
+        <div class="section-label">자녀 정보 (학원에 등록된 학생)</div>
+
+        <div class="child-connect-box">
+          <div class="cc-label"><i class="fas fa-link"></i> 자녀 계정 연동 안내</div>
+          <p>자녀가 이미 가입한 경우 아이디를 입력하시면 자동으로 연동됩니다.<br>
+          미가입 학생은 선생님이 확인 후 수동으로 연결해 드립니다.</p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>자녀 이름 <span class="req">*</span></label>
+            <input type="text" id="par_child_name" placeholder="자녀 이름" required />
+          </div>
+          <div class="form-group">
+            <label>자녀 아이디 (선택)</label>
+            <input type="text" id="par_child_id" placeholder="자녀 계정 아이디" />
+          </div>
+        </div>
+
+        <hr class="divider" />
+        <div class="section-label">계정 설정</div>
+
+        <div class="form-group">
+          <label>아이디 <span class="req">*</span></label>
+          <input type="text" id="par_id" placeholder="영문+숫자 6~20자" required
+            oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')" />
+          <p class="hint"><i class="fas fa-info-circle"></i> 영문, 숫자, 언더바(_)만 사용 가능</p>
+        </div>
+
+        <div class="form-group">
+          <label>비밀번호 <span class="req">*</span></label>
+          <input type="password" id="par_pw" placeholder="8자 이상 입력"
+            oninput="checkPwStrengthPar(this.value)" required />
+          <div class="pw-strength">
+            <div class="pw-bar" id="ppw-bar-1"></div>
+            <div class="pw-bar" id="ppw-bar-2"></div>
+            <div class="pw-bar" id="ppw-bar-3"></div>
+          </div>
+          <p class="pw-strength-text" id="ppw-strength-text">비밀번호를 입력해주세요</p>
+        </div>
+
+        <div class="form-group">
+          <label>비밀번호 확인 <span class="req">*</span></label>
+          <input type="password" id="par_pw2" placeholder="비밀번호 재입력" required />
+        </div>
+
+        <hr class="divider" />
+
+        <div class="terms-check">
+          <input type="checkbox" id="par_terms" required />
+          <label for="par_terms">
+            <a href="#" onclick="return false;">이용약관</a> 및
+            <a href="#" onclick="return false;">개인정보처리방침</a>에 동의합니다. <span style="color:#ef4444;">*</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-submit parent-btn" id="parSubmitBtn" style="margin-top:16px;">
+          <i class="fas fa-user-plus"></i> 학부모 회원가입
+        </button>
+      </form>
+    </div>
+
+    <!-- 하단 -->
+    <div class="reg-footer">
+      이미 계정이 있으신가요? <a href="login.html">로그인</a>
+      &nbsp;·&nbsp;
+      <a href="index.html">홈으로</a>
+    </div>
+  </div>
+
+  <script>
+    /* ====================================
+       다빈치랩 회원가입 v1
+    ==================================== */
+    let currentRole = 'student';
+
+    /* 역할 전환 */
+    function switchRole(role) {
+      currentRole = role;
+      document.getElementById('studentForm').style.display = role === 'student' ? '' : 'none';
+      document.getElementById('parentForm').style.display  = role === 'parent'  ? '' : 'none';
+      document.getElementById('tabStudent').classList.toggle('active', role === 'student');
+      document.getElementById('tabParent').classList.toggle('active',  role === 'parent');
+      document.getElementById('tabParent').classList.toggle('parent',  role === 'parent');
+      hideError();
+    }
+
+    /* 페이지 로드 시 역할 자동 선택 */
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedRole = sessionStorage.getItem('reg_role');
+      if (savedRole === 'parent') {
+        sessionStorage.removeItem('reg_role');
+        switchRole('parent');
+      }
+    });
+
+    /* 비밀번호 강도 (학생) */
+    function checkPwStrength(pw) {
+      const score = calcPwScore(pw);
+      updateBars('pw-bar-', score);
+      const text = document.getElementById('pw-strength-text');
+      if (!pw) { text.textContent = '비밀번호를 입력해주세요'; text.style.color = '#9CA3AF'; return; }
+      if (score === 1) { text.textContent = '취약 — 숫자·특수문자를 추가하세요'; text.style.color = '#ef4444'; }
+      else if (score === 2) { text.textContent = '보통 — 특수문자를 추가하면 더 안전합니다'; text.style.color = '#f59e0b'; }
+      else { text.textContent = '강력한 비밀번호입니다!'; text.style.color = '#22c55e'; }
+    }
+    function checkPwStrengthPar(pw) {
+      const score = calcPwScore(pw);
+      updateBars('ppw-bar-', score);
+      const text = document.getElementById('ppw-strength-text');
+      if (!pw) { text.textContent = '비밀번호를 입력해주세요'; text.style.color = '#9CA3AF'; return; }
+      if (score === 1) { text.textContent = '취약'; text.style.color = '#ef4444'; }
+      else if (score === 2) { text.textContent = '보통'; text.style.color = '#f59e0b'; }
+      else { text.textContent = '강력!'; text.style.color = '#22c55e'; }
+    }
+    function calcPwScore(pw) {
+      if (pw.length < 6) return 1;
+      let s = 0;
+      if (pw.length >= 8) s++;
+      if (/[A-Z]/.test(pw) || /\d/.test(pw)) s++;
+      if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw)) s++;
+      return Math.min(3, Math.max(1, s));
+    }
+    function updateBars(prefix, score) {
+      for (let i = 1; i <= 3; i++) {
+        const bar = document.getElementById(prefix + i);
+        bar.className = 'pw-bar';
+        if (i <= score) {
+          bar.classList.add(score === 1 ? 'weak' : score === 2 ? 'medium' : 'strong');
+        }
+      }
+    }
+
+    /* 중복 아이디 확인 */
+    async function checkDuplicateId(id, table, field) {
+      try {
+        const res  = await fetch(`tables/${table}?search=${encodeURIComponent(id)}&limit=5`);
+        const data = await res.json();
+        return (data.data || []).some(r => r[field] === id || r.id === id);
+      } catch { return false; }
+    }
+
+    /* 학생 가입 */
+    async function submitStudent(e) {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('stuSubmitBtn');
+
+      const name   = document.getElementById('stu_name').value.trim();
+      const phone  = document.getElementById('stu_phone').value.trim();
+      const school = document.getElementById('stu_school').value.trim();
+      const grade  = document.getElementById('stu_grade').value;
+      const id     = document.getElementById('stu_id').value.trim().toLowerCase();
+      const pw     = document.getElementById('stu_pw').value;
+      const pw2    = document.getElementById('stu_pw2').value;
+      const pPhone = document.getElementById('stu_parent_phone').value.trim();
+
+      /* 유효성 검사 */
+      if (!name || !school || !grade || !id || !pw) { showError('모든 필수 항목을 입력해주세요.'); return; }
+      if (id.length < 4 || id.length > 20) { showError('아이디는 4~20자로 입력해주세요.'); return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(id)) { showError('아이디는 영문, 숫자, 언더바(_)만 사용 가능합니다.'); return; }
+      if (pw.length < 8) { showError('비밀번호는 8자 이상이어야 합니다.'); return; }
+      if (pw !== pw2) { showError('비밀번호가 일치하지 않습니다.'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 가입 처리 중...';
+
+      /* 중복 확인 */
+      const isDup = await checkDuplicateId(id, 'student_profiles', 'student_id');
+      if (isDup) {
+        showError('이미 사용 중인 아이디입니다. 다른 아이디를 입력해주세요.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> 학생 회원가입';
+        return;
+      }
+
+      /* grade_num 계산 */
+      const gradeMap = { '중1':7,'중2':8,'중3':9,'고1':10,'고2':11,'고3':12 };
+
+      /* DB 저장 */
+      try {
+        const res = await fetch('tables/student_profiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_id:   id,
+            name:         name,
+            school:       school,
+            grade:        grade,
+            grade_num:    gradeMap[grade] || 0,
+            stage:        '1단계',
+            status:       'pending',   /* 관리자 승인 대기 */
+            password:     pw,
+            memo:         pPhone ? `학부모연락처:${pPhone}` : '',
+          })
+        });
+        if (!res.ok) throw new Error('서버 오류 ' + res.status);
+
+        /* 성공 */
+        showSuccess(
+          '학생 가입 완료!',
+          `${name}님, 가입 신청이 완료되었습니다.\n담당 선생님 확인 후 계정이 활성화됩니다.\n(보통 1 영업일 이내)`,
+          id
+        );
+      } catch(err) {
+        showError('가입 중 오류가 발생했습니다. 다시 시도해주세요.\n' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> 학생 회원가입';
+      }
+    }
+
+    /* 학부모 가입 */
+    async function submitParent(e) {
+      e.preventDefault();
+      hideError();
+      const btn = document.getElementById('parSubmitBtn');
+
+      const name      = document.getElementById('par_name').value.trim();
+      const phone     = document.getElementById('par_phone').value.trim();
+      const rel       = document.getElementById('par_rel').value;
+      const childName = document.getElementById('par_child_name').value.trim();
+      const childId   = document.getElementById('par_child_id').value.trim().toLowerCase();
+      const id        = document.getElementById('par_id').value.trim().toLowerCase();
+      const pw        = document.getElementById('par_pw').value;
+      const pw2       = document.getElementById('par_pw2').value;
+
+      if (!name || !phone || !rel || !childName || !id || !pw) { showError('모든 필수 항목을 입력해주세요.'); return; }
+      if (id.length < 4 || id.length > 20) { showError('아이디는 4~20자로 입력해주세요.'); return; }
+      if (!/^[a-zA-Z0-9_]+$/.test(id)) { showError('아이디는 영문, 숫자, 언더바(_)만 사용 가능합니다.'); return; }
+      if (pw.length < 8) { showError('비밀번호는 8자 이상이어야 합니다.'); return; }
+      if (pw !== pw2) { showError('비밀번호가 일치하지 않습니다.'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 가입 처리 중...';
+
+      const isDup = await checkDuplicateId(id, 'parent_profiles', 'parent_id');
+      if (isDup) {
+        showError('이미 사용 중인 아이디입니다.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> 학부모 회원가입';
+        return;
+      }
+
+      try {
+        const res = await fetch('tables/parent_profiles', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parent_id:    id,
+            parent_name:  name,
+            phone:        phone,
+            relationship: rel,
+            child_id:     childId || '',
+            child_name:   childName,
+            child_ids:    childId || '',
+            password:     pw,
+            status:       'pending',   /* 관리자 승인 대기 */
+            memo:         '',
+          })
+        });
+        if (!res.ok) throw new Error('서버 오류 ' + res.status);
+
+        showSuccess(
+          '학부모 가입 완료!',
+          `${name}님, 가입 신청이 완료되었습니다.\n담당 선생님이 자녀 계정과 연동 후\n계정을 활성화해 드립니다.`,
+          id
+        );
+      } catch(err) {
+        showError('가입 중 오류가 발생했습니다. 다시 시도해주세요.\n' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> 학부모 회원가입';
+      }
+    }
+
+    /* 성공 화면 */
+    function showSuccess(title, msg, id) {
+      document.getElementById('studentForm').style.display = 'none';
+      document.getElementById('parentForm').style.display  = 'none';
+      const box = document.getElementById('successBox');
+      document.getElementById('successTitle').textContent = title;
+      document.getElementById('successMsg').textContent   = msg;
+      document.getElementById('successId').textContent    = '아이디: ' + id;
+      box.style.display = 'block';
+    }
+
+    /* 에러 표시 */
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + msg.replace(/\n/g,'<br>');
+      el.classList.add('show');
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function hideError() {
+      document.getElementById('errorBox').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

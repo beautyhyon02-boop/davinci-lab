@@ -1,0 +1,63 @@
+{
+  "name": "다빈치랩 관리자",
+  "short_name": "DVL관리자",
+  "description": "다빈치랩 관리자 전용 앱 – 학생 관리, 수행평가, 실시간 알림",
+  "start_url": "admin/login.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1f1a",
+  "theme_color": "#163A33",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "대시보드",
+      "short_name": "홈",
+      "url": "admin/dashboard.html",
+      "description": "관리자 대시보드 바로가기",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "수행평가 관리",
+      "short_name": "수행평가",
+      "url": "admin/assessment.html",
+      "description": "수행평가 피드백 및 관리",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "학생 관리",
+      "short_name": "학생",
+      "url": "admin/students.html",
+      "description": "학생 목록 및 상세 관리",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

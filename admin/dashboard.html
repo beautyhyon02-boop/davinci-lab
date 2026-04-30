@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>관리자 대시보드 – 다빈치랩</title>
+  <!-- 관리자 PWA -->
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css?v=20260325" />
+  <link rel="stylesheet" href="../css/mobile.css?v=20260325" />
+  <style>
+    .kpi-loading { font-size: 14px; color: #b0b0b0; font-weight: 400; }
+    .step-bar-fill { transition: width 0.8s ease; }
+    #refreshDashboard:hover { color: var(--mint-600) !important; }
+    .tag-gray { background: #e5e7eb; color: #6b7280; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">메인</span>
+        <a href="dashboard.html" class="nav-item active" data-page="dashboard">
+          <i class="fas fa-th-large"></i><span>대시보드</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="students.html" class="nav-item" data-page="students">
+          <i class="fas fa-user-graduate"></i><span>학생 관리</span>
+          <span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span>
+        </a>
+        <a href="attendance.html" class="nav-item" data-page="attendance">
+          <i class="fas fa-clipboard-list"></i><span>출결 관리</span>
+        </a>
+        <a href="plan.html" class="nav-item" data-page="plan">
+          <i class="fas fa-tasks"></i><span>학습 플랜 관리</span>
+        </a>
+        <a href="daily.html" class="nav-item" data-page="daily">
+          <i class="fas fa-pen-alt"></i><span>일일 학습 기록</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">컨설팅</span>
+        <a href="assessment.html" class="nav-item" data-page="assessment">
+          <i class="fas fa-clipboard-check"></i><span>수행평가 관리</span>
+          <span class="nav-badge nav-badge--alert" id="navBadgeAssessment">3</span>
+        </a>
+        <a href="grades.html" class="nav-item" data-page="grades">
+          <i class="fas fa-chart-line"></i><span>성적 조회</span>
+        </a>
+        <a href="record.html" class="nav-item" data-page="record">
+          <i class="fas fa-book-open"></i><span>학생부 열람</span>
+        </a>
+        <a href="report.html" class="nav-item" data-page="report">
+          <i class="fas fa-file-alt"></i><span>심화탐구보고서</span>
+        </a>
+        <a href="exam.html" class="nav-item" data-page="exam">
+          <i class="fas fa-calendar-alt"></i><span>시험 플래너</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">학부모 / 공지</span>
+        <a href="parents.html" class="nav-item" data-page="parents">
+          <i class="fas fa-users"></i><span>학부모 관리</span>
+        </a>
+        <a href="notice.html" class="nav-item" data-page="notice">
+          <i class="fas fa-bullhorn"></i><span>공지 / 알림</span>
+        </a>
+        <a href="consult.html" class="nav-item" data-page="consult">
+          <i class="fas fa-comments"></i><span>상담 관리</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">시스템</span>
+        <a href="archive.html" class="nav-item" data-page="archive">
+          <i class="fas fa-archive"></i><span>졸업생 / 아카이브</span>
+        </a>
+        <a href="admins.html" class="nav-item" data-page="admins">
+          <i class="fas fa-user-shield"></i><span>관리자 관리</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebarAdminAvatar">박</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
+          <span class="sidebar-user-role" id="sidebarAdminRole">총괄 관리자</span>
+        </div>
+        <a href="../login.html" class="sidebar-logout" title="로그아웃">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN AREA ===== -->
+  <div class="admin-main" id="adminMain">
+
+    <!-- Top Bar -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span>
+          <i class="fas fa-chevron-right"></i>
+          <span class="active">대시보드</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="학생 이름 검색..." id="globalSearch" />
+        </div>
+        <button class="topbar-icon-btn" id="notifBtn" title="알림">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <button class="topbar-icon-btn" title="홈페이지로">
+          <a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="admin-content">
+
+      <!-- Page Title -->
+      <div class="page-title-row">
+        <div>
+          <h1 class="page-title">대시보드</h1>
+          <p class="page-subtitle" id="todayDate">오늘 날짜를 불러오는 중...</p>
+        </div>
+        <button class="btn-add" id="quickAddBtn">
+          <i class="fas fa-plus"></i> 빠른 등록
+        </button>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-green">
+          <div class="kpi-icon"><i class="fas fa-user-check"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">오늘 등원</div>
+            <div class="kpi-value" id="kpiAttend"><span class="kpi-loading">…</span></div>
+            <div class="kpi-sub" id="kpiAttendSub">데이터 로딩 중</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-mint">
+          <div class="kpi-icon"><i class="fas fa-clipboard-check"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">수행평가 알림</div>
+            <div class="kpi-value" id="kpiAssessment"><span class="kpi-loading">…</span></div>
+            <div class="kpi-sub" id="kpiAssessSub">데이터 로딩 중</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-teal">
+          <div class="kpi-icon"><i class="fas fa-tasks"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">학습 플랜 완료율</div>
+            <div class="kpi-value" id="kpiPlan"><span class="kpi-loading">…</span></div>
+            <div class="kpi-sub">수행평가 완료율</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-yellow">
+          <div class="kpi-icon"><i class="fas fa-comments"></i></div>
+          <div class="kpi-body">
+            <div class="kpi-label">상담 신청</div>
+            <div class="kpi-value" id="kpiConsult"><span class="kpi-loading">…</span></div>
+            <div class="kpi-sub" id="kpiConsultSub">데이터 로딩 중</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 가입 대기 알림 배너 -->
+      <div id="pendingBanner" style="display:none; margin-bottom:18px; padding:14px 18px; background:linear-gradient(135deg,#fef3c7,#fde68a); border:1.5px solid #f59e0b; border-radius:14px; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-user-clock" style="color:#b45309;font-size:20px;"></i>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#92400e;">가입 승인 대기</div>
+            <div style="font-size:12.5px;color:#b45309;" id="pendingBannerText">신규 가입 신청이 있습니다.</div>
+          </div>
+        </div>
+        <a href="students.html?filter=pending" style="padding:8px 16px;background:#f59e0b;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">
+          <i class="fas fa-check-circle"></i> 승인하기
+        </a>
+      </div>
+
+      <!-- Main Grid: Urgent + Activity -->
+      <div class="dashboard-grid">
+
+        <!-- LEFT: 긴급 처리 필요 — DB 기반 -->
+        <div class="dash-panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-exclamation-circle"></i> 긴급 처리 필요</h3>
+            <span class="panel-count" id="urgentCount">0건</span>
+          </div>
+          <div class="panel-body" id="urgentList">
+            <div style="text-align:center;padding:30px 16px;color:var(--text-300);">
+              <i class="fas fa-check-circle" style="font-size:28px;color:#22c55e;margin-bottom:8px;display:block;"></i>
+              <p style="font-size:13px;">긴급 처리 항목이 없습니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: 오늘 활동 피드 — DB 기반 -->
+        <div class="dash-panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-stream"></i> 오늘 활동 피드</h3>
+            <span class="panel-meta">실시간</span>
+          </div>
+          <div class="panel-body" id="activityFeed">
+            <div style="text-align:center;padding:30px 16px;color:var(--text-300);">
+              <i class="fas fa-inbox" style="font-size:28px;margin-bottom:8px;display:block;"></i>
+              <p style="font-size:13px;">오늘 활동 내역이 없습니다.</p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dashboard-grid -->
+
+      <!-- Student Status Table -->
+      <div class="dash-panel full-panel" style="margin-top:24px;">
+        <div class="panel-header">
+          <h3><i class="fas fa-user-graduate"></i> 학생 현황</h3>
+          <div class="panel-header-actions">
+            <div class="tab-btns" id="studentTabs">
+              <button class="tab-btn active" data-filter="all">전체 <span class="tab-cnt" id="tabCntAll">0</span></button>
+              <button class="tab-btn" data-filter="consulting">컨설팅 <span class="tab-cnt" id="tabCnt1">0</span></button>
+              <button class="tab-btn" data-filter="general">일반 <span class="tab-cnt" id="tabCnt2">0</span></button>
+            </div>
+            <a href="students.html" class="btn-link">전체 보기 <i class="fas fa-arrow-right"></i></a>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="table-wrap">
+            <table class="admin-table" id="studentTable">
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>학교 / 학년</th>
+                  <th>구분</th>
+                  <th>오늘 출결</th>
+                  <th>학습 플랜</th>
+                  <th>수행평가</th>
+                  <th>최근 피드백</th>
+                  <th>액션</th>
+                </tr>
+              </thead>
+              <tbody id="studentTbody">
+                <!-- JS로 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Grid: Upcoming + Attendance Heatmap -->
+      <div class="dashboard-grid" style="margin-top:24px;">
+
+        <!-- Upcoming exams/events -->
+        <div class="dash-panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-calendar-week"></i> 이번 주 일정</h3>
+            <a href="exam.html" class="btn-link">더보기</a>
+          </div>
+          <div class="panel-body" id="upcomingList">
+            <div style="text-align:center;padding:24px;color:#aaa;font-size:13px;">일정 로딩 중...</div>
+          </div>
+        </div>
+
+        <!-- Step distribution + archive summary -->
+        <div class="dash-panel">
+          <div class="panel-header">
+            <h3><i class="fas fa-chart-pie"></i> 수강 구분 현황</h3>
+          </div>
+          <div class="panel-body">
+            <div class="step-bars" id="stepBarsContainer">
+              <div style="text-align:center;padding:16px;color:#aaa;font-size:13px;">로딩 중...</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="archive-summary">
+              <div class="arc-row">
+                <div class="arc-item">
+                  <i class="fas fa-graduation-cap"></i>
+                  <div>
+                    <div class="arc-label">졸업생</div>
+                    <div class="arc-val" id="arcGrad">0명</div>
+                  </div>
+                </div>
+                <div class="arc-item">
+                  <i class="fas fa-pause-circle"></i>
+                  <div>
+                    <div class="arc-label">휴원</div>
+                    <div class="arc-val" id="arcBreak">0명</div>
+                  </div>
+                </div>
+                <div class="arc-item">
+                  <i class="fas fa-user-clock"></i>
+                  <div>
+                    <div class="arc-label">승인 대기</div>
+                    <div class="arc-val" id="arcPending">0명</div>
+                  </div>
+                </div>
+              </div>
+              <button class="btn-link" id="refreshDashboard" style="margin-top:8px;display:inline-flex;gap:6px;background:none;border:none;cursor:pointer;color:var(--text-300);font-size:12px;"><i class="fas fa-sync-alt"></i> 새로고침</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /bottom grid -->
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-main -->
+
+  <!-- ===== SIDEBAR DIM OVERLAY (mobile) ===== -->
+
+  <!-- ===== FEEDBACK MODAL ===== -->
+  <div class="modal-overlay" id="feedbackModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">수행평가 피드백 작성</h3>
+        <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-student-info" id="modalStudentInfo"></div>
+        <div class="form-group">
+          <label>피드백 유형</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="fbType" value="direction" checked /> 준비 방향</label>
+            <label class="radio-item"><input type="radio" name="fbType" value="task" /> 과제 안내</label>
+            <label class="radio-item"><input type="radio" name="fbType" value="caution" /> 주의사항</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>피드백 내용 <span class="required">*</span></label>
+          <textarea id="feedbackText" rows="5" placeholder="수행평가 준비 방향, 필요한 자료, 주의사항 등을 입력하세요..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>첨부 자료 (선택)</label>
+          <div class="file-drop" id="fileDrop">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>파일을 드래그하거나 클릭하여 업로드</span>
+            <input type="file" id="fileInput" style="display:none" multiple />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>긴급도</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="urgency" value="normal" checked /> 일반</label>
+            <label class="radio-item"><input type="radio" name="urgency" value="urgent" /> 긴급</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modalCancel">취소</button>
+        <button class="btn-submit" id="modalSubmit">
+          <i class="fas fa-paper-plane"></i> 피드백 전송
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUICK ADD MODAL ===== -->
+  <div class="modal-overlay" id="quickAddModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>빠른 등록</h3>
+        <button class="modal-close" id="quickAddClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="quick-add-grid">
+          <a href="students.html#new" class="qa-item">
+            <i class="fas fa-user-plus"></i>
+            <span>신규 학생</span>
+          </a>
+          <a href="attendance.html#new" class="qa-item">
+            <i class="fas fa-clipboard-list"></i>
+            <span>출결 등록</span>
+          </a>
+          <a href="assessment.html#new" class="qa-item">
+            <i class="fas fa-clipboard-check"></i>
+            <span>수행평가</span>
+          </a>
+          <a href="notice.html#new" class="qa-item">
+            <i class="fas fa-bullhorn"></i>
+            <span>공지 작성</span>
+          </a>
+          <a href="report.html#new" class="qa-item">
+            <i class="fas fa-file-alt"></i>
+            <span>탐구보고서</span>
+          </a>
+          <a href="exam.html#new" class="qa-item">
+            <i class="fas fa-calendar-plus"></i>
+            <span>시험 일정</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICATION PANEL ===== -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h4>알림</h4>
+      <button class="notif-read-all">모두 읽음</button>
+    </div>
+    <div class="notif-list" id="notifList">
+      <div style="text-align:center;padding:24px 16px;color:#aaa;font-size:13px;">
+        <i class="fas fa-bell-slash" style="font-size:20px;margin-bottom:8px;display:block;"></i>
+        새로운 알림이 없습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
+  <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item active"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="exam.html" class="mobile-nav-item"><i class="fas fa-calendar-alt"></i><span>플래너</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script src="../js/admin.js?v=20260430"></script>
+  <script>
+    // 대시보드 데이터 로드 (가입 대기 + 학생 현황)
+    (async function initDashboard() {
+      // 세션은 dvl-session.js + admin-common.js 가 이미 검증
+      if (!window._dvlAdminSession) return;
+      try {
+        const res  = await fetch('../tables/student_profiles?limit=500');
+        const data = await res.json();
+        const all  = data.data || [];
+
+        // ── 가입 대기 배너 ──
+        const pendingStudents = all.filter(s => s.status === 'pending');
+        const res2  = await fetch('../tables/parent_profiles?limit=500');
+        const data2 = await res2.json();
+        const pendingParents = (data2.data || []).filter(p => p.status === 'pending');
+        const total = pendingStudents.length + pendingParents.length;
+
+        if (total > 0) {
+          const banner = document.getElementById('pendingBanner');
+          banner.style.display = 'flex';
+          const parts = [];
+          if (pendingStudents.length) parts.push(`학생 ${pendingStudents.length}명`);
+          if (pendingParents.length)  parts.push(`학부모 ${pendingParents.length}명`);
+          document.getElementById('pendingBannerText').textContent =
+            parts.join(', ') + '의 가입 신청이 대기 중입니다.';
+          /* 모바일 뱃지는 admin-common.js의 loadPendingBadge()가 처리 */
+        }
+
+        // ── 학생 현황 탭 카운트 ──
+        const active = all.filter(s => s.status !== 'pending' && s.status !== '졸업' && s.status !== '휴원');
+        const pending = all.filter(s => s.status === 'pending');
+        const graduated = all.filter(s => s.status === '졸업');
+        const onBreak = all.filter(s => s.status === '휴원');
+        const s1  = active.filter(s => s.stage === '1단계').length;
+        const s2  = active.filter(s => s.stage === '2단계').length;
+        const s3  = active.filter(s => s.stage === '3단계').length;
+        const s3c = active.filter(s => s.stage === '3단계+컨설팅').length;
+        document.getElementById('tabCntAll') && (document.getElementById('tabCntAll').textContent = active.length);
+        document.getElementById('tabCnt1')   && (document.getElementById('tabCnt1').textContent   = s1);
+        document.getElementById('tabCnt2')   && (document.getElementById('tabCnt2').textContent   = s2);
+        document.getElementById('tabCnt3')   && (document.getElementById('tabCnt3').textContent   = s3);
+        document.getElementById('tabCnt3c')  && (document.getElementById('tabCnt3c').textContent  = s3c);
+
+        // ── 아카이브 요약 카운트 ──
+        const elGrad    = document.getElementById('arcGrad');
+        const elBreak   = document.getElementById('arcBreak');
+        const elPending = document.getElementById('arcPending');
+        if (elGrad)    elGrad.textContent    = graduated.length + '명';
+        if (elBreak)   elBreak.textContent   = onBreak.length + '명';
+        if (elPending) elPending.textContent = pending.length + '명';
+
+        // ── 학생 현황 테이블 ──
+        const tbody = document.getElementById('studentTbody');
+        if (tbody) {
+          if (!active.length) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-300);">
+              <i class="fas fa-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+              등록된 학생이 없습니다. 학생 회원가입 후 승인하면 여기에 표시됩니다.
+            </td></tr>`;
+          } else {
+            tbody.innerHTML = active.slice(0,10).map(s => `
+              <tr>
+                <td><strong>${s.name}</strong></td>
+                <td>${s.school||'-'} / ${s.grade||'-'}</td>
+                <td><span style="background:#e8f5f0;color:#163A33;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">${s.stage||'1단계'}</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td>
+                  <a href="students.html" style="font-size:12px;color:var(--green-700);font-weight:600;">상세보기</a>
+                </td>
+              </tr>
+            `).join('');
+          }
+        }
+
+        // ── 긴급 처리 — 실제 수행평가 기반 ──
+        try {
+          const aRes  = await fetch('../tables/assessments?limit=100');
+          const aData = await aRes.json();
+          const urgent = (aData.data || []).filter(a =>
+            a.status === 'pending' && a.is_urgent
+          );
+          document.getElementById('urgentCount').textContent = urgent.length + '건';
+          if (urgent.length > 0) {
+            document.getElementById('urgentList').innerHTML = urgent.slice(0,5).map(a => `
+              <div class="urgent-item urgent-red">
+                <div class="urgent-left">
+                  <span class="urgent-tag tag-red">수행평가</span>
+                  <div>
+                    <div class="urgent-name">${a.student_name||''}</div>
+                    <div class="urgent-desc">${a.subject||''} – ${a.title||''}</div>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch(e) { /* 무시 */ }
+
+      } catch(e) {
+        console.warn('대시보드 초기화 오류:', e);
+      }
+    })();
+    // 사이드바 토글은 admin.js에서 통합 처리
+  </script>
+</body>
+</html>

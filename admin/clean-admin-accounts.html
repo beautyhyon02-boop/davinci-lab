@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>관리자 계정 정리 – 내부 도구</title>
+<style>
+  body{font-family:'Noto Sans KR',sans-serif;background:#0f1f1a;color:#e2e8f0;padding:24px;max-width:800px;margin:0 auto;}
+  h1{color:#4fc3a1;font-size:20px;margin-bottom:8px;}
+  .sub{font-size:13px;color:#94a3b8;margin-bottom:24px;}
+  .card{background:#1e3a34;border-radius:12px;padding:20px;margin-bottom:16px;}
+  .card h2{font-size:15px;color:#4fc3a1;margin:0 0 12px;}
+  .btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:14px;font-weight:600;margin-right:8px;margin-top:8px;}
+  .btn-red{background:#ef4444;color:#fff;}
+  .btn-green{background:#34a08a;color:#fff;}
+  .btn-blue{background:#4f46e5;color:#fff;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .log{background:#0f1f1a;border-radius:8px;padding:14px;font-size:12px;font-family:monospace;max-height:300px;overflow-y:auto;margin-top:12px;white-space:pre-wrap;line-height:1.7;}
+  .ok{color:#4ade80;} .warn{color:#fbbf24;} .err{color:#f87171;} .info{color:#60a5fa;}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
+  th{background:#163A33;padding:8px;text-align:left;color:#4fc3a1;}
+  td{padding:8px;border-bottom:1px solid #2d4f45;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
+  .badge-active{background:#dcfce7;color:#166534;}
+  .badge-pending{background:#fef3c7;color:#92400e;}
+  .badge-inactive{background:#f1f5f9;color:#64748b;}
+  .badge-master{background:#ede9fe;color:#5b21b6;}
+</style>
+</head>
+<body>
+<h1>🔧 관리자 계정 정리 도구</h1>
+<p class="sub">⚠️ 내부 전용. 가짜/할루시네이션 계정을 삭제하고 실제 계정만 남깁니다.</p>
+
+<div class="card">
+  <h2>1단계: 현재 관리자 계정 조회</h2>
+  <button class="btn btn-blue" onclick="loadAccounts()">🔍 계정 목록 불러오기</button>
+  <div id="accountTable"></div>
+</div>
+
+<div class="card">
+  <h2>2단계: 가짜 계정 삭제</h2>
+  <p style="font-size:13px;color:#94a3b8;margin:0 0 8px;">박주한 계정(admin_id: <strong id="parkId" style="color:#4fc3a1">?</strong>)을 제외한 모든 계정을 삭제합니다.<br>삭제 전 반드시 1단계에서 목록을 확인하세요.</p>
+  <button class="btn btn-red" id="deleteBtn" onclick="deleteFakeAccounts()" disabled>🗑 가짜 계정 삭제 실행</button>
+  <div class="log" id="deleteLog">삭제 로그가 여기에 표시됩니다.</div>
+</div>
+
+<div class="card">
+  <h2>3단계: 박주한 계정 확인 및 status 활성화</h2>
+  <p style="font-size:13px;color:#94a3b8;margin:0 0 8px;">박주한 계정의 status를 active로 설정합니다.</p>
+  <button class="btn btn-green" id="activateBtn" onclick="activateParkJuhan()" disabled>✅ 박주한 계정 활성화</button>
+  <div class="log" id="activateLog">활성화 로그가 여기에 표시됩니다.</div>
+</div>
+
+<script>
+let allAccounts = [];
+let parkJuhanId = null;
+
+function appendLog(elId, msg, type='') {
+  const el = document.getElementById(elId);
+  const span = document.createElement('span');
+  span.className = type;
+  span.textContent = msg + '\n';
+  el.appendChild(span);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadAccounts() {
+  const tableEl = document.getElementById('accountTable');
+  tableEl.innerHTML = '<p style="color:#94a3b8;font-size:13px;">불러오는 중...</p>';
+  
+  try {
+    const res = await fetch('../tables/admin_accounts?limit=100');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    allAccounts = data.data || [];
+    
+    if (allAccounts.length === 0) {
+      tableEl.innerHTML = '<p style="color:#94a3b8;font-size:13px;">등록된 계정이 없습니다.</p>';
+      return;
+    }
+    
+    let html = `<table><tr><th>admin_id</th><th>이름</th><th>직책</th><th>role</th><th>status</th><th>가입일</th></tr>`;
+    allAccounts.forEach(a => {
+      const statusClass = a.status === 'active' ? 'badge-active' : a.status === 'pending' ? 'badge-pending' : 'badge-inactive';
+      const roleClass = a.role === 'master' ? 'badge-master' : 'badge-active';
+      const date = a.created_at ? new Date(a.created_at).toLocaleDateString('ko-KR') : '-';
+      html += `<tr>
+        <td><strong>${a.admin_id || '-'}</strong></td>
+        <td>${a.name || '-'}</td>
+        <td>${a.title || '-'}</td>
+        <td><span class="badge ${roleClass}">${a.role || '-'}</span></td>
+        <td><span class="badge ${statusClass}">${a.status || '-'}</span></td>
+        <td>${date}</td>
+      </tr>`;
+    });
+    html += '</table>';
+    tableEl.innerHTML = html;
+    
+    // 박주한 계정 찾기
+    const park = allAccounts.find(a => a.name && a.name.includes('박주한'));
+    if (park) {
+      parkJuhanId = park.id;
+      document.getElementById('parkId').textContent = park.admin_id + ' (' + park.name + ')';
+      document.getElementById('activateBtn').disabled = false;
+    } else {
+      document.getElementById('parkId').textContent = '박주한 계정 없음 – 모든 계정이 삭제 대상';
+    }
+    
+    document.getElementById('deleteBtn').disabled = false;
+    
+    console.log('계정 총', allAccounts.length, '개 로드됨');
+  } catch(e) {
+    tableEl.innerHTML = '<p style="color:#f87171;font-size:13px;">오류: ' + e.message + '</p>';
+  }
+}
+
+async function deleteFakeAccounts() {
+  const logEl = document.getElementById('deleteLog');
+  logEl.innerHTML = '';
+  
+  if (!confirm('박주한 계정을 제외한 모든 관리자 계정을 삭제합니다.\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?')) return;
+  
+  const toDelete = allAccounts.filter(a => {
+    if (!a.name) return true; // 이름 없는 계정 삭제
+    if (a.name.includes('박주한')) return false; // 박주한은 유지
+    return true; // 나머지 모두 삭제
+  });
+  
+  if (toDelete.length === 0) {
+    appendLog('deleteLog', '삭제할 계정이 없습니다. (박주한 계정만 존재)', 'ok');
+    return;
+  }
+  
+  appendLog('deleteLog', `삭제 대상: ${toDelete.length}개 계정`, 'warn');
+  
+  let successCount = 0;
+  let failCount = 0;
+  
+  for (const acc of toDelete) {
+    try {
+      const res = await fetch(`../tables/admin_accounts/${acc.id}`, { method: 'DELETE' });
+      if (res.ok || res.status === 204) {
+        appendLog('deleteLog', `✅ 삭제 완료: ${acc.admin_id} (${acc.name || '이름없음'})`, 'ok');
+        successCount++;
+      } else {
+        appendLog('deleteLog', `❌ 삭제 실패: ${acc.admin_id} – HTTP ${res.status}`, 'err');
+        failCount++;
+      }
+    } catch(e) {
+      appendLog('deleteLog', `❌ 오류: ${acc.admin_id} – ${e.message}`, 'err');
+      failCount++;
+    }
+  }
+  
+  appendLog('deleteLog', `\n완료: 성공 ${successCount}건 / 실패 ${failCount}건`, successCount > 0 ? 'ok' : 'warn');
+  
+  // 목록 새로고침
+  await loadAccounts();
+}
+
+async function activateParkJuhan() {
+  const logEl = document.getElementById('activateLog');
+  logEl.innerHTML = '';
+  
+  if (!parkJuhanId) {
+    appendLog('activateLog', '박주한 계정을 먼저 1단계에서 확인하세요.', 'err');
+    return;
+  }
+  
+  try {
+    const res = await fetch(`../tables/admin_accounts/${parkJuhanId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'active' })
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      appendLog('activateLog', `✅ 박주한 계정 활성화 완료!`, 'ok');
+      appendLog('activateLog', `   admin_id: ${updated.admin_id}`, 'info');
+      appendLog('activateLog', `   name: ${updated.name}`, 'info');
+      appendLog('activateLog', `   status: ${updated.status}`, 'ok');
+      await loadAccounts();
+    } else {
+      appendLog('activateLog', `❌ 활성화 실패: HTTP ${res.status}`, 'err');
+    }
+  } catch(e) {
+    appendLog('activateLog', `❌ 오류: ${e.message}`, 'err');
+  }
+}
+</script>
+</body>
+</html>

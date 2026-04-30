@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB 데이터 정리 – 다빈치랩 내부 도구</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 32px 16px; }
+    .container { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 28px; }
+    .warning-box { background: #7f1d1d; border: 1px solid #ef4444; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; font-size: 13.5px; color: #fca5a5; line-height: 1.7; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .card h2 { font-size: 15px; font-weight: 700; color: #38bdf8; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .card h2 i { width: 20px; text-align: center; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; }
+    .btn-blue   { background: #1d4ed8; color: #fff; }
+    .btn-blue:hover   { background: #1e40af; }
+    .btn-red    { background: #dc2626; color: #fff; }
+    .btn-red:hover    { background: #b91c1c; }
+    .btn-green  { background: #059669; color: #fff; }
+    .btn-green:hover  { background: #047857; }
+    .btn-gray   { background: #334155; color: #cbd5e1; }
+    .btn-gray:hover   { background: #475569; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-top: 14px; }
+    .stat-box { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; text-align: center; }
+    .stat-box .val { font-size: 26px; font-weight: 800; color: #38bdf8; }
+    .stat-box .lbl { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .log-area { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px 16px; font-family: 'Consolas', monospace; font-size: 12.5px; color: #94a3b8; height: 280px; overflow-y: auto; margin-top: 14px; white-space: pre-wrap; word-break: break-all; }
+    .log-area .ok  { color: #4ade80; }
+    .log-area .err { color: #f87171; }
+    .log-area .warn{ color: #fbbf24; }
+    .log-area .info{ color: #60a5fa; }
+    .table-wrap { overflow-x: auto; margin-top: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { background: #0f172a; color: #64748b; font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid #334155; }
+    tbody td { padding: 8px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+    tbody tr:hover { background: rgba(255,255,255,.03); }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+    .badge-active  { background: #064e3b; color: #6ee7b7; }
+    .badge-pending { background: #451a03; color: #fcd34d; }
+    .badge-other   { background: #1e1b4b; color: #a5b4fc; }
+    .progress { background: #0f172a; border-radius: 999px; height: 6px; overflow: hidden; margin-top: 6px; }
+    .progress-bar { height: 100%; background: #38bdf8; border-radius: 999px; transition: width .4s; }
+    #stepInfo { font-size: 13px; color: #94a3b8; margin-top: 8px; min-height: 20px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🧹 DB 데이터 정리 도구</h1>
+  <p class="subtitle">승인되지 않은 학생(가짜/더미) 데이터 조회 및 일괄 삭제 | 다빈치랩 내부 전용</p>
+
+  <div class="warning-box">
+    ⚠️ <strong>주의:</strong> 이 도구는 DB 데이터를 영구 삭제합니다. 삭제 전 반드시 <strong>1단계(현황 조회)</strong>를 먼저 실행하여 삭제 대상을 확인하세요.<br>
+    삭제 기준: <code>student_profiles</code>에 없거나 <code>pending</code> 상태인 student_id를 가진 기록들을 삭제합니다.
+  </div>
+
+  <!-- 1단계: 현황 조회 -->
+  <div class="card">
+    <h2>📊 1단계: 현황 조회</h2>
+    <p style="font-size:13px;color:#94a3b8;">DB에 등록된 학생 목록과 각 테이블의 레코드 현황을 확인합니다.</p>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="runAnalysis()">🔍 전체 현황 조회</button>
+    </div>
+    <div id="stepInfo"></div>
+    <div id="analysisStats" class="stat-grid" style="display:none;"></div>
+    <div id="studentTable" style="display:none;"></div>
+  </div>
+
+  <!-- 2단계: 삭제 대상 미리보기 -->
+  <div class="card">
+    <h2>🔎 2단계: 삭제 대상 미리보기</h2>
+    <p style="font-size:13px;color:#94a3b8;">승인되지 않은 학생의 데이터를 미리 확인합니다. 실제 삭제는 3단계에서 수행합니다.</p>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="previewOrphanData()" id="previewBtn" disabled>🔍 삭제 대상 미리보기</button>
+    </div>
+    <div id="previewResult" style="margin-top:14px;"></div>
+  </div>
+
+  <!-- 3단계: 실제 삭제 -->
+  <div class="card">
+    <h2>🗑️ 3단계: 고아 데이터 삭제</h2>
+    <p style="font-size:13px;color:#94a3b8;">2단계에서 확인한 데이터를 실제 삭제합니다. 삭제된 데이터는 복구 불가합니다.</p>
+    <div class="btn-row">
+      <button class="btn btn-red" onclick="deleteOrphanData()" id="deleteBtn" disabled>🗑 고아 데이터 삭제 실행</button>
+      <button class="btn btn-gray" onclick="clearLog()">로그 지우기</button>
+    </div>
+    <div class="progress" id="deleteProgress" style="display:none;"><div class="progress-bar" id="deleteProgressBar" style="width:0%"></div></div>
+    <div class="log-area" id="logArea">// 로그가 여기에 표시됩니다...\n</div>
+  </div>
+
+  <!-- 4단계: 재원 학생 데이터 현황 -->
+  <div class="card">
+    <h2>✅ 4단계: 재원 학생 데이터 현황 확인</h2>
+    <p style="font-size:13px;color:#94a3b8;">정리 후 재원 학생별 데이터 현황을 확인합니다.</p>
+    <div class="btn-row">
+      <button class="btn btn-green" onclick="checkActiveStudentData()" id="checkActiveBtn" disabled>✅ 재원 학생 데이터 확인</button>
+    </div>
+    <div id="activeStudentData" style="margin-top:14px;"></div>
+  </div>
+</div>
+
+<script>
+const API = '../tables';
+
+// 전역 상태
+let activeStudentIds   = new Set();  // 재원 학생 student_id 목록
+let allStudentIds      = new Set();  // 전체 student_id 목록 (pending 포함)
+let orphanTaskIds      = [];         // 삭제 대상 planner_tasks id
+let orphanLogIds       = [];         // 삭제 대상 student_logs id
+let orphanGradeIds     = [];         // 삭제 대상 student_grades id
+let orphanAttendIds    = [];         // 삭제 대상 attendance id
+let orphanAssessIds    = [];         // 삭제 대상 assessments id
+let analysisComplete   = false;
+
+const logEl = document.getElementById('logArea');
+
+function log(msg, cls = '') {
+  const span = document.createElement('span');
+  span.className = cls;
+  span.textContent = msg + '\n';
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function clearLog() {
+  logEl.innerHTML = '';
+}
+
+function setStep(msg) {
+  document.getElementById('stepInfo').textContent = msg;
+}
+
+async function fetchAll(table) {
+  let page = 1, all = [];
+  while (true) {
+    const res  = await fetch(`${API}/${table}?page=${page}&limit=500`);
+    const data = await res.json();
+    const rows = data.data || [];
+    all = all.concat(rows);
+    if (rows.length < 500) break;
+    page++;
+  }
+  return all;
+}
+
+/* ─── 1단계: 전체 현황 조회 ─── */
+async function runAnalysis() {
+  clearLog();
+  document.getElementById('analysisStats').style.display = 'none';
+  document.getElementById('studentTable').style.display  = 'none';
+  document.getElementById('previewBtn').disabled = true;
+  document.getElementById('checkActiveBtn').disabled = true;
+  analysisComplete = false;
+
+  log('[1단계] 현황 조회 시작...', 'info');
+  setStep('⏳ 데이터 불러오는 중...');
+
+  try {
+    // 학생 프로필 전체 로드
+    log('  student_profiles 로드 중...', 'info');
+    const profiles = await fetchAll('student_profiles');
+
+    profiles.forEach(p => {
+      if (p.student_id) allStudentIds.add(p.student_id);
+      if (p.student_id && (p.status === '재원' || p.status === 'active')) {
+        activeStudentIds.add(p.student_id);
+      }
+    });
+
+    const pendingList = profiles.filter(p => p.status === 'pending');
+    const activeList  = profiles.filter(p => p.status === '재원' || p.status === 'active');
+    const otherList   = profiles.filter(p =>
+      p.status !== '재원' && p.status !== 'active' && p.status !== 'pending'
+    );
+
+    log(`  ✅ 전체 학생: ${profiles.length}명 (재원: ${activeList.length}, 대기: ${pendingList.length}, 기타: ${otherList.length})`, 'ok');
+
+    // 각 테이블 로드
+    const [tasks, logs, grades, attends, assessments] = await Promise.all([
+      fetchAll('planner_tasks'),
+      fetchAll('student_logs'),
+      fetchAll('student_grades'),
+      fetchAll('attendance'),
+      fetchAll('assessments'),
+    ]);
+
+    // 통계 표시
+    const statsEl = document.getElementById('analysisStats');
+    statsEl.style.display = 'grid';
+    statsEl.innerHTML = `
+      <div class="stat-box"><div class="val">${profiles.length}</div><div class="lbl">전체 학생</div></div>
+      <div class="stat-box"><div class="val" style="color:#4ade80">${activeList.length}</div><div class="lbl">재원 학생</div></div>
+      <div class="stat-box"><div class="val" style="color:#fbbf24">${pendingList.length}</div><div class="lbl">가입 대기</div></div>
+      <div class="stat-box"><div class="val">${tasks.length}</div><div class="lbl">플랜 태스크</div></div>
+      <div class="stat-box"><div class="val">${logs.length}</div><div class="lbl">학습 기록</div></div>
+      <div class="stat-box"><div class="val">${grades.length}</div><div class="lbl">성적 기록</div></div>
+      <div class="stat-box"><div class="val">${attends.length}</div><div class="lbl">출결 기록</div></div>
+      <div class="stat-box"><div class="val">${assessments.length}</div><div class="lbl">수행평가</div></div>
+    `;
+
+    // 학생 목록 테이블
+    const tableEl = document.getElementById('studentTable');
+    tableEl.style.display = 'block';
+    tableEl.innerHTML = `
+      <h3 style="font-size:13px;color:#64748b;margin-top:20px;margin-bottom:8px;">📋 학생 목록</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>학생 ID</th><th>이름</th><th>학교/학년</th><th>단계</th><th>상태</th>
+            <th>플랜</th><th>학습기록</th><th>출결</th><th>성적</th>
+          </tr></thead>
+          <tbody>
+            ${profiles.map(p => {
+              const taskCount   = tasks.filter(t => t.student_id === p.student_id).length;
+              const logCount    = logs.filter(l => l.student_id === p.student_id).length;
+              const attendCount = attends.filter(a => a.student_id === p.student_id).length;
+              const gradeCount  = grades.filter(g => g.student_id === p.student_id).length;
+              const isActive  = p.status === '재원' || p.status === 'active';
+              const isPending = p.status === 'pending';
+              const badgeCls  = isActive ? 'badge-active' : isPending ? 'badge-pending' : 'badge-other';
+              return `<tr>
+                <td style="font-family:monospace;font-size:12px;">${p.student_id || '-'}</td>
+                <td><strong>${p.name || '-'}</strong></td>
+                <td>${p.school || '-'} ${p.grade || ''}</td>
+                <td>${p.stage || '-'}</td>
+                <td><span class="badge ${badgeCls}">${p.status || '미설정'}</span></td>
+                <td>${taskCount ? `<span style="color:#f87171">${taskCount}</span>` : 0}</td>
+                <td>${logCount  ? `<span style="color:#f87171">${logCount}</span>`  : 0}</td>
+                <td>${attendCount ? `<span style="color:#f87171">${attendCount}</span>` : 0}</td>
+                <td>${gradeCount ? `<span style="color:#f87171">${gradeCount}</span>` : 0}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // 고아 데이터 계산 (student_profiles에 없는 student_id)
+    orphanTaskIds  = tasks.filter(t => t.student_id && !allStudentIds.has(t.student_id)).map(t => t.id);
+    orphanLogIds   = logs.filter(l => l.student_id && !allStudentIds.has(l.student_id)).map(l => l.id);
+    orphanGradeIds = grades.filter(g => g.student_id && !allStudentIds.has(g.student_id)).map(g => g.id);
+    orphanAttendIds = attends.filter(a => a.student_id && !allStudentIds.has(a.student_id)).map(a => a.id);
+    orphanAssessIds = assessments.filter(a => a.student_id && !allStudentIds.has(a.student_id)).map(a => a.id);
+
+    const totalOrphan = orphanTaskIds.length + orphanLogIds.length + orphanGradeIds.length + orphanAttendIds.length + orphanAssessIds.length;
+    if (totalOrphan > 0) {
+      log(`\n⚠️ 고아 데이터 발견 (미등록 학생 ID): ${totalOrphan}건`, 'warn');
+      if (orphanTaskIds.length)   log(`  - planner_tasks: ${orphanTaskIds.length}건`, 'warn');
+      if (orphanLogIds.length)    log(`  - student_logs: ${orphanLogIds.length}건`, 'warn');
+      if (orphanGradeIds.length)  log(`  - student_grades: ${orphanGradeIds.length}건`, 'warn');
+      if (orphanAttendIds.length) log(`  - attendance: ${orphanAttendIds.length}건`, 'warn');
+      if (orphanAssessIds.length) log(`  - assessments: ${orphanAssessIds.length}건`, 'warn');
+    } else {
+      log('\n✅ 미등록 학생 ID 기반 고아 데이터 없음', 'ok');
+    }
+
+    analysisComplete = true;
+    document.getElementById('previewBtn').disabled    = false;
+    document.getElementById('checkActiveBtn').disabled = false;
+    setStep('✅ 조회 완료! 2단계에서 삭제 대상을 미리보기 하세요.');
+    log('\n[1단계 완료] 2단계 버튼을 클릭하세요.', 'ok');
+
+  } catch (e) {
+    log('[오류] ' + e.message, 'err');
+    setStep('❌ 오류 발생: ' + e.message);
+  }
+}
+
+/* ─── 2단계: 삭제 대상 미리보기 ─── */
+async function previewOrphanData() {
+  if (!analysisComplete) {
+    alert('먼저 1단계 조회를 실행하세요.');
+    return;
+  }
+
+  const previewEl = document.getElementById('previewResult');
+  const pendingStudents = [];
+
+  // pending 학생들의 데이터도 보기
+  try {
+    const profiles = await fetchAll('student_profiles');
+    const pendingList = profiles.filter(p => p.status === 'pending');
+
+    const [tasks, logs, attends, assessments] = await Promise.all([
+      fetchAll('planner_tasks'),
+      fetchAll('student_logs'),
+      fetchAll('attendance'),
+      fetchAll('assessments'),
+    ]);
+
+    const pendingRows = pendingList.map(p => {
+      const t = tasks.filter(x => x.student_id === p.student_id).length;
+      const l = logs.filter(x => x.student_id === p.student_id).length;
+      const a = attends.filter(x => x.student_id === p.student_id).length;
+      const s = assessments.filter(x => x.student_id === p.student_id).length;
+      return { ...p, taskCnt: t, logCnt: l, attendCnt: a, assessCnt: s, total: t+l+a+s };
+    }).filter(p => p.total > 0);
+
+    const totalOrphan = orphanTaskIds.length + orphanLogIds.length + orphanGradeIds.length + orphanAttendIds.length + orphanAssessIds.length;
+    const totalPendingData = pendingRows.reduce((acc, r) => acc + r.total, 0);
+
+    previewEl.innerHTML = `
+      <div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:13px;color:#fbbf24;font-weight:700;margin-bottom:10px;">⚠️ 삭제 대상 요약</div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.9;">
+          <strong>① 미등록 student_id 고아 데이터:</strong> 총 <strong style="color:#f87171">${totalOrphan}건</strong><br>
+          &nbsp;&nbsp;planner_tasks: ${orphanTaskIds.length}건 &nbsp;|&nbsp;
+          student_logs: ${orphanLogIds.length}건 &nbsp;|&nbsp;
+          student_grades: ${orphanGradeIds.length}건 &nbsp;|&nbsp;
+          attendance: ${orphanAttendIds.length}건 &nbsp;|&nbsp;
+          assessments: ${orphanAssessIds.length}건<br><br>
+          <strong>② 가입 대기(pending) 학생 관련 데이터:</strong> 총 <strong style="color:#fbbf24">${totalPendingData}건</strong>
+          ${pendingRows.length === 0 ? '<br>&nbsp;&nbsp;(없음)' : ''}
+        </div>
+        ${pendingRows.length > 0 ? `
+        <div class="table-wrap" style="margin-top:12px;">
+          <table>
+            <thead><tr>
+              <th>학생 ID</th><th>이름</th><th>상태</th>
+              <th>플랜</th><th>학습기록</th><th>출결</th><th>수행평가</th>
+            </tr></thead>
+            <tbody>
+              ${pendingRows.map(p => `
+                <tr>
+                  <td style="font-family:monospace;font-size:12px;">${p.student_id}</td>
+                  <td>${p.name}</td>
+                  <td><span class="badge badge-pending">${p.status}</span></td>
+                  <td>${p.taskCnt}</td><td>${p.logCnt}</td><td>${p.attendCnt}</td><td>${p.assessCnt}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : ''}
+        <div style="margin-top:14px;padding:12px;background:#1e293b;border-radius:8px;font-size:12.5px;color:#94a3b8;">
+          ℹ️ 3단계에서는 <strong>미등록 학생 ID 고아 데이터만</strong> 삭제합니다.<br>
+          pending 학생 데이터는 해당 학생을 승인하거나 거절(삭제)할 때 함께 처리됩니다.
+        </div>
+      </div>
+    `;
+
+    document.getElementById('deleteBtn').disabled = (totalOrphan === 0);
+    if (totalOrphan === 0) {
+      log('[미리보기] 삭제할 고아 데이터가 없습니다. DB가 깨끗합니다! ✅', 'ok');
+    } else {
+      log(`[미리보기] 삭제 대상 ${totalOrphan}건 확인됨. 3단계 삭제 버튼이 활성화됩니다.`, 'warn');
+    }
+  } catch (e) {
+    previewEl.innerHTML = `<p style="color:#f87171;font-size:13px;">오류: ${e.message}</p>`;
+  }
+}
+
+/* ─── 3단계: 실제 삭제 ─── */
+async function deleteOrphanData() {
+  if (!analysisComplete) {
+    alert('먼저 1단계 조회를 실행하세요.');
+    return;
+  }
+
+  const allIds = [
+    ...orphanTaskIds.map(id => ({ table: 'planner_tasks', id })),
+    ...orphanLogIds.map(id => ({ table: 'student_logs', id })),
+    ...orphanGradeIds.map(id => ({ table: 'student_grades', id })),
+    ...orphanAttendIds.map(id => ({ table: 'attendance', id })),
+    ...orphanAssessIds.map(id => ({ table: 'assessments', id })),
+  ];
+
+  if (allIds.length === 0) {
+    log('[삭제] 삭제할 고아 데이터가 없습니다.', 'ok');
+    return;
+  }
+
+  if (!confirm(`총 ${allIds.length}건의 고아 데이터를 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?`)) return;
+
+  document.getElementById('deleteBtn').disabled = true;
+  document.getElementById('deleteProgress').style.display = 'block';
+  const progressBar = document.getElementById('deleteProgressBar');
+
+  log(`\n[3단계] 고아 데이터 ${allIds.length}건 삭제 시작...`, 'info');
+
+  let done = 0, success = 0, failed = 0;
+
+  for (const item of allIds) {
+    try {
+      const res = await fetch(`${API}/${item.table}/${item.id}`, { method: 'DELETE' });
+      if (res.ok || res.status === 204) {
+        success++;
+      } else {
+        failed++;
+        log(`  ❌ 삭제 실패 [${item.table}/${item.id}] status=${res.status}`, 'err');
+      }
+    } catch (e) {
+      failed++;
+      log(`  ❌ 오류 [${item.table}/${item.id}]: ${e.message}`, 'err');
+    }
+    done++;
+    progressBar.style.width = Math.round(done / allIds.length * 100) + '%';
+    // 배치 딜레이 (서버 부하 방지)
+    if (done % 10 === 0) await new Promise(r => setTimeout(r, 100));
+  }
+
+  log(`\n[3단계 완료] 삭제: ${success}건 성공, ${failed}건 실패`, success > 0 ? 'ok' : 'err');
+  if (success > 0) {
+    log('✅ 데이터 정리가 완료되었습니다!', 'ok');
+    // 고아 ID 목록 초기화
+    orphanTaskIds = orphanLogIds = orphanGradeIds = orphanAttendIds = orphanAssessIds = [];
+  }
+}
+
+/* ─── 4단계: 재원 학생 데이터 현황 ─── */
+async function checkActiveStudentData() {
+  const el = document.getElementById('activeStudentData');
+  el.innerHTML = '<p style="color:#94a3b8;font-size:13px;margin-top:8px;">불러오는 중...</p>';
+
+  try {
+    const profiles = await fetchAll('student_profiles');
+    const active   = profiles.filter(p => p.status === '재원' || p.status === 'active');
+
+    const [tasks, logs, attends, assessments] = await Promise.all([
+      fetchAll('planner_tasks'),
+      fetchAll('student_logs'),
+      fetchAll('attendance'),
+      fetchAll('assessments'),
+    ]);
+
+    el.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>이름</th><th>학생 ID</th><th>학교/학년</th><th>단계</th>
+            <th>플랜태스크</th><th>학습기록</th><th>출결</th><th>수행평가</th>
+          </tr></thead>
+          <tbody>
+            ${active.length === 0 ? '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">재원 학생 없음</td></tr>' :
+              active.map(p => {
+                const taskCnt   = tasks.filter(t => t.student_id === p.student_id).length;
+                const logCnt    = logs.filter(l => l.student_id === p.student_id).length;
+                const attendCnt = attends.filter(a => a.student_id === p.student_id).length;
+                const assessCnt = assessments.filter(a => a.student_id === p.student_id).length;
+                return `<tr>
+                  <td><strong>${p.name}</strong></td>
+                  <td style="font-family:monospace;font-size:12px;">${p.student_id}</td>
+                  <td>${p.school || '-'} ${p.grade || ''}</td>
+                  <td>${p.stage || '-'}</td>
+                  <td style="color:${taskCnt>0?'#4ade80':'#475569'}">${taskCnt}</td>
+                  <td style="color:${logCnt>0?'#4ade80':'#475569'}">${logCnt}</td>
+                  <td style="color:${attendCnt>0?'#4ade80':'#475569'}">${attendCnt}</td>
+                  <td style="color:${assessCnt>0?'#4ade80':'#475569'}">${assessCnt}</td>
+                </tr>`;
+              }).join('')
+            }
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin-top:8px;">재원 학생 ${active.length}명 표시</p>
+    `;
+    log(`\n[4단계] 재원 학생 ${active.length}명 현황 확인 완료`, 'ok');
+  } catch (e) {
+    el.innerHTML = `<p style="color:#f87171;font-size:13px;">오류: ${e.message}</p>`;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>상담 신청 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <style>
+    :root {
+      --sc-main: #0ea5e9;
+      --sc-dark: #0369a1;
+      --sc-light: #e0f2fe;
+      --sc-success: #10b981;
+      --sc-warn: #f59e0b;
+      --sc-danger: #ef4444;
+    }
+    .sc-wrap { padding: 24px; max-width: 900px; margin: 0 auto; }
+
+    /* 상단 배너 */
+    .sc-banner {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+      border-radius: 18px; padding: 24px 28px;
+      color: white; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sc-banner-left h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+    .sc-banner-left p  { font-size: .88rem; opacity: .85; }
+    .btn-new-req {
+      padding: 10px 22px; background: white; color: var(--sc-dark);
+      border: none; border-radius: 30px; font-size: .9rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: all .2s;
+    }
+    .btn-new-req:hover { background: #e0f2fe; }
+
+    /* 탭 */
+    .sc-tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
+    .sc-tab {
+      padding: 10px 20px; font-size: .9rem; font-weight: 600;
+      color: #6b7280; cursor: pointer; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: all .2s;
+    }
+    .sc-tab.active { color: var(--sc-main); border-bottom-color: var(--sc-main); }
+
+    /* 신청 카드 */
+    .sc-req-list { display: flex; flex-direction: column; gap: 14px; }
+    .sc-req-card {
+      background: white; border-radius: 14px; padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 1.5px solid #e5e7eb;
+      transition: all .2s;
+    }
+    .sc-req-card.pending { border-left: 4px solid var(--sc-warn); }
+    .sc-req-card.confirmed { border-left: 4px solid var(--sc-success); }
+    .sc-req-card.rejected { border-left: 4px solid var(--sc-danger); opacity: .8; }
+    .sc-req-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .sc-req-title { font-size: .95rem; font-weight: 700; color: #1e293b; }
+    .sc-req-date  { font-size: .78rem; color: #94a3b8; white-space: nowrap; }
+    .sc-req-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .sc-badge {
+      font-size: .74rem; padding: 2px 9px; border-radius: 99px; font-weight: 700;
+    }
+    .sc-badge.status-pending   { background: #fef3c7; color: #92400e; }
+    .sc-badge.status-confirmed { background: #d1fae5; color: #065f46; }
+    .sc-badge.status-rejected  { background: #fee2e2; color: #991b1b; }
+    .sc-badge.status-completed { background: #e0e7ff; color: #3730a3; }
+    .sc-badge.cat { background: #f1f5f9; color: #475569; }
+    .sc-req-body { font-size: .88rem; color: #475569; line-height: 1.6; background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+    .sc-req-confirm-info {
+      font-size: .85rem; color: #374151; background: #f0fdf4;
+      border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--sc-success);
+      margin-bottom: 8px;
+    }
+    .sc-req-reply {
+      font-size: .85rem; color: #374151; background: #f0f9ff;
+      border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--sc-main);
+    }
+    .sc-req-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; gap: 8px; }
+    .btn-cancel-req {
+      padding: 6px 14px; border-radius: 8px; background: #fee2e2; color: #991b1b;
+      border: none; font-size: .8rem; font-weight: 600; cursor: pointer;
+    }
+
+    /* 상담 이력 카드 */
+    .sc-hist-list { display: flex; flex-direction: column; gap: 14px; }
+    .sc-hist-card {
+      background: white; border-radius: 14px; padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 1.5px solid #e5e7eb;
+    }
+    .sc-hist-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .sc-hist-title { font-size: .95rem; font-weight: 700; color: #1e293b; }
+    .sc-hist-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+    .sc-hist-meta-item { font-size: .82rem; color: #64748b; }
+    .sc-hist-meta-item strong { color: #374151; }
+    .sc-hist-summary { font-size: .88rem; color: #475569; line-height: 1.6; background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+    .sc-hist-followup {
+      font-size: .85rem; color: #374151; background: #fffbeb;
+      border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--sc-warn);
+    }
+    .sc-hist-next { font-size: .82rem; color: #64748b; margin-top: 8px; }
+    .sc-hist-next strong { color: var(--sc-main); }
+
+    /* 모달 */
+    .sc-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      z-index: 1000; align-items: flex-end; justify-content: center;
+    }
+    .sc-modal-overlay.open { display: flex; }
+    .sc-modal {
+      background: white; border-radius: 20px 20px 0 0; padding: 28px 24px;
+      width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 -8px 40px rgba(0,0,0,.15);
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .sc-modal h3 { font-size: 1.05rem; font-weight: 700; color: #1e293b; margin-bottom: 18px; }
+    .sc-form-row { margin-bottom: 14px; }
+    .sc-form-row label { display: block; font-size: .85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
+    .sc-form-row select, .sc-form-row input, .sc-form-row textarea {
+      width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e5e7eb;
+      font-size: .88rem; color: #374151; font-family: inherit; box-sizing: border-box;
+    }
+    .sc-form-row select:focus, .sc-form-row input:focus, .sc-form-row textarea:focus {
+      outline: none; border-color: var(--sc-main);
+    }
+    .sc-form-row textarea { resize: vertical; min-height: 100px; }
+    .sc-form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sc-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+    .btn-modal-cancel { padding: 10px 20px; border-radius: 9px; background: #f1f5f9; color: #64748b; border: none; font-size: .9rem; font-weight: 600; cursor: pointer; }
+    .btn-modal-submit { padding: 10px 24px; border-radius: 9px; background: var(--sc-main); color: white; border: none; font-size: .9rem; font-weight: 700; cursor: pointer; }
+
+    /* 빈 상태 */
+    .sc-empty { text-align: center; padding: 48px 20px; color: #94a3b8; }
+    .sc-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+
+    /* 토스트 */
+    .sc-toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 12px 24px;
+      border-radius: 30px; font-size: .88rem; font-weight: 600;
+      opacity: 0; transition: opacity .3s; z-index: 9999; pointer-events: none;
+    }
+    .sc-toast.show { opacity: 1; }
+
+    /* 팁 박스 */
+    .sc-tip {
+      background: #f0f9ff; border-radius: 12px; padding: 14px 16px;
+      border-left: 4px solid var(--sc-main); margin-bottom: 20px;
+      font-size: .88rem; color: #374151; line-height: 1.6;
+    }
+    .sc-tip strong { color: var(--sc-main); }
+
+    @media (max-width: 600px) {
+      .sc-wrap { padding: 14px; }
+      .sc-form-2col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">김</div>
+        <span class="stu-stage-badge" id="sidebarStage">1단계</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">학생</strong>
+        <span id="sidebarStudentSchool">학교</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 현황</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+        <a href="exam.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+        <a href="report.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>역량 리포트</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item"><i class="fas fa-robot"></i><span>AI 튜터링 로그</span></a>
+        <a href="golden-time.html" class="nav-item"><i class="fas fa-star"></i><span>골든타임 미션</span></a>
+        <a href="incubating.html" class="nav-item"><i class="fas fa-lightbulb"></i><span>질문 아카이브</span></a>
+        <a href="clinic.html" class="nav-item"><i class="fas fa-file-medical"></i><span>학생부 클리닉</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="consult.html" class="nav-item active"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>상담 신청</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar student-avatar-color" id="topbarAvatar">김</div>
+          <span class="topbar-user-name" id="topbarName">학생</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="sc-wrap">
+
+      <!-- 배너 -->
+      <div class="sc-banner">
+        <div class="sc-banner-left">
+          <h2><i class="fas fa-comments" style="margin-right:8px;"></i>선생님과 1:1 상담</h2>
+          <p>궁금한 점이나 고민이 있으면 언제든지 상담을 신청하세요!</p>
+        </div>
+        <button class="btn-new-req" id="btnNewReq">
+          <i class="fas fa-plus"></i> 상담 신청하기
+        </button>
+      </div>
+
+      <!-- 탭 -->
+      <div class="sc-tabs">
+        <div class="sc-tab active" data-tab="requests">📋 나의 신청</div>
+        <div class="sc-tab" data-tab="history">📁 상담 이력</div>
+      </div>
+
+      <!-- 신청 목록 탭 -->
+      <div id="tab-requests">
+        <div class="sc-tip">
+          <strong>📌 안내</strong> 상담 신청 후 선생님께서 확정하면 날짜와 시간이 안내됩니다.<br>
+          긴급한 상담은 직접 선생님께 말씀해 주세요.
+        </div>
+        <div class="sc-req-list" id="reqList">
+          <div class="sc-empty"><i class="fas fa-inbox"></i><p>신청 내역이 없습니다.<br>상담이 필요하면 위 버튼을 눌러 신청해 주세요!</p></div>
+        </div>
+      </div>
+
+      <!-- 이력 탭 -->
+      <div id="tab-history" style="display:none;">
+        <div class="sc-hist-list" id="histList">
+          <div class="sc-empty"><i class="fas fa-history"></i><p>상담 이력이 없습니다.</p></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== 상담 신청 모달 ===== -->
+  <div class="sc-modal-overlay" id="reqModal">
+    <div class="sc-modal">
+      <h3><i class="fas fa-pen-alt" style="color:var(--sc-main);margin-right:8px;"></i>상담 신청서 작성</h3>
+
+      <div class="sc-form-row">
+        <label>상담 분류 *</label>
+        <select id="rCategory">
+          <option value="academic">📚 학업 (공부 방법, 성적 고민)</option>
+          <option value="career">🎯 진로 (진학, 직업, 목표)</option>
+          <option value="behavior">🌿 생활태도 (습관, 규칙)</option>
+          <option value="mental">💚 심리정서 (스트레스, 감정)</option>
+          <option value="family">🏠 가정환경 (가족 관계)</option>
+          <option value="other">💬 기타</option>
+        </select>
+      </div>
+
+      <div class="sc-form-row">
+        <label>상담 신청 내용 * <small style="color:#94a3b8;">(선생님께 전달됩니다)</small></label>
+        <textarea id="rContent" rows="5" placeholder="어떤 내용으로 상담을 원하시나요? 구체적으로 적어주실수록 더 도움이 됩니다."></textarea>
+      </div>
+
+      <div class="sc-form-2col">
+        <div class="sc-form-row">
+          <label>희망 상담일 1순위</label>
+          <input type="date" id="rDate1" />
+        </div>
+        <div class="sc-form-row">
+          <label>희망 상담일 2순위</label>
+          <input type="date" id="rDate2" />
+        </div>
+      </div>
+
+      <div class="sc-form-row">
+        <label>희망 시간대</label>
+        <select id="rTime">
+          <option value="morning">오전 (10:00 ~ 12:00)</option>
+          <option value="afternoon" selected>오후 (14:00 ~ 18:00)</option>
+          <option value="evening">저녁 (18:00 ~ 20:00)</option>
+        </select>
+      </div>
+
+      <div class="sc-modal-actions">
+        <button class="btn-modal-cancel" id="btnReqCancel">취소</button>
+        <button class="btn-modal-submit" id="btnReqSubmit"><i class="fas fa-paper-plane"></i> 신청하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 -->
+  <div class="sc-toast" id="scToast"></div>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--student" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+      <a href="assessment.html" class="mobile-nav-item">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+      <a href="grades.html" class="mobile-nav-item">
+        <i class="fas fa-chart-line"></i><span>성적</span>
+      </a>
+      <a href="notice.html" class="mobile-nav-item">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+      <button class="mobile-nav-item morenav-toggle" id="moreNavBtn" onclick="openMoreNav()">
+        <i class="fas fa-ellipsis"></i><span>더보기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div class="morenav-overlay" id="moreNavOverlay" onclick="closeMoreNav()"></div>
+  <div class="morenav-drawer morenav--student" id="moreNavDrawer">
+    <div class="morenav-handle"></div>
+    <div class="morenav-profile">
+      <div class="morenav-avatar" id="moreNavAvatar">학</div>
+      <div>
+        <div class="morenav-name" id="moreNavName">–</div>
+        <div class="morenav-sub" id="moreNavSub">–</div>
+      </div>
+    </div>
+    <div class="morenav-header">전체 메뉴</div>
+    <div class="morenav-grid">
+      <a href="attendance.html" class="morenav-item">
+        <i class="fas fa-calendar-check"></i><span>출결</span>
+      </a>
+      <a href="plan.html" class="morenav-item">
+        <i class="fas fa-tasks"></i><span>학습플랜</span>
+      </a>
+      <a href="exam.html" class="morenav-item">
+        <i class="fas fa-calendar-alt"></i><span>시험플래너</span>
+      </a>
+      <a href="consult.html" class="morenav-item active">
+        <i class="fas fa-comments"></i><span>상담</span>
+      </a>
+      <a href="record.html" class="morenav-item">
+        <i class="fas fa-id-card"></i><span>학생부</span>
+      </a>
+      <a href="report.html" class="morenav-item">
+        <i class="fas fa-chart-bar"></i><span>역량리포트</span>
+      </a>
+      <a href="dashboard.html" class="morenav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+    </div>
+  </div>
+  <script>
+  function openMoreNav() {
+    document.getElementById('moreNavDrawer').classList.add('open');
+    document.getElementById('moreNavOverlay').classList.add('show');
+    document.getElementById('moreNavBtn').classList.add('open');
+    try {
+      const s = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+      const name = s.name || s.userName || '';
+      const school = s.school || s.userSchool || '';
+      if (name) {
+        document.getElementById('moreNavAvatar').textContent = name.charAt(0);
+        document.getElementById('moreNavName').textContent = name;
+        document.getElementById('moreNavSub').textContent = school;
+      }
+    } catch(e) {}
+  }
+  function closeMoreNav() {
+    document.getElementById('moreNavDrawer').classList.remove('open');
+    document.getElementById('moreNavOverlay').classList.remove('show');
+    document.getElementById('moreNavBtn').classList.remove('open');
+  }
+  </script>
+
+  <script>
+    const TABLE_REQUESTS = 'consult_requests';
+    const TABLE_CONSULTATIONS = 'consultations';
+    let session = null;
+    let myRequests = [];
+    let myHistory  = [];
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      session = JSON.parse(sessionStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || 'null');
+      if (!session || session.role !== 'student') {
+        location.href = '../login.html'; return;
+      }
+      initSidebar();
+      initTabs();
+      initModal();
+      setDefaultDates();
+      await Promise.all([loadRequests(), loadHistory()]);
+    });
+
+    function initSidebar() {
+      const av = session.name ? session.name[0] : '학';
+      document.getElementById('sidebarAvatar').textContent = av;
+      document.getElementById('sidebarStudentName').textContent = session.name || '학생';
+      document.getElementById('sidebarStudentSchool').textContent = (session.school || '') + ' ' + (session.grade || '');
+      document.getElementById('topbarAvatar').textContent = av;
+      document.getElementById('topbarName').textContent = session.name || '학생';
+      document.getElementById('sidebarStage').textContent = session.stage ? session.stage + '단계' : '1단계';
+
+      // ── 사이드바 토글 (표준) ──
+      (function() {
+        const sb  = document.getElementById('sidebar');
+        const dim = document.getElementById('sidebarDim');
+        if (!sb || !dim) return;
+        const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+        const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+        ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+        document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+        dim.addEventListener('click', close);
+      })();
+      document.getElementById('logoutBtn')?.addEventListener('click', e => {
+        e.preventDefault(); ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)}); sessionStorage.clear(); location.href = '../login.html';
+      });
+    }
+
+    function setDefaultDates() {
+      const today = new Date();
+      const fmt = d => d.toISOString().split('T')[0];
+      document.getElementById('rDate1').value = fmt(new Date(today.getTime() + 3*86400000));
+      document.getElementById('rDate2').value = fmt(new Date(today.getTime() + 7*86400000));
+    }
+
+    function initTabs() {
+      document.querySelectorAll('.sc-tab').forEach(t => {
+        t.addEventListener('click', () => {
+          document.querySelectorAll('.sc-tab').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          document.getElementById('tab-requests').style.display = t.dataset.tab === 'requests' ? '' : 'none';
+          document.getElementById('tab-history').style.display  = t.dataset.tab === 'history'  ? '' : 'none';
+          if (t.dataset.tab === 'history') renderHistory();
+        });
+      });
+    }
+
+    function initModal() {
+      document.getElementById('btnNewReq').addEventListener('click', () => {
+        document.getElementById('rContent').value = '';
+        document.getElementById('rCategory').value = 'academic';
+        setDefaultDates();
+        document.getElementById('reqModal').classList.add('open');
+      });
+      document.getElementById('btnReqCancel').addEventListener('click', () => {
+        document.getElementById('reqModal').classList.remove('open');
+      });
+      document.getElementById('btnReqSubmit').addEventListener('click', submitRequest);
+    }
+
+    // ─── 데이터 로드 ───
+    async function loadRequests() {
+      try {
+        const r = await fetch(`tables/${TABLE_REQUESTS}?limit=50`);
+        const d = await r.json();
+        const all = d.data || [];
+        myRequests = all.filter(x => x.requester_id === session.id || x.requester_id === session.username);
+        renderRequests();
+      } catch(e) { myRequests = []; renderRequests(); }
+    }
+
+    async function loadHistory() {
+      try {
+        const r = await fetch(`tables/${TABLE_CONSULTATIONS}?limit=100`);
+        const d = await r.json();
+        const all = d.data || [];
+        const sid = session.id || session.username;
+        myHistory = all.filter(x => x.student_id === sid && x.status === 'completed');
+      } catch(e) { myHistory = []; }
+    }
+
+    // ─── 신청 렌더링 ───
+    function renderRequests() {
+      const listEl = document.getElementById('reqList');
+      if (!myRequests.length) {
+        listEl.innerHTML = '<div class="sc-empty"><i class="fas fa-inbox"></i><p>신청 내역이 없습니다.<br>상담이 필요하면 위 버튼을 눌러 신청해 주세요!</p></div>';
+        return;
+      }
+      const sorted = [...myRequests].sort((a,b) => (b.created_at||0)-(a.created_at||0));
+      listEl.innerHTML = sorted.map(r => `
+        <div class="sc-req-card ${r.status||'pending'}">
+          <div class="sc-req-header">
+            <div class="sc-req-title">${catLabel(r.category)} 상담 신청</div>
+            <div class="sc-req-date">${formatDate(r.created_at)}</div>
+          </div>
+          <div class="sc-req-badges">
+            <span class="sc-badge status-${r.status||'pending'}">${reqStatusLabel(r.status)}</span>
+            <span class="sc-badge cat">${catLabel(r.category)}</span>
+          </div>
+          <div class="sc-req-body">${r.request_content||'내용 없음'}</div>
+          ${r.status==='confirmed'&&r.confirmed_date?`
+            <div class="sc-req-confirm-info">
+              <i class="fas fa-calendar-check" style="color:var(--sc-success);margin-right:6px;"></i>
+              <strong>확정 일정:</strong> ${r.confirmed_date} ${r.confirmed_time||''} 
+            </div>
+          `:''}
+          ${r.admin_reply?`
+            <div class="sc-req-reply">
+              <i class="fas fa-reply" style="color:var(--sc-main);margin-right:6px;"></i>
+              <strong>선생님 답변:</strong> ${r.admin_reply}
+            </div>
+          `:''}
+          <div class="sc-req-footer">
+            <span style="font-size:.8rem;color:#94a3b8;">희망일: ${r.preferred_date1||'-'} · ${timeLabel(r.preferred_time)}</span>
+            ${r.status==='pending'?`<button class="btn-cancel-req" onclick="cancelRequest('${r.id}')"><i class="fas fa-times"></i> 취소</button>`:''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── 이력 렌더링 ───
+    function renderHistory() {
+      const listEl = document.getElementById('histList');
+      if (!myHistory.length) {
+        listEl.innerHTML = '<div class="sc-empty"><i class="fas fa-history"></i><p>상담 이력이 없습니다.</p></div>';
+        return;
+      }
+      const sorted = [...myHistory].sort((a,b) => (b.scheduled_date||'').localeCompare(a.scheduled_date||''));
+      listEl.innerHTML = sorted.map(c => `
+        <div class="sc-hist-card">
+          <div class="sc-hist-header">
+            <div class="sc-hist-title"><i class="fas fa-comments" style="color:var(--sc-main);margin-right:6px;"></i>${c.title||'상담'}</div>
+            <span style="font-size:.8rem;color:#94a3b8;">${c.scheduled_date||''}</span>
+          </div>
+          <div class="sc-hist-meta">
+            <div class="sc-hist-meta-item"><i class="fas fa-tag" style="margin-right:4px;color:#94a3b8;"></i>${catLabel(c.category)}</div>
+            <div class="sc-hist-meta-item"><i class="fas fa-clock" style="margin-right:4px;color:#94a3b8;"></i>${c.duration_min||60}분</div>
+            <div class="sc-hist-meta-item"><i class="fas fa-user-tie" style="margin-right:4px;color:#94a3b8;"></i>${c.admin_name||'선생님'}</div>
+          </div>
+          ${c.summary?`<div class="sc-hist-summary"><strong style="font-size:.82rem;color:#64748b;">📋 상담 요약</strong><br>${c.summary}</div>`:''}
+          ${c.follow_up?`<div class="sc-hist-followup"><strong>📌 후속 조치:</strong> ${c.follow_up}</div>`:''}
+          ${c.next_consult_date?`<div class="sc-hist-next">다음 상담 권고일: <strong>${c.next_consult_date}</strong></div>`:''}
+        </div>
+      `).join('');
+    }
+
+    // ─── 신청 제출 ───
+    async function submitRequest() {
+      const content = document.getElementById('rContent').value.trim();
+      const date1   = document.getElementById('rDate1').value;
+      if (!content) { showToast('상담 내용을 입력해 주세요.'); return; }
+
+      const payload = {
+        requester_id:   session.id || session.username,
+        requester_name: session.name || '학생',
+        requester_type: 'student',
+        student_id:     session.id || session.username,
+        student_name:   session.name || '학생',
+        category:       document.getElementById('rCategory').value,
+        preferred_date1: date1,
+        preferred_date2: document.getElementById('rDate2').value,
+        preferred_time:  document.getElementById('rTime').value,
+        request_content: content,
+        status: 'pending',
+        is_read: false
+      };
+
+      try {
+        const r = await fetch(`tables/${TABLE_REQUESTS}`, {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error();
+        showToast('상담 신청이 완료되었습니다! 선생님께서 확인 후 연락드릴 거예요. 😊');
+        document.getElementById('reqModal').classList.remove('open');
+        await loadRequests();
+      } catch(e) { showToast('오류가 발생했습니다. 다시 시도해 주세요.'); }
+    }
+
+    async function cancelRequest(id) {
+      if (!confirm('상담 신청을 취소하시겠습니까?')) return;
+      try {
+        await fetch(`tables/${TABLE_REQUESTS}/${id}`, {
+          method: 'PATCH', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ status: 'cancelled' })
+        });
+        showToast('신청이 취소되었습니다.');
+        await loadRequests();
+      } catch(e) { showToast('오류가 발생했습니다.'); }
+    }
+
+    // ─── 유틸 ───
+    function catLabel(c) {
+      return {academic:'학업',career:'진로',behavior:'생활태도',mental:'심리정서',family:'가정환경',other:'기타'}[c]||c||'-';
+    }
+    function reqStatusLabel(s) {
+      return {pending:'대기중',confirmed:'✅ 확정됨',rejected:'거절됨',cancelled:'취소됨',completed:'완료'}[s]||s||'대기중';
+    }
+    function timeLabel(t) {
+      return {morning:'오전',afternoon:'오후',evening:'저녁'}[t]||t||'-';
+    }
+    function formatDate(ts) {
+      if (!ts) return '';
+      return new Date(ts).toLocaleDateString('ko-KR', {month:'short',day:'numeric'});
+    }
+    function showToast(msg) {
+      const t = document.getElementById('scToast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+</html>

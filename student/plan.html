@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학습 플랜 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <style>
+    /* ══ 학습 플랜 전용 스타일 ══ */
+    :root {
+      --plan-mint:   #163A33;
+      --plan-green:  #10b981;
+      --plan-yellow: #f59e0b;
+      --plan-blue:   #3b82f6;
+      --plan-violet: #8b5cf6;
+      --plan-pink:   #ec4899;
+      --plan-red:    #ef4444;
+      --plan-gray:   #6b7280;
+    }
+
+    .plan-wrap { padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    /* ── 주간 헤더 ── */
+    .plan-week-header {
+      background: linear-gradient(135deg, var(--plan-mint) 0%, #245A4E 100%);
+      border-radius: 16px; padding: 24px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      color: white; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .plan-week-info h2 { font-size: 1.15rem; font-weight: 700; margin-bottom: 4px; }
+    .plan-week-info p  { font-size: .88rem; opacity: .8; }
+    .plan-week-nav { display: flex; align-items: center; gap: 8px; }
+    .week-nav-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      border: 1.5px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.15); color: white;
+      cursor: pointer; font-size: .9rem; display: flex;
+      align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .week-nav-btn:hover { background: rgba(255,255,255,.3); }
+    .week-label {
+      font-size: .9rem; font-weight: 600; padding: 0 12px;
+      white-space: nowrap;
+    }
+
+    /* ── KPI 카드 ── */
+    .plan-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px; margin-bottom: 24px;
+    }
+    .plan-kpi-card {
+      background: white; border-radius: 14px; padding: 16px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .kpi-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .kpi-icon.green  { background: #d1fae5; color: var(--plan-green); }
+    .kpi-icon.yellow { background: #fef3c7; color: var(--plan-yellow); }
+    .kpi-icon.blue   { background: #dbeafe; color: var(--plan-blue); }
+    .kpi-icon.violet { background: #ede9fe; color: var(--plan-violet); }
+    .kpi-val  { font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .kpi-lbl  { font-size: .75rem; color: #94a3b8; margin-top: 2px; }
+
+    /* ── 진행률 바 ── */
+    .plan-progress-section {
+      background: white; border-radius: 14px; padding: 18px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px;
+    }
+    .progress-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .progress-title { font-size: .95rem; font-weight: 700; color: #1e293b; }
+    .progress-pct   { font-size: 1.1rem; font-weight: 800; color: var(--plan-mint); }
+    .progress-bar-bg {
+      height: 10px; background: #f1f5f9; border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, var(--plan-green), #059669);
+      transition: width .6s ease;
+    }
+
+    /* ── 탭 ── */
+    .plan-tabs {
+      display: flex; gap: 4px; background: #f1f5f9;
+      border-radius: 12px; padding: 4px; margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .plan-tab-btn {
+      flex: 1; padding: 9px 8px;
+      border-radius: 9px; border: none;
+      background: none; font-size: 13px; font-weight: 500;
+      color: #64748b; cursor: pointer; transition: all .2s;
+      white-space: nowrap; min-width: 72px;
+    }
+    .plan-tab-btn.active {
+      background: white; color: var(--plan-mint);
+      font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    /* ── 월간 캘린더 ── */
+    .monthly-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .monthly-title {
+      font-size: 1.1rem; font-weight: 700; color: #1e293b;
+    }
+    .monthly-nav-btn {
+      width: 34px; height: 34px; border-radius: 9px;
+      border: 1.5px solid #e5e7eb; background: white;
+      cursor: pointer; font-size: .85rem; color: #374151;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .monthly-nav-btn:hover { background: #f0fdf4; border-color: #a7f3d0; }
+    .monthly-grid {
+      background: white; border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      overflow: hidden; border: 1.5px solid #e5e7eb;
+    }
+    .monthly-weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      background: var(--plan-mint);
+    }
+    .monthly-weekday {
+      padding: 10px 4px; text-align: center;
+      font-size: 12px; font-weight: 700; color: rgba(255,255,255,.9);
+    }
+    .monthly-weekday.sun { color: #fca5a5; }
+    .monthly-weekday.sat { color: #93c5fd; }
+    .monthly-days {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border-top: none;
+    }
+    .monthly-day {
+      min-height: 90px; padding: 6px 5px;
+      border-right: 1px solid #e5e7eb;
+      border-bottom: 1px solid #e5e7eb;
+      position: relative; cursor: pointer;
+      transition: background .15s;
+    }
+    .monthly-day:nth-child(7n) { border-right: none; }
+    .monthly-day:hover { background: #f0fdf4; }
+    .monthly-day.today {
+      background: #f0fdf4;
+    }
+    .monthly-day.today .mday-num {
+      background: var(--plan-mint); color: white;
+      border-radius: 50%; width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .monthly-day.other-month .mday-num { color: #cbd5e1; }
+    .mday-num {
+      font-size: 13px; font-weight: 600; color: #374151;
+      margin-bottom: 4px; line-height: 1;
+    }
+    .mday-num.sun { color: #ef4444; }
+    .mday-num.sat { color: #3b82f6; }
+    .mday-task-chips { display: flex; flex-direction: column; gap: 2px; }
+    .mday-chip {
+      font-size: 10.5px; font-weight: 600;
+      padding: 2px 5px; border-radius: 4px;
+      line-height: 1.4; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+      cursor: pointer;
+    }
+    .mday-chip.done { opacity: .55; text-decoration: line-through; }
+    .mday-more {
+      font-size: 10px; color: #94a3b8; margin-top: 2px;
+    }
+    /* 월간 범례 */
+    .monthly-legend {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 14px; padding: 12px 16px;
+      background: #f8fafc; border-radius: 10px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: #64748b;
+    }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 3px;
+    }
+    /* 일간 패널 */
+    .day-panel {
+      background: white; border-radius: 14px;
+      border: 1.5px solid #e5e7eb;
+      box-shadow: 0 4px 20px rgba(0,0,0,.1);
+      padding: 20px; margin-top: 16px;
+    }
+    .day-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .day-panel-title {
+      font-size: 1rem; font-weight: 700; color: #1e293b;
+    }
+    .day-panel-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: none; background: #f1f5f9; color: #64748b;
+      cursor: pointer; font-size: 13px; display: flex;
+      align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .day-panel-close:hover { background: #fee2e2; color: #ef4444; }
+    .monthly-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; margin-bottom: 18px;
+    }
+    .msummary-card {
+      background: #f8fafc; border-radius: 10px; padding: 10px 12px;
+      text-align: center;
+    }
+    .msummary-val { font-size: 1.3rem; font-weight: 800; color: #1e293b; }
+    .msummary-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    @media(max-width:640px) {
+      .monthly-day { min-height: 64px; padding: 4px 3px; }
+      .mday-chip { font-size: 9.5px; padding: 1px 3px; }
+      .monthly-summary { grid-template-columns: repeat(2,1fr); }
+    }
+
+    /* ── 플랜 카드 리스트 ── */
+    .plan-list { display: flex; flex-direction: column; gap: 12px; }
+    .plan-card {
+      background: white; border-radius: 14px; padding: 18px 20px;
+      border: 1.5px solid #e5e7eb;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+      display: flex; align-items: flex-start; gap: 14px;
+      transition: all .2s;
+    }
+    .plan-card:hover { border-color: #a7f3d0; box-shadow: 0 4px 16px rgba(16,185,129,.12); }
+    .plan-card.done { opacity: .7; }
+
+    .plan-check-wrap {
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .plan-check-btn {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid #e5e7eb; background: white;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; transition: all .2s;
+    }
+    .plan-check-btn.done {
+      background: var(--plan-green); border-color: var(--plan-green); color: white;
+    }
+    .plan-card-body { flex: 1; }
+    .plan-card-top {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;
+    }
+    .subj-tag {
+      font-size: 11.5px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .plan-card-title {
+      font-size: .95rem; font-weight: 600; color: #1e293b; line-height: 1.55;
+    }
+    .plan-card.done .plan-card-title { text-decoration: line-through; color: #94a3b8; }
+    .plan-card-meta {
+      display: flex; gap: 14px; margin-top: 6px; flex-wrap: wrap;
+    }
+    .plan-meta-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: #94a3b8;
+    }
+    .plan-meta-item i { font-size: 11px; }
+    .plan-comment {
+      margin-top: 8px; padding: 8px 12px;
+      background: #f0fdf4; border-radius: 8px;
+      border-left: 3px solid var(--plan-green);
+      font-size: 12.5px; color: #065f46;
+    }
+    .plan-comment i { margin-right: 4px; color: var(--plan-green); }
+
+    .plan-card-memo-row {
+      display: flex; align-items: flex-start; gap: 8px; margin-top: 10px;
+    }
+    .student-memo-input {
+      flex: 1; padding: 8px 12px;
+      border: 1.5px solid #e5e7eb; border-radius: 8px;
+      font-size: 12.5px; font-family: inherit; resize: none;
+      min-height: 38px; transition: border-color .2s;
+    }
+    .student-memo-input:focus { outline: none; border-color: var(--plan-green); }
+    .memo-save-btn {
+      padding: 8px 14px; border: none; border-radius: 8px;
+      background: var(--plan-mint); color: white;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      white-space: nowrap; transition: background .2s;
+    }
+    .memo-save-btn:hover { background: #245A4E; }
+
+    /* 상태 뱃지 */
+    .status-pill {
+      font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    }
+    .sp-todo    { background: #f1f5f9; color: #64748b; }
+    .sp-ing     { background: #fef3c7; color: #b45309; }
+    .sp-done    { background: #d1fae5; color: #065f46; }
+
+    /* ── 플랜 없음 ── */
+    .plan-empty {
+      text-align: center; padding: 60px 20px; color: #94a3b8;
+    }
+    .plan-empty-icon { font-size: 3.5rem; margin-bottom: 16px; opacity: .4; }
+    .plan-empty h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; color: #475569; }
+    .plan-empty p  { font-size: .88rem; line-height: 1.7; }
+
+    /* ── 시험 플래너 섹션 ── */
+    .planner-section { margin-top: 0; }
+    .planner-card {
+      background: white; border-radius: 14px; padding: 20px 22px;
+      border: 1.5px solid #e5e7eb; margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .planner-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
+    }
+    .planner-card-title { font-size: 1rem; font-weight: 700; color: #1e293b; }
+    .planner-dday {
+      font-size: .85rem; font-weight: 700; padding: 4px 14px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .pd-soon   { background: #fee2e2; color: #be123c; }
+    .pd-normal { background: #ede9fe; color: #6d28d9; }
+    .pd-passed { background: #f1f5f9; color: #64748b; }
+
+    .planner-subjects {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+    }
+    .planner-subj-tag {
+      font-size: 12px; padding: 4px 12px; border-radius: 20px;
+      font-weight: 600;
+    }
+    .planner-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .planner-meta-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12.5px; color: #94a3b8;
+    }
+
+    /* ── 주간 태스크 ── */
+    .week-task-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .week-task-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: #f8fafc;
+      border-radius: 10px; border: 1.5px solid #e5e7eb;
+      transition: all .2s;
+    }
+    .week-task-item.done { background: #f0fdf4; border-color: #bbf7d0; }
+    .task-done-btn {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid #e5e7eb; background: white;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; flex-shrink: 0; transition: all .2s;
+    }
+    .task-done-btn.done { background: var(--plan-green); border-color: var(--plan-green); color: white; }
+    .task-subj-tag {
+      font-size: 11.5px; font-weight: 700; padding: 2px 8px;
+      border-radius: 12px; white-space: nowrap; flex-shrink: 0;
+    }
+    .task-content { flex: 1; font-size: 13px; color: #374151; }
+    .week-task-item.done .task-content { text-decoration: line-through; color: #94a3b8; }
+    .task-date { font-size: 11.5px; color: #94a3b8; white-space: nowrap; }
+
+    /* 과목 색상 */
+    .sc-math    { background: #dbeafe; color: #1d4ed8; }
+    .sc-eng     { background: #d1fae5; color: #065f46; }
+    .sc-kor     { background: #ede9fe; color: #6d28d9; }
+    .sc-sci     { background: #fef3c7; color: #92400e; }
+    .sc-soc     { background: #fce7f3; color: #9d174d; }
+    .sc-hist    { background: #fee2e2; color: #b91c1c; }
+    .sc-etc     { background: #f1f5f9; color: #475569; }
+
+    /* 로딩 */
+    .loading-shimmer {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 12px; height: 80px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* 반응형 */
+    @media(max-width: 640px) {
+      .plan-kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .plan-week-header { padding: 18px 20px; }
+      .plan-wrap { padding: 16px; }
+      .plan-week-info h2 { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">학</div>
+        <span class="stu-stage-badge" id="sidebarStage">–</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">–</strong>
+        <span id="sidebarStudentSchool">–</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item" data-page="dashboard">
+          <i class="fas fa-th-large"></i><span>홈 대시보드</span>
+        </a>
+        <a href="attendance.html" class="nav-item" data-page="attendance">
+          <i class="fas fa-calendar-check"></i><span>출결 현황</span>
+        </a>
+        <a href="plan.html" class="nav-item active" data-page="plan">
+          <i class="fas fa-tasks"></i><span>학습 플랜</span>
+        </a>
+        <a href="exam.html" class="nav-item" data-page="exam">
+          <i class="fas fa-calendar-alt"></i><span>시험 플래너</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item" data-page="assessment">
+          <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+        </a>
+        <a href="grades.html" class="nav-item" data-page="grades">
+          <i class="fas fa-chart-line"></i><span>성적 관리</span>
+        </a>
+        <a href="record.html" class="nav-item" data-page="record">
+          <i class="fas fa-id-card"></i><span>학생부 관리</span>
+        </a>
+        <a href="report.html" class="nav-item" data-page="report">
+          <i class="fas fa-chart-bar"></i><span>역량 리포트</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item" data-page="ai-log">
+          <i class="fas fa-robot"></i><span>AI 튜터링 로그</span>
+        </a>
+        <a href="golden-time.html" class="nav-item" data-page="golden-time">
+          <i class="fas fa-star"></i><span>골든타임 미션</span>
+        </a>
+        <a href="incubating.html" class="nav-item" data-page="incubating">
+          <i class="fas fa-lightbulb"></i><span>질문 아카이브</span>
+        </a>
+        <a href="clinic.html" class="nav-item" data-page="clinic">
+          <i class="fas fa-file-medical"></i><span>학생부 클리닉</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item" data-page="notice">
+          <i class="fas fa-bullhorn"></i><span>공지사항</span>
+        </a>
+        <a href="consult.html" class="nav-item" data-page="consult">
+          <i class="fas fa-comments"></i><span>상담 신청</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i><span>로그아웃</span>
+      </a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>학습 플랜</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user" id="topbarUser">
+          <div class="topbar-avatar student-avatar-color" id="topbarAvatar">학</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topbarName">–</span>
+            <span class="topbar-user-role student-role-label" id="topbarRole">학생</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="admin-content">
+      <div class="plan-wrap">
+
+        <!-- 주간 헤더 -->
+        <div class="plan-week-header">
+          <div class="plan-week-info">
+            <h2><i class="fas fa-tasks"></i> 이번 주 학습 플랜</h2>
+            <p id="weekRangeLabel">로딩 중...</p>
+          </div>
+          <div class="plan-week-nav">
+            <button class="week-nav-btn" id="prevWeekBtn"><i class="fas fa-chevron-left"></i></button>
+            <span class="week-label" id="weekLabel">–</span>
+            <button class="week-nav-btn" id="nextWeekBtn"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <!-- KPI 카드 -->
+        <div class="plan-kpi-row">
+          <div class="plan-kpi-card">
+            <div class="kpi-icon green"><i class="fas fa-check-circle"></i></div>
+            <div>
+              <div class="kpi-val" id="kpiDone">0</div>
+              <div class="kpi-lbl">완료</div>
+            </div>
+          </div>
+          <div class="plan-kpi-card">
+            <div class="kpi-icon yellow"><i class="fas fa-spinner"></i></div>
+            <div>
+              <div class="kpi-val" id="kpiIng">0</div>
+              <div class="kpi-lbl">진행 중</div>
+            </div>
+          </div>
+          <div class="plan-kpi-card">
+            <div class="kpi-icon blue"><i class="fas fa-list"></i></div>
+            <div>
+              <div class="kpi-val" id="kpiTodo">0</div>
+              <div class="kpi-lbl">미완료</div>
+            </div>
+          </div>
+          <div class="plan-kpi-card">
+            <div class="kpi-icon violet"><i class="fas fa-chart-pie"></i></div>
+            <div>
+              <div class="kpi-val" id="kpiTotal">0</div>
+              <div class="kpi-lbl">전체</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 진행률 바 -->
+        <div class="plan-progress-section">
+          <div class="progress-header">
+            <span class="progress-title"><i class="fas fa-fire" style="color:var(--plan-yellow);margin-right:6px;"></i>이번 주 달성률</span>
+            <span class="progress-pct" id="progressPct">0%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- 탭 -->
+        <div class="plan-tabs">
+          <button class="plan-tab-btn active" data-tab="week" onclick="switchTab('week')">
+            <i class="fas fa-calendar-week"></i> 이번 주
+          </button>
+          <button class="plan-tab-btn" data-tab="monthly" onclick="switchTab('monthly')">
+            <i class="fas fa-calendar-alt"></i> 월간
+          </button>
+          <button class="plan-tab-btn" data-tab="all" onclick="switchTab('all')">
+            <i class="fas fa-list-ul"></i> 전체
+          </button>
+          <button class="plan-tab-btn" data-tab="exam" onclick="switchTab('exam')">
+            <i class="fas fa-graduation-cap"></i> 시험 플래너
+          </button>
+        </div>
+
+        <!-- 탭 패널: 이번 주 플랜 -->
+        <div id="tabWeek" class="tab-panel">
+          <div id="weekTaskList" class="plan-list">
+            <div class="loading-shimmer"></div>
+            <div class="loading-shimmer"></div>
+            <div class="loading-shimmer"></div>
+          </div>
+        </div>
+
+        <!-- 탭 패널: 월간 캘린더 -->
+        <div id="tabMonthly" class="tab-panel" style="display:none;">
+          <!-- 월단 헤더 -->
+          <div class="monthly-header">
+            <button class="monthly-nav-btn" id="prevMonthBtn"><i class="fas fa-chevron-left"></i></button>
+            <span class="monthly-title" id="monthlyTitle">2024년 1월</span>
+            <button class="monthly-nav-btn" id="nextMonthBtn"><i class="fas fa-chevron-right"></i></button>
+          </div>
+
+          <!-- 월간 요약 KPI -->
+          <div class="monthly-summary">
+            <div class="msummary-card">
+              <div class="msummary-val" id="mSumTotal">0</div>
+              <div class="msummary-lbl">전체 플랜</div>
+            </div>
+            <div class="msummary-card">
+              <div class="msummary-val" id="mSumDone" style="color:var(--plan-green)">0</div>
+              <div class="msummary-lbl">완료</div>
+            </div>
+            <div class="msummary-card">
+              <div class="msummary-val" id="mSumTodo" style="color:var(--plan-yellow)">0</div>
+              <div class="msummary-lbl">미완료</div>
+            </div>
+            <div class="msummary-card">
+              <div class="msummary-val" id="mSumRate" style="color:var(--plan-violet)">0%</div>
+              <div class="msummary-lbl">달성률</div>
+            </div>
+          </div>
+
+          <!-- 월간 캘린더 그리드 -->
+          <div class="monthly-grid">
+            <div class="monthly-weekdays">
+              <div class="monthly-weekday sun">일</div>
+              <div class="monthly-weekday">월</div>
+              <div class="monthly-weekday">화</div>
+              <div class="monthly-weekday">수</div>
+              <div class="monthly-weekday">목</div>
+              <div class="monthly-weekday">금</div>
+              <div class="monthly-weekday sat">토</div>
+            </div>
+            <div class="monthly-days" id="monthlyDaysGrid"></div>
+          </div>
+
+          <!-- 선택된 날 패널 -->
+          <div class="day-panel" id="dayPanel" style="display:none">
+            <div class="day-panel-header">
+              <div class="day-panel-title" id="dayPanelTitle">사낙 항목</div>
+              <button class="day-panel-close" onclick="document.getElementById('dayPanel').style.display='none'"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="dayPanelList" class="plan-list"></div>
+          </div>
+
+          <!-- 범례 -->
+          <div class="monthly-legend">
+            <div class="legend-item"><div class="legend-dot sc-math"></div> 수학</div>
+            <div class="legend-item"><div class="legend-dot sc-eng"></div> 영어</div>
+            <div class="legend-item"><div class="legend-dot sc-kor"></div> 국어</div>
+            <div class="legend-item"><div class="legend-dot sc-sci"></div> 과학</div>
+            <div class="legend-item"><div class="legend-dot sc-soc"></div> 사회</div>
+            <div class="legend-item"><div class="legend-dot sc-hist"></div> 역사</div>
+            <div class="legend-item"><div class="legend-dot sc-etc"></div> 기타</div>
+          </div>
+        </div>
+
+        <!-- 탭 패널: 전체 플랜 -->
+        <div id="tabAll" class="tab-panel" style="display:none;">
+          <div id="allTaskList" class="plan-list">
+            <div class="loading-shimmer"></div>
+            <div class="loading-shimmer"></div>
+          </div>
+        </div>
+
+        <!-- 탭 패널: 시험 플래너 -->
+        <div id="tabExam" class="tab-panel" style="display:none;">
+          <div id="examPlannerList" class="planner-section">
+            <div class="loading-shimmer"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--student" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+      <a href="assessment.html" class="mobile-nav-item">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+      <a href="grades.html" class="mobile-nav-item">
+        <i class="fas fa-chart-line"></i><span>성적</span>
+      </a>
+      <a href="notice.html" class="mobile-nav-item">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+      <button class="mobile-nav-item morenav-toggle" id="moreNavBtn" onclick="openMoreNav()">
+        <i class="fas fa-ellipsis"></i><span>더보기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div class="morenav-overlay" id="moreNavOverlay" onclick="closeMoreNav()"></div>
+  <div class="morenav-drawer morenav--student" id="moreNavDrawer">
+    <div class="morenav-handle"></div>
+    <div class="morenav-profile">
+      <div class="morenav-avatar" id="moreNavAvatar">학</div>
+      <div>
+        <div class="morenav-name" id="moreNavName">–</div>
+        <div class="morenav-sub" id="moreNavSub">–</div>
+      </div>
+    </div>
+    <div class="morenav-header">전체 메뉴</div>
+    <div class="morenav-grid">
+      <a href="attendance.html" class="morenav-item">
+        <i class="fas fa-calendar-check"></i><span>출결</span>
+      </a>
+      <a href="plan.html" class="morenav-item active">
+        <i class="fas fa-tasks"></i><span>학습플랜</span>
+      </a>
+      <a href="exam.html" class="morenav-item">
+        <i class="fas fa-calendar-alt"></i><span>시험플래너</span>
+      </a>
+      <a href="consult.html" class="morenav-item">
+        <i class="fas fa-comments"></i><span>상담</span>
+      </a>
+      <a href="record.html" class="morenav-item">
+        <i class="fas fa-id-card"></i><span>학생부</span>
+      </a>
+      <a href="report.html" class="morenav-item">
+        <i class="fas fa-chart-bar"></i><span>역량리포트</span>
+      </a>
+      <a href="dashboard.html" class="morenav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+    </div>
+  </div>
+  <script>
+  function openMoreNav() {
+    document.getElementById('moreNavDrawer').classList.add('open');
+    document.getElementById('moreNavOverlay').classList.add('show');
+    document.getElementById('moreNavBtn').classList.add('open');
+    try {
+      const s = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+      const name = s.name || s.userName || '';
+      const school = s.school || s.userSchool || '';
+      if (name) {
+        document.getElementById('moreNavAvatar').textContent = name.charAt(0);
+        document.getElementById('moreNavName').textContent = name;
+        document.getElementById('moreNavSub').textContent = school;
+      }
+    } catch(e) {}
+  }
+  function closeMoreNav() {
+    document.getElementById('moreNavDrawer').classList.remove('open');
+    document.getElementById('moreNavOverlay').classList.remove('show');
+    document.getElementById('moreNavBtn').classList.remove('open');
+  }
+  </script>
+
+  <!-- 토스트 -->
+  <div id="toastContainer" style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;"></div>
+
+  <script>
+  /* ═══════════════════════════════════════════
+     학습 플랜 – 학생 뷰
+     DB 연동: exam_planners, planner_tasks
+  ═══════════════════════════════════════════ */
+
+  const TABLE_PLANNERS = 'exam_planners';
+  const TABLE_TASKS    = 'planner_tasks';
+
+  let session     = null;
+  let studentId   = '';
+  let allTasks    = [];
+  let allPlanners = [];
+  let weekOffset  = 0;   // 0 = 현재 주
+
+  /* ── 세션 체크 ── */
+  window.addEventListener('DOMContentLoaded', async () => {
+    // localStorage 우선 → sessionStorage 폴백 (앱 백그라운드 복귀 시에도 유지)
+    try {
+      // 모든 가능한 세션 키를 순서대로 시도
+      const lsKeys = ['dvl_student_session','dvl_user','dvl_session'];
+      const ssKeys = ['dvl_user','dvl_session','dvSession'];
+      let raw = null;
+      for (const k of lsKeys) {
+        raw = localStorage.getItem(k);
+        if (raw && raw !== 'null' && raw !== '{}') break;
+      }
+      if (!raw || raw === 'null' || raw === '{}') {
+        for (const k of ssKeys) {
+          raw = sessionStorage.getItem(k);
+          if (raw && raw !== 'null' && raw !== '{}') break;
+        }
+      }
+      if (!raw || raw === 'null') raw = 'null';
+      session = JSON.parse(raw);
+      // sessionStorage에도 동기화 (다른 스크립트 호환)
+      if (session && session.id) {
+        sessionStorage.setItem('dvl_user',    raw);
+        sessionStorage.setItem('dvl_session', raw);
+      }
+    } catch(e) { session = null; }
+
+    // id가 없으면 로그인으로
+    if (!session || !session.id) {
+      location.href = '../login.html';
+      return;
+    }
+    // role이 명시적으로 admin/master이면 로그인으로 (role 없거나 student면 허용)
+    if (session.role && session.role !== 'student') {
+      location.href = '../login.html';
+      return;
+    }
+
+    studentId = session.id || session.username || '';
+    console.log(`[plan.html] 세션 확인 완료 - studentId: "${studentId}", role: "${session.role || '없음'}"`);
+
+    initSidebar();
+    initWeekNav();
+    initMonthNav();
+    await loadData();
+    renderAll();
+  });
+
+  /* ── 사이드바 초기화 ── */
+  function initSidebar() {
+    const av = session.name ? session.name[0] : '학';
+    const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+    setTxt('sidebarAvatar',       av);
+    setTxt('topbarAvatar',        av);
+    setTxt('sidebarStudentName',  session.name || '학생');
+    setTxt('topbarName',          session.name || '학생');
+    setTxt('topbarRole',          `학생 · ${session.stage || '1단계'}`);
+    setTxt('sidebarStage',        session.stage || '1단계');
+    setTxt('sidebarStudentSchool',`${session.school || ''} ${session.grade || ''}`.trim() || '–');
+
+    // ── 사이드바 토글 (표준) ──
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+    document.getElementById('logoutBtn')?.addEventListener('click', e => {
+      e.preventDefault();
+      ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k => {
+        localStorage.removeItem(k); sessionStorage.removeItem(k);
+      });
+      sessionStorage.clear();
+      location.href = '../login.html';
+    });
+  }
+
+  /* ── 주간 네비게이션 ── */
+  function getWeekRange(offset) {
+    const today = new Date();
+    const mon   = new Date(today);
+    mon.setDate(today.getDate() - ((today.getDay() + 6) % 7) + offset * 7);
+    const sun = new Date(mon);
+    sun.setDate(mon.getDate() + 6);
+    return { mon, sun };
+  }
+
+  function fmtDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function fmtLabel(d) {
+    return `${d.getMonth()+1}월 ${d.getDate()}일`;
+  }
+
+  function updateWeekLabels() {
+    const { mon, sun } = getWeekRange(weekOffset);
+    const label = weekOffset === 0 ? '이번 주' : weekOffset === -1 ? '지난 주' : weekOffset === 1 ? '다음 주' : `${weekOffset > 0 ? '+' : ''}${weekOffset}주`;
+    document.getElementById('weekLabel').textContent     = label;
+    document.getElementById('weekRangeLabel').textContent = `${fmtLabel(mon)} ~ ${fmtLabel(sun)}`;
+  }
+
+  function initWeekNav() {
+    updateWeekLabels();
+    document.getElementById('prevWeekBtn')?.addEventListener('click', () => {
+      weekOffset--;
+      updateWeekLabels();
+      renderAll();
+    });
+    document.getElementById('nextWeekBtn')?.addEventListener('click', () => {
+      weekOffset++;
+      updateWeekLabels();
+      renderAll();
+    });
+  }
+
+  /* ── DB 로드 ── */
+  async function loadData() {
+    if (!studentId) return;
+    console.log(`[plan.html] loadData 시작 - studentId: "${studentId}"`);
+
+    try {
+      // 플래너 로드 (limit을 크게 하여 전체 조회 후 클라이언트 필터링)
+      const pr = await fetch(`../tables/${TABLE_PLANNERS}?limit=200`);
+      if (pr.ok) {
+        const pd = await pr.json();
+        allPlanners = (pd.data || []).filter(p =>
+          String(p.student_id).trim() === String(studentId).trim()
+        );
+        console.log(`[plan.html] 플래너: 전체 ${pd.data?.length}, 내 것 ${allPlanners.length}`);
+      }
+    } catch(e) { allPlanners = []; console.error('[plan.html] 플래너 로드 실패:', e); }
+
+    try {
+      // 태스크 로드 (limit을 크게 하여 전체 조회 후 클라이언트 필터링)
+      const tr = await fetch(`../tables/${TABLE_TASKS}?limit=1000`);
+      if (tr.ok) {
+        const td = await tr.json();
+        allTasks = (td.data || []).filter(t =>
+          String(t.student_id).trim() === String(studentId).trim()
+        );
+        console.log(`[plan.html] 태스크: 전체 ${td.data?.length}, 내 것 ${allTasks.length}`);
+      }
+    } catch(e) { allTasks = []; console.error('[plan.html] 태스크 로드 실패:', e); }
+  }
+
+  /* ── 탭 전환 ── */
+  function switchTab(tab) {
+    document.querySelectorAll('.plan-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    const panelId = 'tab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+    const panel = document.getElementById(panelId);
+    if (panel) panel.style.display = '';
+    if (tab === 'monthly') renderMonthly();
+  }
+
+  /* ── 전체 렌더 ── */
+  function renderAll() {
+    renderWeekTasks();
+    renderAllTasks();
+    renderExamPlanners();
+    // 월간 탭이 활성화되어 있을 때만 렌더
+    const monthlyTab = document.getElementById('tabMonthly');
+    if (monthlyTab && monthlyTab.style.display !== 'none') renderMonthly();
+  }
+
+  /* ── 과목 색상 ── */
+  function getSubjClass(subj) {
+    if (!subj) return 'sc-etc';
+    const s = subj.toLowerCase();
+    if (s.includes('수학') || s.includes('math')) return 'sc-math';
+    if (s.includes('영어') || s.includes('eng'))  return 'sc-eng';
+    if (s.includes('국어') || s.includes('kor'))  return 'sc-kor';
+    if (s.includes('과학') || s.includes('물리') || s.includes('화학') || s.includes('생명') || s.includes('지구')) return 'sc-sci';
+    if (s.includes('사회') || s.includes('경제') || s.includes('정치')) return 'sc-soc';
+    if (s.includes('역사') || s.includes('한국')) return 'sc-hist';
+    return 'sc-etc';
+  }
+
+  /* ── 상태 뱃지 ── */
+  function statusPill(isDone, val) {
+    if (isDone === true || isDone === 1 || isDone === 'true') {
+      return '<span class="status-pill sp-done">완료</span>';
+    }
+    if (val === 'ing') return '<span class="status-pill sp-ing">진행 중</span>';
+    return '<span class="status-pill sp-todo">미완료</span>';
+  }
+
+  /* ── D-day ── */
+  function dday(dateStr) {
+    if (!dateStr) return null;
+    // UTC 오프셋 버그 방지: YYYY-MM-DD를 로컬 자정 기준 Date로 파싱
+    const [y, mo, d] = dateStr.split('-').map(Number);
+    const target = new Date(y, mo - 1, d, 0, 0, 0, 0);
+    const today  = new Date(); today.setHours(0, 0, 0, 0);
+    const diff = Math.round((target - today) / 86400000);
+    if (diff < 0) return { label: `D+${Math.abs(diff)}`, cls: 'pd-passed' };
+    if (diff === 0) return { label: 'D-DAY', cls: 'pd-soon' };
+    if (diff <= 7)  return { label: `D-${diff}`,  cls: 'pd-soon' };
+    return { label: `D-${diff}`, cls: 'pd-normal' };
+  }
+
+  /* ── 이번 주 플랜 ── */
+  function renderWeekTasks() {
+    const { mon, sun } = getWeekRange(weekOffset);
+    const monStr = fmtDate(mon);
+    const sunStr = fmtDate(sun);
+
+    const weekTasks = allTasks.filter(t => {
+      // task_date가 "YYYY-MM-DDThh:mm:ss" 형태일 수도 있으므로 앞 10자리만 비교
+      const d = (t.task_date || '').trim().substring(0, 10);
+      return d >= monStr && d <= sunStr;
+    }).sort((a, b) => (a.task_date||'').localeCompare(b.task_date||''));
+
+    // KPI
+    const done = weekTasks.filter(t => t.is_done === true || t.is_done === 1 || t.is_done === 'true').length;
+    const todo = weekTasks.filter(t => !t.is_done).length;
+    const ing  = weekTasks.length - done - todo;
+    const rate = weekTasks.length ? Math.round(done / weekTasks.length * 100) : 0;
+
+    document.getElementById('kpiDone').textContent  = done;
+    document.getElementById('kpiIng').textContent   = Math.max(0, ing);
+    document.getElementById('kpiTodo').textContent  = todo;
+    document.getElementById('kpiTotal').textContent = weekTasks.length;
+    document.getElementById('progressPct').textContent  = weekTasks.length ? rate + '%' : '–';
+    document.getElementById('progressFill').style.width = weekTasks.length ? rate + '%' : '0%';
+
+    const container = document.getElementById('weekTaskList');
+    if (!weekTasks.length) {
+      container.innerHTML = `
+        <div class="plan-empty">
+          <div class="plan-empty-icon"><i class="fas fa-clipboard-list"></i></div>
+          <h3>이번 주 학습 플랜이 없습니다</h3>
+          <p>선생님이 학습 플랜을 등록하면<br>여기서 확인할 수 있습니다.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = weekTasks.map(t => {
+      const isDone = t.is_done === true || t.is_done === 1 || t.is_done === 'true';
+      const sc = getSubjClass(t.subject);
+      // UTC 오프셋 버그 방지: YYYY-MM-DD를 로컬 자정으로 파싱
+      const _td = t.task_date ? (() => { const [y,m,d]=t.task_date.split('-').map(Number); return new Date(y,m-1,d); })() : null;
+      const dayStr = _td ? _td.toLocaleDateString('ko-KR', { month:'numeric', day:'numeric', weekday:'short' }) : '';
+      return `
+        <div class="week-task-item ${isDone ? 'done' : ''}" id="task-${t.id}">
+          <button class="task-done-btn ${isDone ? 'done' : ''}" onclick="toggleTaskDone('${t.id}', ${!isDone})" title="${isDone ? '완료 취소' : '완료 처리'}">
+            ${isDone ? '<i class="fas fa-check"></i>' : ''}
+          </button>
+          <span class="task-subj-tag ${sc}">${t.subject || '기타'}</span>
+          <span class="task-content">${t.task_content || '내용 없음'}</span>
+          ${t.admin_comment ? `<span class="task-date" style="color:#065f46;" title="선생님 코멘트"><i class="fas fa-comment-alt"></i></span>` : ''}
+          ${dayStr ? `<span class="task-date">${dayStr}</span>` : ''}
+        </div>
+        ${t.admin_comment ? `<div style="margin:-4px 0 4px 44px;padding:6px 12px;background:#f0fdf4;border-radius:8px;border-left:3px solid #10b981;font-size:12px;color:#065f46;">
+          <i class="fas fa-comment-alt" style="margin-right:5px;color:#10b981;"></i>${t.admin_comment}
+        </div>` : ''}
+        ${t.student_memo !== undefined ? `
+        <div style="display:flex;gap:8px;margin:-4px 0 4px 44px;">
+          <textarea id="smemo-${t.id}" class="student-memo-input" rows="1" placeholder="나의 메모를 남겨보세요...">${t.student_memo || ''}</textarea>
+          <button class="memo-save-btn" onclick="saveStudentMemo('${t.id}')">저장</button>
+        </div>` : ''}
+      `;
+    }).join('');
+  }
+
+  /* ── 전체 플랜 ── */
+  function renderAllTasks() {
+    const sorted = [...allTasks].sort((a, b) => (b.task_date||'').localeCompare(a.task_date||''));
+    const container = document.getElementById('allTaskList');
+
+    if (!sorted.length) {
+      container.innerHTML = `
+        <div class="plan-empty">
+          <div class="plan-empty-icon"><i class="fas fa-folder-open"></i></div>
+          <h3>등록된 학습 플랜이 없습니다</h3>
+          <p>선생님이 학습 플랜을 등록하면<br>여기서 전체 내역을 확인할 수 있습니다.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = sorted.map(t => {
+      const isDone = t.is_done === true || t.is_done === 1 || t.is_done === 'true';
+      const sc = getSubjClass(t.subject);
+      // UTC 오프셋 버그 방지: YYYY-MM-DD를 로컬 자정으로 파싱
+      const _atd = t.task_date ? (() => { const [y,m,d]=t.task_date.split('-').map(Number); return new Date(y,m-1,d); })() : null;
+      const dateStr = _atd ? _atd.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric', weekday:'short' }) : '날짜 미지정';
+      return `
+        <div class="plan-card ${isDone ? 'done' : ''}">
+          <div class="plan-check-wrap">
+            <button class="plan-check-btn ${isDone ? 'done' : ''}" onclick="toggleTaskDone('${t.id}', ${!isDone})">
+              ${isDone ? '<i class="fas fa-check"></i>' : ''}
+            </button>
+          </div>
+          <div class="plan-card-body">
+            <div class="plan-card-top">
+              <span class="subj-tag ${sc}">${t.subject || '기타'}</span>
+              ${statusPill(t.is_done)}
+              ${t.week_num ? `<span style="font-size:11px;color:#94a3b8;">${t.week_num}주차</span>` : ''}
+            </div>
+            <div class="plan-card-title">${t.task_content || '내용 없음'}</div>
+            <div class="plan-card-meta">
+              <span class="plan-meta-item"><i class="fas fa-calendar-day"></i> ${dateStr}</span>
+              ${t.color_tag ? `<span class="plan-meta-item"><i class="fas fa-tag"></i> ${t.color_tag}</span>` : ''}
+            </div>
+            ${t.admin_comment ? `<div class="plan-comment"><i class="fas fa-comment-alt"></i>${t.admin_comment}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ── 시험 플래너 ── */
+  function renderExamPlanners() {
+    const container = document.getElementById('examPlannerList');
+    if (!allPlanners.length) {
+      container.innerHTML = `
+        <div class="plan-empty">
+          <div class="plan-empty-icon"><i class="fas fa-graduation-cap"></i></div>
+          <h3>등록된 시험 플래너가 없습니다</h3>
+          <p>시험 플래너는 시험 플래너 메뉴에서<br>직접 등록하거나 선생님이 등록해 드립니다.</p>
+          <a href="exam.html" style="display:inline-block;margin-top:16px;padding:10px 24px;background:var(--plan-mint);color:white;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;">
+            <i class="fas fa-plus" style="margin-right:6px;"></i>시험 플래너 등록하기
+          </a>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = allPlanners
+      .sort((a, b) => (a.exam_start_date||'').localeCompare(b.exam_start_date||''))
+      .map(p => {
+        const dd = dday(p.exam_start_date);
+        // subjects가 배열, JSON 문자열, 쉼표 구분 문자열 어느 형태든 처리
+        let subjs = [];
+        if (Array.isArray(p.subjects)) {
+          subjs = p.subjects;
+        } else if (typeof p.subjects === 'string' && p.subjects.trim()) {
+          try { subjs = JSON.parse(p.subjects); }
+          catch(e) { subjs = p.subjects.split(',').map(s => s.trim()).filter(Boolean); }
+        }
+        // UTC 오프셋 문제 방지: YYYY-MM-DD 문자열을 로컬 날짜로 파싱
+        const parseLocalForDisplay = (str) => {
+          if (!str) return null;
+          const [y, mo, d] = str.split('-').map(Number);
+          return new Date(y, mo - 1, d);
+        };
+        const startD = parseLocalForDisplay(p.exam_start_date);
+        const endD   = parseLocalForDisplay(p.exam_end_date);
+        const startStr = startD ? startD.toLocaleDateString('ko-KR', { year:'numeric', month:'long', day:'numeric' }) : '–';
+        const endStr   = endD   ? endD.toLocaleDateString('ko-KR', { month:'long', day:'numeric' }) : '–';
+
+        // 이 플래너의 태스크들
+        const pTasks = allTasks.filter(t => String(t.planner_id).trim() === String(p.id).trim());
+        const pDone  = pTasks.filter(t => t.is_done === true || t.is_done === 1 || t.is_done === 'true').length;
+        const pRate  = pTasks.length ? Math.round(pDone / pTasks.length * 100) : 0;
+
+        return `
+          <div class="planner-card">
+            <div class="planner-card-header">
+              <div>
+                <div class="planner-card-title">
+                  <i class="fas fa-graduation-cap" style="color:var(--plan-violet);margin-right:6px;"></i>
+                  ${p.exam_type || '시험'} — ${p.year || ''}년 ${p.semester ? p.semester + '학기' : ''}
+                </div>
+              </div>
+              ${dd ? `<span class="planner-dday ${dd.cls}">${dd.label}</span>` : ''}
+            </div>
+
+            <div class="planner-subjects">
+              ${subjs.length
+                ? subjs.map(s => `<span class="planner-subj-tag ${getSubjClass(s)}">${s}</span>`).join('')
+                : '<span class="planner-subj-tag sc-etc">과목 미지정</span>'}
+            </div>
+
+            <div class="planner-meta">
+              <span class="planner-meta-item"><i class="fas fa-calendar-day"></i> ${startStr} ~ ${endStr}</span>
+              ${p.exam_days ? `<span class="planner-meta-item"><i class="fas fa-sun"></i> ${p.exam_days}일간</span>` : ''}
+              ${pTasks.length ? `<span class="planner-meta-item"><i class="fas fa-tasks"></i> ${pDone}/${pTasks.length}개 완료 (${pRate}%)</span>` : ''}
+            </div>
+
+            ${pTasks.length ? `
+              <div class="week-task-list">
+                ${pTasks.slice(0, 5).map(t => {
+                  const isDone = t.is_done === true || t.is_done === 1 || t.is_done === 'true';
+                  const sc = getSubjClass(t.subject);
+                  return `
+                    <div class="week-task-item ${isDone ? 'done' : ''}">
+                      <button class="task-done-btn ${isDone ? 'done' : ''}" onclick="toggleTaskDone('${t.id}', ${!isDone})">
+                        ${isDone ? '<i class="fas fa-check"></i>' : ''}
+                      </button>
+                      <span class="task-subj-tag ${sc}">${t.subject||'기타'}</span>
+                      <span class="task-content">${t.task_content||'–'}</span>
+                      ${t.task_date ? `<span class="task-date">${t.task_date}</span>` : ''}
+                    </div>`;
+                }).join('')}
+                ${pTasks.length > 5 ? `<div style="text-align:center;padding:8px;font-size:12.5px;color:#94a3b8;">+ ${pTasks.length - 5}개 더 있음 → <a href="exam.html" style="color:var(--plan-mint);font-weight:600;">시험 플래너에서 보기</a></div>` : ''}
+              </div>` : ''}
+          </div>`;
+      }).join('');
+  }
+
+  /* ─────────────────────────────────────────────
+     월간 캘린더
+  ───────────────────────────────────────────── */
+  let monthlyYear  = new Date().getFullYear();
+  let monthlyMonth = new Date().getMonth(); // 0-based
+
+  function initMonthNav() {
+    document.getElementById('prevMonthBtn')?.addEventListener('click', () => {
+      monthlyMonth--;
+      if (monthlyMonth < 0) { monthlyMonth = 11; monthlyYear--; }
+      renderMonthly();
+    });
+    document.getElementById('nextMonthBtn')?.addEventListener('click', () => {
+      monthlyMonth++;
+      if (monthlyMonth > 11) { monthlyMonth = 0; monthlyYear++; }
+      renderMonthly();
+    });
+  }
+
+  function renderMonthly() {
+    const yr = monthlyYear;
+    const mo = monthlyMonth; // 0-based
+
+    // 타이틀
+    const titleEl = document.getElementById('monthlyTitle');
+    if (titleEl) titleEl.textContent = `${yr}년 ${mo+1}월`;
+
+    // 이 달의 태스크 필터
+    const mStr = `${yr}-${String(mo+1).padStart(2,'0')}`;
+    const mTasks = allTasks.filter(t => {
+      const d = (t.task_date || '').trim().substring(0, 7);
+      return d === mStr;
+    });
+
+    // KPI 업데이트
+    const mDone = mTasks.filter(t => t.is_done === true || t.is_done === 1 || t.is_done === 'true').length;
+    const mTodo = mTasks.length - mDone;
+    const mRate = mTasks.length ? Math.round(mDone / mTasks.length * 100) : 0;
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt('mSumTotal', mTasks.length);
+    setTxt('mSumDone',  mDone);
+    setTxt('mSumTodo',  mTodo);
+    setTxt('mSumRate',  mRate + '%');
+
+    // 캘린더 그리드 생성
+    const grid = document.getElementById('monthlyDaysGrid');
+    if (!grid) return;
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstDay = new Date(yr, mo, 1);
+    const lastDay  = new Date(yr, mo+1, 0);
+    const startDow = firstDay.getDay(); // 0=일
+    const totalDays = lastDay.getDate();
+
+    // 날짜별 태스크 맵
+    const taskMap = {};
+    mTasks.forEach(t => {
+      const key = (t.task_date || '').trim().substring(0, 10);
+      if (!taskMap[key]) taskMap[key] = [];
+      taskMap[key].push(t);
+    });
+
+    let html = '';
+
+    // 앞 달 빈 셀
+    for (let i = 0; i < startDow; i++) {
+      const prevD = new Date(yr, mo, -startDow + i + 1);
+      html += `<div class="monthly-day other-month">
+        <div class="mday-num ${prevD.getDay()===0?'sun':prevD.getDay()===6?'sat':''}">${prevD.getDate()}</div>
+      </div>`;
+    }
+
+    // 이 달 날짜
+    for (let d = 1; d <= totalDays; d++) {
+      const dateObj = new Date(yr, mo, d);
+      const dow = dateObj.getDay();
+      const dateStr = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const isToday = dateObj.getTime() === today.getTime();
+      const dayTasks = taskMap[dateStr] || [];
+
+      const numClass = dow === 0 ? 'sun' : dow === 6 ? 'sat' : '';
+      let numHtml = `<div class="mday-num ${numClass}">${d}</div>`;
+
+      // 태스크 칩 (최대 3개 표시)
+      const chips = dayTasks.slice(0, 3).map(t => {
+        const isDone = t.is_done === true || t.is_done === 1 || t.is_done === 'true';
+        const sc = getSubjClass(t.subject);
+        const lbl = t.subject ? t.subject.substring(0,3) : '기타';
+        return `<div class="mday-chip ${sc} ${isDone?'done':''}" title="${t.task_content||''}" onclick="openDayPanel('${dateStr}',event)">${lbl}</div>`;
+      }).join('');
+
+      const moreHtml = dayTasks.length > 3
+        ? `<div class="mday-more">+${dayTasks.length - 3}개</div>` : '';
+
+      html += `<div class="monthly-day ${isToday ? 'today' : ''}" onclick="openDayPanel('${dateStr}',event)">
+        ${isToday ? `<div class="mday-num ${numClass}" style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:var(--plan-mint);color:white;border-radius:50%;font-size:12px;">${d}</div>` : numHtml}
+        <div class="mday-task-chips">${chips}${moreHtml}</div>
+      </div>`;
+    }
+
+    // 뒷달 빈 셀 (7의 배수 맞추기)
+    const total = startDow + totalDays;
+    const rem = total % 7;
+    if (rem > 0) {
+      for (let i = 1; i <= 7 - rem; i++) {
+        html += `<div class="monthly-day other-month">
+          <div class="mday-num ${i===7?'sat':''}">${i}</div>
+        </div>`;
+      }
+    }
+
+    grid.innerHTML = html;
+
+    // 숨겨진 일 패널 초기화
+    const panel = document.getElementById('dayPanel');
+    if (panel) panel.style.display = 'none';
+  }
+
+  function openDayPanel(dateStr, e) {
+    if (e) e.stopPropagation();
+    const panel = document.getElementById('dayPanel');
+    const titleEl = document.getElementById('dayPanelTitle');
+    const listEl  = document.getElementById('dayPanelList');
+    if (!panel || !listEl) return;
+
+    // 날짜 파싱 (UTC 오프셋 버그 방지)
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m-1, d);
+    const label = dateObj.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' });
+    if (titleEl) titleEl.textContent = label;
+
+    const dayTasks = allTasks.filter(t => (t.task_date || '').trim().substring(0, 10) === dateStr)
+      .sort((a, b) => (a.col_order||0) - (b.col_order||0));
+
+    if (!dayTasks.length) {
+      listEl.innerHTML = `<div class="plan-empty" style="padding:28px 16px;">
+        <div class="plan-empty-icon" style="font-size:2.5rem;"><i class="fas fa-calendar-day"></i></div>
+        <h3 style="font-size:.95rem;">이 날 학습 플랜이 없습니다</h3>
+        <p style="font-size:.83rem;">선생님이 등록한 플랜이 없거나<br>시험 플래너 태스크가 없습니다.</p>
+      </div>`;
+    } else {
+      listEl.innerHTML = dayTasks.map(t => {
+        const isDone = t.is_done === true || t.is_done === 1 || t.is_done === 'true';
+        const sc = getSubjClass(t.subject);
+        return `
+          <div class="week-task-item ${isDone ? 'done' : ''}" id="task-${t.id}">
+            <button class="task-done-btn ${isDone ? 'done' : ''}" onclick="toggleTaskDone('${t.id}', ${!isDone})">
+              ${isDone ? '<i class="fas fa-check"></i>' : ''}
+            </button>
+            <span class="task-subj-tag ${sc}">${t.subject || '기타'}</span>
+            <span class="task-content">${t.task_content || '내용 없음'}</span>
+          </div>
+          ${t.admin_comment ? `<div style="margin:-4px 0 4px 44px;padding:6px 12px;background:#f0fdf4;border-radius:8px;border-left:3px solid #10b981;font-size:12px;color:#065f46;">
+            <i class="fas fa-comment-alt" style="margin-right:5px;color:#10b981;"></i>${t.admin_comment}
+          </div>` : ''}`;
+      }).join('');
+    }
+
+    panel.style.display = '';
+    // 스크롤해서 패널 보이게
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+
+  /* ── 로컬 날짜 헬퍼 (UTC 오프셋 버그 방지) ── */
+  function toLocalDateStrPlan(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  /* ── student_logs 에 학습 기록 저장 ── */
+  async function writeStudentLog(task) {
+    try {
+      const today = toLocalDateStrPlan(new Date());  // UTC 오프셋 버그 방지
+      await fetch('../tables/student_logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id:   studentId,
+          log_type:     'plan_done',
+          log_date:     task.task_date || today,
+          title:        task.subject ? `[${task.subject}] ${task.task_content || ''}` : (task.task_content || '학습 완료'),
+          content:      task.task_content || '',
+          subject:      task.subject || '',
+          duration_min: 0,
+          tags:         ['플랜완료', task.subject || '']
+        })
+      });
+    } catch(e) {
+      console.warn('[plan] student_logs 저장 실패:', e);
+    }
+  }
+
+  /* ── 완료 토글 ── */
+  async function toggleTaskDone(taskId, newDone) {
+    try {
+      const r = await fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_done: newDone })
+      });
+      if (!r.ok) throw new Error();
+
+      // 로컬 데이터 업데이트
+      const idx = allTasks.findIndex(t => t.id === taskId);
+      if (idx !== -1) allTasks[idx].is_done = newDone;
+
+      // 완료로 바뀔 때만 student_logs에 기록
+      if (newDone) {
+        const task = allTasks[idx] || { id: taskId };
+        await writeStudentLog(task);
+      }
+
+      showToast(newDone ? '✅ 완료 처리되었습니다!' : '↩️ 완료가 취소되었습니다.', newDone ? 'success' : 'info');
+      renderAll();
+    } catch(e) {
+      showToast('⚠️ 업데이트에 실패했습니다.', 'error');
+    }
+  }
+
+  /* ── 학생 메모 저장 ── */
+  async function saveStudentMemo(taskId) {
+    const ta = document.getElementById(`smemo-${taskId}`);
+    if (!ta) return;
+    const memo = ta.value.trim();
+    try {
+      const r = await fetch(`../tables/${TABLE_TASKS}/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_memo: memo })
+      });
+      if (!r.ok) throw new Error();
+      const idx = allTasks.findIndex(t => t.id === taskId);
+      if (idx !== -1) allTasks[idx].student_memo = memo;
+      showToast('메모가 저장되었습니다.', 'success');
+    } catch(e) {
+      showToast('메모 저장에 실패했습니다.', 'error');
+    }
+  }
+
+  /* ── 토스트 ── */
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastContainer');
+    const col = { success:'#163A33', info:'#245A4E', error:'#ef4444' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:${col[type]||col.info};color:#fff;padding:12px 22px;border-radius:999px;font-size:13.5px;font-weight:600;font-family:'Noto Sans KR',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;pointer-events:auto;white-space:nowrap;max-width:90vw;`;
+    t.textContent = msg;
+    c.appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      t.style.opacity = '1'; t.style.transform = 'translateY(0)';
+    }));
+    setTimeout(() => {
+      t.style.opacity = '0'; t.style.transform = 'translateY(10px)';
+      setTimeout(() => t.remove(), 350);
+    }, 3500);
+  }
+  </script>
+</body>
+</html>

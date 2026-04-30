@@ -1,0 +1,902 @@
+/* cache-bust: 20260325
+   =============================================
+   다빈치랩 – 모바일 PWA / 스마트폰 앱 최적화 CSS v2
+   ============================================= */
+
+/* ════════════════════════════════════════
+   0. CSS 변수 & 기본
+════════════════════════════════════════ */
+:root {
+  --mob-nav-h: 62px;
+  --mob-topbar-h: 52px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* ════════════════════════════════════════
+   1. 하단 네비게이션 바  (공통)
+════════════════════════════════════════ */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-top: 1px solid rgba(0,0,0,.08);
+  z-index: 8000;
+  padding: 0;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.10);
+  /* iOS Safe Area */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mobile-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  height: var(--mob-nav-h);
+}
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  padding: 6px 4px;
+  color: #9ca3af;
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color .18s, transform .15s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.mobile-nav-item i {
+  font-size: 1.18rem;
+  line-height: 1;
+  transition: transform .18s;
+}
+.mobile-nav-item.active {
+  color: #163A33;
+}
+.mobile-nav-item.active i {
+  transform: translateY(-2px);
+  color: #163A33;
+}
+/* 역할별 색상 */
+.mobile-nav--student .mobile-nav-item.active { color: #4f46e5; }
+.mobile-nav--student .mobile-nav-item.active i { color: #4f46e5; }
+.mobile-nav--parent  .mobile-nav-item.active { color: #7c3aed; }
+.mobile-nav--parent  .mobile-nav-item.active i { color: #7c3aed; }
+.mobile-nav--admin   .mobile-nav-item.active { color: #163A33; }
+.mobile-nav--admin   .mobile-nav-item.active i { color: #163A33; }
+
+/* 활성 하이라이트 점 */
+.mobile-nav-item.active::after {
+  content: '';
+  display: block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  position: absolute;
+  bottom: 6px;
+}
+/* 배지 */
+.mobile-nav-badge {
+  position: absolute;
+  top: 6px; right: calc(50% - 18px);
+  background: #ef4444;
+  color: #fff;
+  font-size: .58rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 99px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 1.4;
+  border: 1.5px solid #fff;
+}
+
+/* ════════════════════════════════════════
+   2. PWA 설치 배너
+════════════════════════════════════════ */
+.pwa-install-banner {
+  display: none;
+  position: fixed;
+  bottom: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: .86rem;
+  font-weight: 600;
+  z-index: 8500;
+  box-shadow: 0 6px 28px rgba(0,0,0,.3);
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  width: calc(100% - 32px);
+}
+.pwa-install-banner.show { display: flex; }
+.btn-pwa-install {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-pwa-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,.55);
+  cursor: pointer;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════
+   3. 사이드바 딤처리 오버레이
+════════════════════════════════════════ */
+.sidebar-dim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 9400;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-dim.show { display: block; }
+
+
+/* ════════════════════════════════════════
+   4. 모바일 전용 미디어 쿼리 (≤ 768px)
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── 4-1. 하단 네비 표시 ── */
+  .mobile-nav { display: block; }
+
+  /* ── 4-2. 콘텐츠 하단 여백 (네비바 + safe area) ── */
+  .admin-main,
+  .student-main,
+  .pa-wrap,
+  .pg-wrap,
+  .parent-wrap,
+  .lp-wrap,
+  .ep-wrap,
+  .nc-wrap,
+  .at-wrap,
+  .sc-wrap,
+  body > .page-wrap {
+    padding-bottom: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px) + 8px) !important;
+  }
+
+  /* ── 4-3. 사이드바 슬라이드 ── */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    z-index: 9500;
+    width: 280px !important;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 6px 0 32px rgba(0,0,0,.22);
+  }
+
+  /* ── 4-4. 탑바 슬림화 ── */
+  .topbar,
+  .admin-topbar {
+    padding: 0 14px !important;
+    height: var(--mob-topbar-h) !important;
+    min-height: var(--mob-topbar-h) !important;
+  }
+  .topbar-breadcrumb { font-size: .8rem; }
+  /* topbar-right 불필요 요소 숨김 */
+  .topbar-right .topbar-date,
+  .topbar-right .topbar-user-info { display: none; }
+  .topbar-right .topbar-user { gap: 0 !important; }
+
+  /* ── 4-5. 메인 콘텐츠 margin 제거 ── */
+  .admin-main {
+    margin-left: 0 !important;
+  }
+  /* 학부모 페이지 margin 제거 */
+  .pa-wrap,
+  .pg-wrap,
+  .lp-wrap {
+    margin-left: 0 !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* ── 4-6. page-content 패딩 ── */
+  .page-content,
+  .admin-content,
+  .ep-wrap,
+  .nc-wrap {
+    padding: 14px !important;
+  }
+
+  /* ── 4-7. 카드 / 패널 ── */
+  .dash-panel,
+  .rp-card,
+  .pg-chart-section,
+  .mock-card,
+  .pg-table-wrap {
+    border-radius: 14px !important;
+  }
+
+  /* ── 4-8. 그리드 단열 ── */
+  .summary-grid,
+  .stats-grid,
+  .rp-grid,
+  .pg-summary-row,
+  .ep-summary-row,
+  .child-overview-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* 일부 그리드 단열 */
+  .planner-grid,
+  .child-selector { grid-template-columns: 1fr !important; }
+
+  /* ── 4-9. 히어로 배너 세로 배치 ── */
+  .rp-hero,
+  .child-overview-card,
+  .pg-hero-inner,
+  .dday-banner {
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding: 20px !important;
+  }
+  .rp-hero-stats,
+  .child-overview-stats {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  /* ── 4-10. 테이블 스크롤 래퍼 ── */
+  .table-wrap,
+  .ep-table-wrap,
+  .pg-table-wrap,
+  .attend-table-wrap,
+  .rp-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-table,
+  .ep-table,
+  .pg-table {
+    min-width: 560px;
+  }
+
+  /* ── 4-11. 모달 바텀시트 ── */
+  .modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .modal,
+  .modal-box,
+  .modal-lg,
+  .modal-sm {
+    border-radius: 20px 20px 0 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    margin: 0 !important;
+    overflow-y: hidden !important; /* 전체 스크롤 금지 → body만 스크롤 */
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  /* modal-body만 스크롤 */
+  .modal .modal-body,
+  .modal-box .modal-body,
+  .modal-lg .modal-body {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* footer 항상 하단에 고정 */
+  .modal .modal-footer,
+  .modal-box .modal-footer,
+  .modal-lg .modal-footer {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #fff !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 1;
+  }
+  /* 모달 위 드래그 핸들 */
+  .modal::before,
+  .modal-box::before,
+  .modal-lg::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: #d1d5db;
+    margin: 10px auto -4px;
+    flex-shrink: 0;
+  }
+
+  /* ── 4-12. 드로어 (성적 등) 풀스크린 ── */
+  .drawer-overlay .drawer-panel,
+  [class*="drawer-panel"],
+  .detail-panel {
+    width: 100% !important;
+    right: -100% !important;
+    border-radius: 0 !important;
+  }
+  .drawer-overlay .drawer-panel.show,
+  [class*="drawer-panel"].show,
+  .detail-panel.open {
+    right: 0 !important;
+  }
+
+  /* ── 4-13. 탭 바 가로 스크롤 ── */
+  .pg-tab-bar,
+  .detail-tabs,
+  .week-tab-bar,
+  .week-tabs,
+  .pg-filter-row,
+  .child-tab-bar,
+  .status-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .pg-tab-bar::-webkit-scrollbar,
+  .detail-tabs::-webkit-scrollbar,
+  .week-tab-bar::-webkit-scrollbar { display: none; }
+
+  .pg-tab-btn,
+  .detail-tab,
+  .week-tab,
+  .w-tab,
+  .child-tab-pill {
+    flex-shrink: 0 !important;
+    white-space: nowrap;
+  }
+
+  /* ── 4-14. 필터/요약바 ── */
+  .filter-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .filter-left,
+  .filter-right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .filter-select { flex: 1; min-width: 120px; }
+  .summary-bar {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  /* ── 4-15. 플로팅 / 고정 버튼 ── */
+  .btn-add,
+  .btn-ep-create,
+  .btn-create-planner,
+  .btn-new-notice {
+    /* 터치 44px 최소 */
+    min-height: 44px !important;
+    font-size: .85rem !important;
+  }
+
+  /* ── 4-16. 폼 입력 (iOS 확대 방지 = 16px 이상) ── */
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* ── 4-17. 토스트 ── */
+  #dvl-toast {
+    bottom: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px) + 12px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: 100% !important;
+    text-align: center !important;
+  }
+
+  /* ── 4-18. 학생 테이블 열 숨김 (너무 좁을 때) ── */
+  .admin-table th:nth-child(5),
+  .admin-table td:nth-child(5),
+  .admin-table th:nth-child(8),
+  .admin-table td:nth-child(8),
+  .admin-table th:nth-child(9),
+  .admin-table td:nth-child(9) { display: none !important; }
+
+  /* ── 4-19. 차트 높이 모바일 조정 ── */
+  .rp-chart-wrap,
+  .chart-wrap,
+  .pg-chart-section .chart-wrap {
+    height: 200px !important;
+  }
+
+  /* ── 4-20. 타임라인 ── */
+  .rp-tl-date { display: none; }
+
+  /* ── 4-21. 달력 ── */
+  .calendar-grid { font-size: .78rem !important; }
+  .cal-day { min-height: 44px !important; padding: 3px !important; }
+
+  /* ── 4-22. 공지 카드 ── */
+  .nc-card { padding: 14px !important; }
+
+  /* ── 4-23. 플래너 진도 카드 ── */
+  .progress-cards { grid-template-columns: repeat(3, 1fr) !important; }
+  .prog-card { padding: 10px 6px !important; }
+  .prog-card .pc-circle { width: 44px !important; height: 44px !important; }
+
+  /* ── 4-24. KPI 행 (리포트) ── */
+  .rp-kpi-row { gap: 6px !important; }
+  .rp-kpi { min-width: 70px !important; padding: 10px 8px !important; }
+  .rp-kpi-val { font-size: 1.2rem !important; }
+
+  /* ── 4-25. 드로어 내 테이블 ── */
+  .drawer-school-table,
+  .drawer-mock-table {
+    font-size: 12px !important;
+  }
+  .drawer-school-table th,
+  .drawer-school-table td,
+  .drawer-mock-table th,
+  .drawer-mock-table td {
+    padding: 7px 8px !important;
+  }
+
+  /* ── 4-26. 히어로 Hero 섹션 ── */
+  .pg-hero { padding: 18px 20px !important; }
+  .pg-hero h2 { font-size: 17px !important; }
+
+  /* ── 4-27. 학부모 대시보드 child overview ── */
+  .child-overview-card { min-height: auto !important; }
+  .child-big-avatar { width: 52px !important; height: 52px !important; font-size: 20px !important; }
+
+  /* ── 4-28. 학생/학부모 요약 카드 숫자 크기 ── */
+  .pg-sc-value { font-size: 18px !important; }
+  .co-stat-val  { font-size: 20px !important; }
+
+  /* ── 4-29. 읽기 전용 배너 ── */
+  .read-only-banner { font-size: 12.5px !important; padding: 10px 14px !important; }
+
+  /* ── 4-30. D-day 배너 ── */
+  .dday-progress-wrap { width: 100% !important; min-width: unset !important; }
+
+  /* ── 4-31. 성적 등급 배지 ── */
+  .rank-badge {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 11px !important;
+  }
+
+  /* ── 4-32. 플로팅 페이지 타이틀 행 ── */
+  .page-title-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .page-title { font-size: 18px !important; }
+}
+
+/* ════════════════════════════════════════
+   4-33. 누락 래퍼 클래스 padding-bottom 보완
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* 상담, 학생관리 등 커스텀 래퍼 */
+  .cs-wrap,
+  .pm-wrap,
+  .at-wrap,
+  .pg-wrap,
+  .nc-wrap,
+  .sc-wrap,
+  .ep-wrap,
+  .rp-wrap,
+  .lp-wrap,
+  .planner-wrap,
+  .assess-wrap,
+  .grade-wrap,
+  .parents-wrap,
+  .exam-planner-wrap,
+  .admin-content,
+  .page-content {
+    padding-bottom: calc(var(--mob-nav-h) + env(safe-area-inset-bottom, 0px) + 16px) !important;
+  }
+
+  /* ── 관리자 상담 페이지 (cs-*) ── */
+  .cs-wrap { padding-left: 14px !important; padding-right: 14px !important; }
+  .cs-stat-row { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .cs-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap !important; gap: 0; padding-bottom: 2px; scrollbar-width: none; }
+  .cs-tabs::-webkit-scrollbar { display: none; }
+  .cs-tab { flex-shrink: 0 !important; white-space: nowrap; padding: 10px 14px !important; font-size: .8rem !important; }
+  .cs-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cs-table { min-width: 560px; }
+  .cs-modal { padding: 20px 18px !important; }
+  .cs-form-2col { grid-template-columns: 1fr !important; }
+  .cs-filter-bar { flex-wrap: wrap !important; }
+  .cs-filter-bar select,
+  .cs-filter-bar input { flex: 1 1 140px; font-size: 16px !important; }
+  .req-card { padding: 14px 16px !important; }
+
+  /* ── 학생 시험 플래너 (planner/exam) ── */
+  .planner-main { flex-direction: column !important; }
+  .planner-sidebar { width: 100% !important; max-width: 100% !important; }
+  .week-grid,
+  .cal-week-grid { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .week-day-col { min-width: 120px !important; }
+  .ep-header { flex-direction: column !important; gap: 10px !important; }
+  .ep-header-actions { flex-wrap: wrap !important; gap: 8px !important; }
+  .ep-dday-badge { font-size: .75rem !important; }
+  .task-card,
+  .ep-task-card { padding: 10px 12px !important; font-size: .85rem !important; }
+  .ep-week-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── 학생 대시보드 ── */
+  .student-main-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .student-topbar { padding: 0 14px !important; }
+  .student-hero { padding: 18px 16px !important; flex-direction: column !important; }
+  .stu-quick-btns { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .stu-stat-row { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+
+  /* ── 관리자 대시보드 ── */
+  .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .dashboard-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .kpi-card { padding: 14px 16px !important; }
+  .kpi-val { font-size: 1.6rem !important; }
+
+  /* ── 관리자 학생 목록 ── */
+  .sum-cards { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .sum-card { padding: 14px !important; }
+
+  /* ── 관리자 notices ── */
+  .nc-topbar { flex-direction: column !important; gap: 10px !important; align-items: flex-start !important; }
+  .nc-filter-bar { flex-wrap: wrap !important; gap: 8px !important; }
+
+  /* ── 학부모 페이지 ── */
+  .pa-wrap { padding: 14px !important; }
+  .parent-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .parent-hero { flex-direction: column !important; gap: 12px !important; padding: 16px !important; }
+
+  /* ── 공통 테이블 스크롤 ── */
+  .cs-table-wrap,
+  .table-scroll,
+  .attend-table-wrap,
+  .grade-table-wrap,
+  .student-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── 공통 버튼 최소 터치 크기 ── */
+  .btn-cs-primary,
+  .btn-modal-save,
+  .btn-modal-cancel,
+  .btn-req-confirm,
+  .btn-req-reject,
+  .btn-req-reply {
+    min-height: 44px !important;
+    font-size: .88rem !important;
+  }
+
+  /* ── 모달 바텀시트 (cs-modal) ── */
+  .cs-modal-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+  .cs-modal {
+    border-radius: 20px 20px 0 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 92dvh !important;
+    margin: 0 !important;
+  }
+  .cs-modal::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    border-radius: 2px;
+    background: #d1d5db;
+    margin: 10px auto 2px;
+  }
+  .reply-modal {
+    border-radius: 20px 20px 0 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* ── 알림 패널 ── */
+  .notif-panel {
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+  }
+
+  /* ── 성적 페이지 ── */
+  .grades-summary { flex-direction: column !important; }
+  .grades-filter-row { flex-wrap: wrap !important; gap: 8px !important; }
+
+  /* ── 출결 페이지 ── */
+  .at-filter-row { flex-wrap: wrap !important; gap: 8px !important; }
+  .at-stat-row { grid-template-columns: repeat(2,1fr) !important; gap: 10px !important; }
+}
+
+/* ════════════════════════════════════════
+   5. 작은 모바일 (≤ 390px)
+════════════════════════════════════════ */
+@media (max-width: 390px) {
+  .mobile-nav-item { font-size: .58rem; padding: 5px 2px; }
+  .mobile-nav-item i { font-size: 1.1rem; }
+
+  .pg-summary-row,
+  .summary-grid,
+  .rp-kpi-row { grid-template-columns: 1fr 1fr !important; }
+
+  .pg-hero h2 { font-size: 15px !important; }
+  .summary-bar { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ════════════════════════════════════════
+   6. 태블릿 최적화 (769px ~ 1024px)
+════════════════════════════════════════ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar { width: 200px !important; }
+  .admin-main { margin-left: 200px !important; }
+  .planner-grid { grid-template-columns: 1fr 260px !important; }
+  .ep-summary-row { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ════════════════════════════════════════
+   7. 아이폰 노치/다이나믹 아일랜드 대응
+════════════════════════════════════════ */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .mobile-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .admin-main,
+  .student-main {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* ════════════════════════════════════════
+   8. 터치 피드백
+════════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 기기에서 버튼/링크에 ripple 효과 */
+  .nav-item,
+  .mobile-nav-item,
+  .btn-add,
+  .tbl-btn,
+  .rp-stu-chip,
+  .pg-tab-btn,
+  .child-tab-pill {
+    -webkit-tap-highlight-color: rgba(0,0,0,.06);
+    transition: opacity .15s !important;
+  }
+  .nav-item:active,
+  .mobile-nav-item:active,
+  .btn-add:active,
+  .tbl-btn:active {
+    opacity: .7 !important;
+    transform: scale(.97) !important;
+  }
+}
+
+/* ════════════════════════════════════════
+   9. 모바일 네비 컬러 테마 오버라이드
+   (각 역할별 브랜드 색상)
+════════════════════════════════════════ */
+/* 학생 — 보라 */
+.mobile-nav--student {
+  border-top-color: rgba(79,70,229,.15);
+}
+.mobile-nav--student .mobile-nav-item.active {
+  color: #4f46e5;
+}
+/* 학부모 — 퍼플 */
+.mobile-nav--parent {
+  border-top-color: rgba(124,58,237,.15);
+}
+.mobile-nav--parent .mobile-nav-item.active {
+  color: #7c3aed;
+}
+/* 관리자 — 그린 */
+.mobile-nav--admin {
+  border-top-color: rgba(22,58,51,.15);
+}
+.mobile-nav--admin .mobile-nav-item.active {
+  color: #163A33;
+}
+
+/* ════════════════════════════════════════
+   10. 모바일 "더보기" 드로어 메뉴
+════════════════════════════════════════ */
+
+/* 드로어 오버레이 */
+.morenav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 8900;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.morenav-overlay.show { display: block; }
+
+/* 드로어 패널 (하단에서 위로) */
+.morenav-drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-radius: 22px 22px 0 0;
+  z-index: 9000;
+  padding: 0 0 env(safe-area-inset-bottom, 0px);
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 -8px 40px rgba(0,0,0,.18);
+  max-height: 82dvh;
+  overflow-y: auto;
+}
+.morenav-drawer.open {
+  transform: translateY(0);
+}
+
+/* 드래그 핸들 */
+.morenav-handle {
+  width: 40px; height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
+  margin: 12px auto 4px;
+}
+
+/* 드로어 헤더 */
+.morenav-header {
+  padding: 10px 20px 12px;
+  font-size: .78rem;
+  font-weight: 700;
+  color: #6b7280;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* 드로어 메뉴 그리드 */
+.morenav-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  padding: 12px 10px 16px;
+}
+
+/* 드로어 아이템 */
+.morenav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 14px 8px 12px;
+  border-radius: 14px;
+  color: #374151;
+  text-decoration: none;
+  font-size: .7rem;
+  font-weight: 600;
+  transition: background .15s, color .15s, transform .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.morenav-item i {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.morenav-item:active {
+  transform: scale(.93);
+  opacity: .75;
+}
+.morenav-item.active {
+  background: rgba(79,70,229,.08);
+  color: #4f46e5;
+}
+.morenav-item.active i { color: #4f46e5; }
+
+/* 역할별 활성 색상 */
+.morenav--student .morenav-item.active {
+  background: rgba(79,70,229,.09);
+  color: #4f46e5;
+}
+.morenav--parent .morenav-item.active {
+  background: rgba(124,58,237,.09);
+  color: #7c3aed;
+}
+
+/* 더보기 버튼 초기화 (button 태그 기본 스타일 제거) */
+button.mobile-nav-item {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 더보기 탭 버튼 활성 시 */
+.mobile-nav-item.morenav-toggle.open {
+  color: #4f46e5;
+}
+.mobile-nav--student .mobile-nav-item.morenav-toggle.open { color: #4f46e5; }
+
+/* 드로어 프로필 섹션 */
+.morenav-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  border-radius: 22px 22px 0 0;
+}
+.morenav-avatar {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.morenav-name {
+  font-size: .95rem;
+  font-weight: 700;
+}
+.morenav-sub {
+  font-size: .75rem;
+  opacity: .8;
+}
+
+/* ════════════════════════════════════════
+   10. 스크롤바 숨기기 (모바일 UX)
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+  * { scrollbar-width: none; }
+  *::-webkit-scrollbar { display: none; }
+}
+
+/* ════════════════════════════════════════
+   11. 전환 애니메이션 (페이지 진입)
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .page-content,
+  .admin-content {
+    animation: fadeSlideUp .28s ease both;
+  }
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

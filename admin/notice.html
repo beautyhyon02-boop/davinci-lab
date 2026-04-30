@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>공지/알림 관리 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <style>
+    :root {
+      --nc-main: #4f46e5; --nc-light: #e0e7ff;
+      --nc-success: #10b981; --nc-warn: #f59e0b; --nc-danger: #ef4444;
+    }
+    .nc-wrap { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+    /* 상단 액션바 */
+    .nc-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .nc-topbar h2 { font-size: 1.15rem; font-weight: 700; color: #1e1b4b; }
+    .btn-new-notice {
+      background: var(--nc-main); color: white; border: none;
+      padding: 10px 20px; border-radius: 9px; font-size: .9rem;
+      font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: background .2s;
+    }
+    .btn-new-notice:hover { background: #4338ca; }
+
+    /* 필터 탭 */
+    .nc-filter-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .nc-tab {
+      padding: 7px 16px; border-radius: 20px; font-size: .85rem; font-weight: 600;
+      cursor: pointer; border: 1.5px solid #e5e7eb; background: white; color: #6b7280;
+      transition: all .2s;
+    }
+    .nc-tab.active { background: var(--nc-main); color: white; border-color: var(--nc-main); }
+
+    /* 공지 카드 리스트 */
+    .nc-list { display: flex; flex-direction: column; gap: 12px; }
+    .nc-card {
+      background: white; border-radius: 14px; padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 1.5px solid transparent;
+      transition: all .2s; cursor: pointer;
+    }
+    .nc-card:hover { border-color: var(--nc-light); box-shadow: 0 4px 16px rgba(79,70,229,.1); }
+    .nc-card.pinned { border-color: #fde68a; background: #fffbeb; }
+    .nc-card.important { border-left: 4px solid var(--nc-danger); }
+
+    .nc-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .nc-card-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .nc-badge {
+      font-size: .72rem; padding: 2px 9px; border-radius: 99px; font-weight: 700;
+    }
+    .nc-badge.cat-exam    { background: #fee2e2; color: #991b1b; }
+    .nc-badge.cat-event   { background: #dbeafe; color: #1d4ed8; }
+    .nc-badge.cat-parent  { background: #fce7f3; color: #9d174d; }
+    .nc-badge.cat-student { background: #d1fae5; color: #065f46; }
+    .nc-badge.cat-general { background: #f3f4f6; color: #374151; }
+    .nc-badge.target-all  { background: #ede9fe; color: #5b21b6; }
+    .nc-badge.pinned-tag  { background: #fef3c7; color: #92400e; }
+    .nc-badge.important-tag { background: #fee2e2; color: #991b1b; }
+    .nc-badge.draft-tag   { background: #f3f4f6; color: #6b7280; }
+
+    .nc-card-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; flex: 1; }
+    .nc-card-meta { font-size: .8rem; color: #9ca3af; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .nc-card-meta i { font-size: .75rem; }
+    .nc-card-preview { font-size: .88rem; color: #6b7280; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .nc-card-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .btn-nc-edit { padding: 5px 14px; border-radius: 7px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; background: var(--nc-light); color: var(--nc-main); }
+    .btn-nc-edit:hover { background: #c7d2fe; }
+    .btn-nc-del  { padding: 5px 14px; border-radius: 7px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; background: #fee2e2; color: #991b1b; }
+    .btn-nc-del:hover  { background: #fecaca; }
+    .btn-nc-pin  { padding: 5px 14px; border-radius: 7px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; background: #fef3c7; color: #92400e; }
+
+    /* 공지 작성/수정 모달 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; position: relative; }
+    .modal-box h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 22px; color: #1e1b4b; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #9ca3af; }
+    .modal-close:hover { color: #374151; }
+    .modal-form { display: flex; flex-direction: column; gap: 16px; }
+    .modal-form label { font-size: .85rem; font-weight: 600; color: #374151; margin-bottom: 4px; display: block; }
+    .modal-form input, .modal-form select, .modal-form textarea {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e5e7eb;
+      border-radius: 8px; font-size: .95rem; font-family: inherit; box-sizing: border-box;
+      transition: border-color .2s;
+    }
+    .modal-form input:focus, .modal-form select:focus, .modal-form textarea:focus {
+      outline: none; border-color: var(--nc-main);
+    }
+    .modal-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-form .form-check { display: flex; align-items: center; gap: 8px; }
+    .modal-form .form-check input[type=checkbox] { width: auto; accent-color: var(--nc-main); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .btn-modal-cancel { flex: 1; padding: 12px; border-radius: 10px; border: 1.5px solid #e5e7eb; background: white; color: #374151; font-weight: 600; cursor: pointer; font-size: .95rem; }
+    .btn-modal-draft  { flex: 1; padding: 12px; border-radius: 10px; border: none; background: #f3f4f6; color: #374151; font-weight: 600; cursor: pointer; font-size: .95rem; }
+    .btn-modal-save   { flex: 2; padding: 12px; border-radius: 10px; border: none; background: var(--nc-main); color: white; font-weight: 700; cursor: pointer; font-size: .95rem; }
+
+    /* 빈 상태 */
+    .nc-empty { text-align: center; padding: 60px 24px; color: #9ca3af; }
+    .nc-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+
+    /* 토스트 */
+    .nc-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e1b4b; color: white; padding: 12px 24px; border-radius: 30px; font-size: .9rem; font-weight: 600; z-index: 99999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .nc-toast.show { opacity: 1; }
+
+    /* 반응형 */
+    @media(max-width: 600px) {
+      .modal-form .form-row { grid-template-columns: 1fr; }
+      .nc-card { padding: 16px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+        <a href="students.html" class="nav-item"><i class="fas fa-users"></i><span>학생 목록</span><span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학습 관리</span>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 조회</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 열람</span></a>
+        <a href="exam.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">소통</span>
+        <a href="notice.html" class="nav-item active"><i class="fas fa-bullhorn"></i><span>공지/알림</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../login.html" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>공지/알림 관리</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
+          <i class="fas fa-bell"></i>
+        </button>
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="topbarAvatar">박</div>
+          <span id="topbarName">박소현</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="nc-wrap">
+      <div class="nc-topbar">
+        <h2><i class="fas fa-bullhorn" style="color:var(--nc-main);margin-right:8px"></i>공지/알림 관리</h2>
+        <button class="btn-new-notice" onclick="openWriteModal()">
+          <i class="fas fa-plus"></i> 새 공지 작성
+        </button>
+      </div>
+
+      <!-- 필터 탭 -->
+      <div class="nc-filter-tabs">
+        <button class="nc-tab active" data-cat="">전체</button>
+        <button class="nc-tab" data-cat="전체공지">전체공지</button>
+        <button class="nc-tab" data-cat="학생공지">학생공지</button>
+        <button class="nc-tab" data-cat="학부모공지">학부모공지</button>
+        <button class="nc-tab" data-cat="시험공지">시험공지</button>
+        <button class="nc-tab" data-cat="행사공지">행사공지</button>
+      </div>
+
+      <!-- 공지 목록 -->
+      <div class="nc-list" id="noticeList"></div>
+      <div class="nc-empty" id="noticeEmpty" style="display:none">
+        <i class="fas fa-bell-slash"></i>
+        <p>등록된 공지가 없습니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 공지 작성/수정 모달 -->
+  <div class="modal-overlay" id="writeModal">
+    <div class="modal-box">
+      <h3 id="modalTitle"><i class="fas fa-edit" style="color:var(--nc-main);margin-right:8px"></i>공지 작성</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      <div class="modal-form">
+        <input type="hidden" id="editNoticeId" />
+        <div>
+          <label>제목 *</label>
+          <input type="text" id="noticeTitle" placeholder="공지 제목을 입력하세요" />
+        </div>
+        <div class="form-row">
+          <div>
+            <label>카테고리</label>
+            <select id="noticeCategory">
+              <option value="전체공지">전체공지</option>
+              <option value="학생공지">학생공지</option>
+              <option value="학부모공지">학부모공지</option>
+              <option value="시험공지">시험공지</option>
+              <option value="행사공지">행사공지</option>
+            </select>
+          </div>
+          <div>
+            <label>수신 대상</label>
+            <select id="noticeTarget">
+              <option value="전체">전체 (학생+학부모)</option>
+              <option value="학생">학생만</option>
+              <option value="학부모">학부모만</option>
+              <option value="특정학생">특정 학생</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label>내용 *</label>
+          <textarea id="noticeContent" rows="8" placeholder="공지 내용을 입력하세요..."></textarea>
+        </div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <label class="form-check">
+            <input type="checkbox" id="noticePinned" />
+            <span>📌 상단 고정</span>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" id="noticeImportant" />
+            <span>🔴 중요 공지</span>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" onclick="closeModal()">취소</button>
+          <button class="btn-modal-draft" onclick="saveNotice('임시저장')">임시저장</button>
+          <button class="btn-modal-save" onclick="saveNotice('발행')">
+            <i class="fas fa-paper-plane"></i> 발행
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nc-toast" id="ncToast"></div>
+
+  <script>
+  const TABLE_NOTICES = 'notices';
+  let allNotices = [];
+  let currentFilter = '';
+  let editingId = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    /* 세션: admin-common.js가 이미 검증한 window._dvlAdminSession 사용 */
+    const _s = window._dvlAdminSession;
+    if (!_s) return;
+    const name = _s.name || '관리자';
+    document.getElementById('topbarName') && (document.getElementById('topbarName').textContent = name);
+    document.getElementById('topbarAvatar') && (document.getElementById('topbarAvatar').textContent = name[0] || '관');
+
+    // 필터 탭 이벤트
+    document.querySelectorAll('.nc-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nc-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.cat;
+        renderNotices();
+      });
+    });
+
+    await loadNotices();
+  });
+
+  async function loadNotices() {
+    try {
+      const res = await fetch(`../tables/${TABLE_NOTICES}?limit=200`);
+      const data = await res.json();
+      allNotices = (data.data || []).filter(n => n.status !== '삭제')
+        .sort((a, b) => {
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+          return b.created_at - a.created_at;
+        });
+      renderNotices();
+    } catch(e) {
+      showToast('⚠️ 공지 목록 로드 실패');
+    }
+  }
+
+  function renderNotices() {
+    const list  = document.getElementById('noticeList');
+    const empty = document.getElementById('noticeEmpty');
+    const filtered = currentFilter
+      ? allNotices.filter(n => n.category === currentFilter)
+      : allNotices;
+
+    if (filtered.length === 0) {
+      list.innerHTML = ''; empty.style.display = 'block'; return;
+    }
+    empty.style.display = 'none';
+
+    list.innerHTML = filtered.map(n => {
+      const catClass = { '시험공지':'cat-exam','행사공지':'cat-event','학부모공지':'cat-parent','학생공지':'cat-student' }[n.category] || 'cat-general';
+      const dateStr  = n.created_at ? new Date(n.created_at).toLocaleDateString('ko-KR') : '';
+      const preview  = (n.content || '').replace(/\n/g,' ').substring(0,80);
+      return `
+        <div class="nc-card ${n.is_pinned?'pinned':''} ${n.is_important?'important':''}" onclick="openEditModal('${n.id}')">
+          <div class="nc-card-badges">
+            <span class="nc-badge ${catClass}">${n.category}</span>
+            <span class="nc-badge target-all">${n.target}</span>
+            ${n.is_pinned ? '<span class="nc-badge pinned-tag">📌 고정</span>' : ''}
+            ${n.is_important ? '<span class="nc-badge important-tag">🔴 중요</span>' : ''}
+            ${n.status === '임시저장' ? '<span class="nc-badge draft-tag">임시저장</span>' : ''}
+          </div>
+          <div class="nc-card-title">${n.title}</div>
+          <div class="nc-card-meta" style="margin-top:6px">
+            <span><i class="fas fa-user"></i> ${n.author_name}</span>
+            <span><i class="fas fa-clock"></i> ${dateStr}</span>
+            <span><i class="fas fa-eye"></i> ${n.view_count || 0}회</span>
+          </div>
+          <div class="nc-card-preview" style="margin-top:8px">${preview}</div>
+          <div class="nc-card-actions" onclick="event.stopPropagation()">
+            <button class="btn-nc-edit" onclick="openEditModal('${n.id}')">
+              <i class="fas fa-edit"></i> 수정
+            </button>
+            <button class="btn-nc-pin" onclick="togglePin('${n.id}')">
+              ${n.is_pinned ? '📌 고정해제' : '📌 고정'}
+            </button>
+            <button class="btn-nc-del" onclick="deleteNotice('${n.id}')">
+              <i class="fas fa-trash"></i> 삭제
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // 작성 모달 열기
+  function openWriteModal() {
+    editingId = null;
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit" style="color:var(--nc-main);margin-right:8px"></i>새 공지 작성';
+    document.getElementById('noticeTitle').value    = '';
+    document.getElementById('noticeContent').value  = '';
+    document.getElementById('noticeCategory').value = '전체공지';
+    document.getElementById('noticeTarget').value   = '전체';
+    document.getElementById('noticePinned').checked    = false;
+    document.getElementById('noticeImportant').checked = false;
+    document.getElementById('writeModal').classList.add('open');
+  }
+
+  // 수정 모달 열기
+  function openEditModal(id) {
+    const n = allNotices.find(x => x.id === id);
+    if (!n) return;
+    editingId = id;
+    document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit" style="color:var(--nc-main);margin-right:8px"></i>공지 수정';
+    document.getElementById('noticeTitle').value    = n.title || '';
+    document.getElementById('noticeContent').value  = n.content || '';
+    document.getElementById('noticeCategory').value = n.category || '전체공지';
+    document.getElementById('noticeTarget').value   = n.target || '전체';
+    document.getElementById('noticePinned').checked    = !!n.is_pinned;
+    document.getElementById('noticeImportant').checked = !!n.is_important;
+    document.getElementById('writeModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('writeModal').classList.remove('open');
+  }
+
+  // 저장 (발행 / 임시저장)
+  async function saveNotice(statusStr) {
+    const title   = document.getElementById('noticeTitle').value.trim();
+    const content = document.getElementById('noticeContent').value.trim();
+    if (!title || !content) { showToast('⚠️ 제목과 내용을 입력해주세요.'); return; }
+
+    const data = {
+      title, content,
+      category:     document.getElementById('noticeCategory').value,
+      target:       document.getElementById('noticeTarget').value,
+      author_id:    sessionStorage.getItem('userId') || 'admin',
+      author_name:  sessionStorage.getItem('userName') || '관리자',
+      is_pinned:    document.getElementById('noticePinned').checked,
+      is_important: document.getElementById('noticeImportant').checked,
+      status:       statusStr === '발행' ? '발행' : '임시저장',
+      view_count:   0,
+      target_ids:   '',
+    };
+
+    try {
+      if (editingId) {
+        await fetch(`../tables/${TABLE_NOTICES}/${editingId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        showToast('✅ 공지가 수정되었습니다!');
+      } else {
+        await fetch(`../tables/${TABLE_NOTICES}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        showToast(statusStr === '발행' ? '✅ 공지가 발행되었습니다!' : '💾 임시저장되었습니다.');
+      }
+      closeModal();
+      await loadNotices();
+    } catch(e) { showToast('⚠️ 저장 실패'); }
+  }
+
+  // 고정 토글
+  async function togglePin(id) {
+    const n = allNotices.find(x => x.id === id);
+    if (!n) return;
+    try {
+      await fetch(`../tables/${TABLE_NOTICES}/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_pinned: !n.is_pinned }),
+      });
+      await loadNotices();
+      showToast(n.is_pinned ? '📌 고정이 해제되었습니다.' : '📌 상단에 고정되었습니다.');
+    } catch(e) {}
+  }
+
+  // 삭제
+  async function deleteNotice(id) {
+    if (!confirm('이 공지를 삭제할까요?')) return;
+    try {
+      await fetch(`../tables/${TABLE_NOTICES}/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: '삭제' }),
+      });
+      await loadNotices();
+      showToast('🗑️ 삭제되었습니다.');
+    } catch(e) {}
+  }
+
+  function showToast(msg) {
+    const el = document.getElementById('ncToast');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+  </script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="exam.html" class="mobile-nav-item"><i class="fas fa-calendar-alt"></i><span>플래너</span></a>
+      <a href="notice.html" class="mobile-nav-item active"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+</body>
+</html>

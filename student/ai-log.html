@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 튜터링 로그 생성기 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <style>
+    /* ══ AI 튜터링 로그 – 바이올렛 톤 ══ */
+
+    /* 입력 레이아웃 */
+    .ailog-grid {
+      display: grid; grid-template-columns: 1fr 420px;
+      gap: 24px; align-items: start;
+    }
+    @media (max-width: 1100px) { .ailog-grid { grid-template-columns: 1fr; } }
+
+    .ailog-form-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 28px 32px; box-shadow: var(--shadow-sm);
+    }
+    .ailog-section-title {
+      font-size: 15px; font-weight: 700; color: var(--text-900);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .ailog-section-title .step-badge {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--violet-600), var(--violet-800));
+      color: #fff; font-size: 12px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(109,82,204,.3);
+    }
+
+    .form-row { margin-bottom: 18px; }
+    .form-row label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: var(--text-300); text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 8px;
+    }
+    .form-row input, .form-row select, .form-row textarea {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 13.5px; font-family: inherit;
+      color: var(--text-900); background: var(--bg-card);
+      transition: all var(--transition);
+    }
+    .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
+      outline: none; border-color: var(--violet-400);
+      box-shadow: 0 0 0 3px rgba(167,139,250,.1);
+    }
+    .form-row textarea { min-height: 130px; resize: vertical; line-height: 1.75; }
+
+    .ai-paste-area {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md); padding: 20px;
+      background: var(--bg-section); transition: all var(--transition);
+    }
+    .ai-paste-area:focus-within {
+      border-color: var(--violet-400); background: var(--violet-50);
+    }
+    .ai-paste-area textarea { border: none !important; background: transparent !important; padding: 0 !important; min-height: 160px; }
+    .ai-paste-hint {
+      font-size: 12px; color: var(--text-300); margin-top: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ai-paste-hint i { color: var(--violet-400); }
+
+    .critical-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .critical-tag {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 30px; font-size: 12.5px; font-weight: 600;
+      border: 1.5px solid var(--border); cursor: pointer; transition: all var(--transition);
+    }
+    .critical-tag input { display: none; }
+    .critical-tag.error-tag:has(input:checked), .critical-tag.error-tag.selected {
+      background: rgba(251,113,133,.1); border-color: #fb7185; color: #be123c;
+    }
+    .critical-tag.limit-tag:has(input:checked), .critical-tag.limit-tag.selected {
+      background: rgba(252,211,77,.1); border-color: #fcd34d; color: #b45309;
+    }
+    .critical-tag.insight-tag:has(input:checked), .critical-tag.insight-tag.selected {
+      background: rgba(52,211,153,.1); border-color: #34d399; color: #065f46;
+    }
+
+    .generate-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--violet-600), var(--violet-800));
+      color: #fff; border: none; border-radius: var(--radius-sm);
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: all var(--transition);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-top: 8px; box-shadow: 0 4px 16px rgba(109,82,204,.3);
+    }
+    .generate-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(109,82,204,.4); }
+
+    /* 결과 패널 */
+    .result-panel {
+      background: var(--bg-card); border-radius: var(--radius-xl);
+      overflow: hidden; box-shadow: var(--shadow-md);
+      border: 1px solid rgba(167,139,250,.12);
+    }
+    .result-panel-header {
+      background: linear-gradient(135deg, var(--violet-900), var(--violet-800));
+      padding: 18px 24px; color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .result-panel-header h3 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .result-panel-header .header-btns { display: flex; gap: 8px; }
+    .result-icon-btn {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(255,255,255,.12); color: #fff; font-size: 14px;
+      border: none; cursor: pointer; transition: background var(--transition);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .result-icon-btn:hover { background: rgba(255,255,255,.22); }
+
+    .result-body { padding: 24px; }
+    .result-empty { text-align: center; padding: 48px 20px; color: var(--text-300); }
+    .result-empty i { font-size: 40px; display: block; margin-bottom: 12px; opacity:.5; }
+    .result-empty p { font-size: 13.5px; }
+
+    /* 문서 출력 */
+    .doc-output { display: none; }
+    .doc-output.visible { display: block; }
+    .doc-header-strip {
+      background: var(--violet-50); border-radius: var(--radius-sm);
+      padding: 14px 16px; margin-bottom: 18px;
+      border-left: 4px solid var(--violet-400);
+    }
+    .doc-header-strip p { font-size: 12.5px; color: var(--text-700); line-height: 1.7; margin: 0; }
+    .doc-section { margin-bottom: 20px; }
+    .doc-section-label {
+      font-size: 11px; font-weight: 800; color: var(--text-300);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+    }
+    .doc-section-label i { color: var(--violet-400); }
+    .doc-content-box {
+      background: var(--bg-section); border-radius: var(--radius-sm);
+      padding: 14px 16px; font-size: 13.5px; color: var(--text-700); line-height: 1.8;
+      border: 1px solid var(--border-light);
+    }
+    .doc-content-box.critical {
+      background: rgba(251,113,133,.04); border-color: rgba(251,113,133,.2);
+      border-left: 3px solid #fb7185;
+    }
+    .doc-content-box.verified {
+      background: rgba(52,211,153,.04); border-color: rgba(52,211,153,.2);
+      border-left: 3px solid #34d399;
+    }
+    .doc-stamp { margin-top: 18px; text-align: right; font-size: 12px; color: var(--text-300); }
+    .doc-stamp strong { color: var(--violet-600); }
+
+    /* 이력 패널 */
+    .log-history-panel {
+      background: var(--bg-card); border-radius: var(--radius-xl);
+      padding: 24px; box-shadow: var(--shadow-sm); margin-top: 24px;
+    }
+    .log-history-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 0; border-bottom: 1px solid var(--border-light);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .log-history-item:last-child { border-bottom: none; }
+    .log-history-item:hover { background: var(--violet-50); margin: 0 -8px; padding: 12px 8px; border-radius: 8px; }
+    .lhi-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+      background: var(--violet-100); color: var(--violet-600);
+    }
+    .lhi-info { flex: 1; }
+    .lhi-title { font-size: 13.5px; font-weight: 600; color: var(--text-900); }
+    .lhi-meta  { font-size: 12px; color: var(--text-500); margin-top: 2px; }
+    .lhi-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+    .lhi-badge.submitted { background: var(--violet-100); color: var(--violet-700); }
+    .lhi-badge.saved     { background: rgba(96,165,250,.1); color: #1d4ed8; }
+
+    @media print {
+      .sidebar, .topbar, .dv-hero, .ailog-form-card,
+      .log-history-panel, .result-icon-btn, .generate-btn { display: none !important; }
+      .admin-main { margin: 0; }
+      .result-panel { box-shadow: none; }
+      .doc-output { display: block !important; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sideAvatar">김</div>
+        <span class="stu-stage-badge">2단계</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sideName">김다빈</strong>
+        <span>○○중학교 2학년</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 현황</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+        <a href="report.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>역량 리포트</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item active"><i class="fas fa-robot"></i><span>AI 튜터링 로그</span></a>
+        <a href="golden-time.html" class="nav-item"><i class="fas fa-star"></i><span>골든타임 미션</span></a>
+        <a href="incubating.html" class="nav-item"><i class="fas fa-lightbulb"></i><span>질문 아카이브</span></a>
+        <a href="clinic.html" class="nav-item"><i class="fas fa-file-medical"></i><span>학생부 클리닉</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="message.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>선생님께 질문</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <a href="dashboard.html">홈</a>
+          <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+          <span>AI 튜터링 로그 생성기</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar student-avatar-color" id="topAvatar">김</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topName">김다빈</span>
+            <span class="topbar-user-role student-role-label">학생 · 2단계</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+
+      <!-- 히어로 -->
+      <div class="dv-hero dv-hero--violet">
+        <div class="dv-hero-icon dv-icon--violet">
+          <i class="fas fa-microchip-ai"></i>
+        </div>
+        <div class="dv-hero-body">
+          <h2>AI 튜터링 로그 생성기</h2>
+          <p>AI를 사용했다면 '어떻게 활용했는지' 증명하세요. 교육부 수행평가 AI 활용 기록 제출 의무화에 대응하는 <strong style="color:var(--violet-300);">비판적 사고 증빙 문서</strong>를 자동으로 만들어 드립니다.</p>
+          <span class="dv-badge"><i class="fas fa-shield-halved"></i> 교육부 AI 활용 기록 대응</span>
+          <span class="dv-badge"><i class="fas fa-file-arrow-down"></i> 학교 제출용 PDF 출력</span>
+        </div>
+      </div>
+
+      <div class="ailog-grid">
+
+        <!-- 왼쪽: 입력 폼 -->
+        <div>
+          <div class="ailog-form-card">
+
+            <!-- STEP 1 -->
+            <div class="ailog-section-title">
+              <span class="step-badge">1</span>
+              기본 정보 입력
+            </div>
+            <div class="form-row">
+              <label>과목 / 수행평가명</label>
+              <input type="text" id="subjectInput" placeholder="예) 수학 – 이차방정식 심화 탐구 보고서" />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-row">
+                <label>AI 도구 종류</label>
+                <select id="aiToolSelect">
+                  <option>ChatGPT (GPT-4)</option>
+                  <option>ChatGPT (GPT-3.5)</option>
+                  <option>Claude (Anthropic)</option>
+                  <option>Gemini (Google)</option>
+                  <option>Copilot (Microsoft)</option>
+                  <option>뤼튼 (wrtn)</option>
+                  <option>기타</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>사용 일시</label>
+                <input type="date" id="useDateInput" />
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="ailog-section-title" style="margin-top:8px;">
+              <span class="step-badge">2</span>
+              나의 질문 (AI에게 던진 프롬프트)
+            </div>
+            <div class="form-row">
+              <div class="ai-paste-area">
+                <textarea id="myQuestionInput" placeholder="AI에게 던진 질문을 그대로 붙여 넣거나 직접 입력하세요.&#10;&#10;예) '이차방정식의 판별식이 음수일 때 근이 존재하지 않는 이유를 실생활 예시로 설명해줘'"></textarea>
+                <div class="ai-paste-hint"><i class="fas fa-paste"></i> ChatGPT 대화창에서 복사해서 붙여넣기 가능</div>
+              </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="ailog-section-title" style="margin-top:8px;">
+              <span class="step-badge">3</span>
+              AI 답변 중 내가 발견한 것
+            </div>
+            <div class="form-row" style="margin-bottom:10px;">
+              <label>발견 유형 선택 (복수 선택 가능)</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <label class="critical-tag error-tag" id="tagError">
+                  <i class="fas fa-times-circle"></i> 오류 발견
+                </label>
+                <label class="critical-tag limit-tag" id="tagLimit">
+                  <i class="fas fa-exclamation-triangle"></i> 한계점 발견
+                </label>
+                <label class="critical-tag insight-tag" id="tagInsight">
+                  <i class="fas fa-lightbulb"></i> 새로운 인사이트
+                </label>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="ai-paste-area">
+                <textarea id="aiAnswerInput" placeholder="AI의 답변 내용을 붙여 넣거나, 핵심 내용을 요약해 입력하세요."></textarea>
+              </div>
+            </div>
+
+            <!-- STEP 4 -->
+            <div class="ailog-section-title" style="margin-top:8px;">
+              <span class="step-badge">4</span>
+              나의 비판적 분석 & 직접 수정/보완한 내용
+            </div>
+            <div class="form-row">
+              <textarea id="myAnalysisInput" style="min-height:120px;" placeholder="AI 답변의 어떤 부분이 틀렸는지, 한계가 있는지, 또는 어떤 점에서 영감을 받아 스스로 어떻게 발전시켰는지 작성하세요.&#10;&#10;예) 'AI는 판별식이 음수일 때 '근이 없다'고만 했지만, 복소수 범위에서는 근이 존재함을 확인하여 이를 추가로 탐구함'"></textarea>
+            </div>
+
+            <div class="form-row">
+              <label>최종 활용 방식 (내 보고서/답안에 어떻게 반영했나)</label>
+              <textarea id="myApplicationInput" style="min-height:80px;" placeholder="예) AI 설명을 출발점으로 삼아, 교과서 p.142 개념과 비교 검증 후 독자적인 분석 결과를 작성함."></textarea>
+            </div>
+
+            <button class="generate-btn" onclick="generateLog()">
+              <i class="fas fa-wand-magic-sparkles"></i> AI 활용 증빙 문서 생성하기
+            </button>
+          </div>
+
+          <!-- 이력 -->
+          <div class="log-history-panel">
+            <div class="card-header" style="padding:0 0 14px;">
+              <h3 class="card-title"><i class="fas fa-history"></i> 저장된 로그 이력</h3>
+              <span style="font-size:12px;color:var(--text-300);">최근 5건</span>
+            </div>
+            <div id="logHistoryList">
+              <div class="log-history-item" onclick="loadSample()">
+                <div class="lhi-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;"><i class="fas fa-robot"></i></div>
+                <div class="lhi-info">
+                  <div class="lhi-title">수학 – 이차방정식 심화 탐구</div>
+                  <div class="lhi-meta">ChatGPT · 2025.03.18 · 오류 발견 1건</div>
+                </div>
+                <span class="lhi-badge submitted">제출됨</span>
+              </div>
+              <div class="log-history-item">
+                <div class="lhi-icon" style="background:rgba(16,185,129,.1);color:#059669;"><i class="fas fa-robot"></i></div>
+                <div class="lhi-info">
+                  <div class="lhi-title">영어 – 영미문학 에세이 리서치</div>
+                  <div class="lhi-meta">Claude · 2025.03.10 · 한계점 발견</div>
+                </div>
+                <span class="lhi-badge saved">저장됨</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: 결과 패널 -->
+        <div>
+          <div class="result-panel" id="resultPanel">
+            <div class="result-panel-header">
+              <h3><i class="fas fa-file-alt" style="margin-right:8px;"></i>생성된 증빙 문서</h3>
+              <div class="header-btns">
+                <button class="result-icon-btn" title="복사" onclick="copyResult()"><i class="fas fa-copy"></i></button>
+                <button class="result-icon-btn" title="인쇄/PDF 저장" onclick="window.print()"><i class="fas fa-print"></i></button>
+                <button class="result-icon-btn" title="저장" onclick="saveLog()"><i class="fas fa-save"></i></button>
+              </div>
+            </div>
+            <div class="result-body">
+              <div class="result-empty" id="resultEmpty">
+                <i class="fas fa-file-signature"></i>
+                <p>왼쪽 양식을 작성하고<br/><strong>문서 생성하기</strong> 버튼을 클릭하면<br/>학교 제출용 증빙 문서가 여기에 나타납니다.</p>
+              </div>
+              <div class="doc-output" id="docOutput">
+                <!-- JS 생성 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 안내 카드 -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-info-circle"></i> 이 문서가 필요한 이유</h3>
+            </div>
+            <div class="card-body" style="font-size:13px;color:var(--text-700);line-height:1.9;">
+              <p style="margin-bottom:10px;">
+                <i class="fas fa-check" style="color:var(--teal-400);margin-right:6px;"></i>
+                <strong>교육부 방침:</strong> 수행평가에서 AI 활용 시 질문 로그 미제출은 부정행위로 간주될 수 있음 (2025년 강화)
+              </p>
+              <p style="margin-bottom:10px;">
+                <i class="fas fa-check" style="color:var(--teal-400);margin-right:6px;"></i>
+                <strong>핵심 메시지:</strong> "AI를 사용했지만, AI의 오류를 발견하고 스스로 수정·보완했다"는 증거가 담깁니다.
+              </p>
+              <p style="margin-bottom:10px;">
+                <i class="fas fa-check" style="color:var(--teal-400);margin-right:6px;"></i>
+                <strong>평가자 신뢰도:</strong> AI를 도구로 활용한 비판적 사고력을 정량적으로 입증합니다.
+              </p>
+              <p>
+                <i class="fas fa-star" style="color:var(--yellow);margin-right:6px;"></i>
+                <strong>다빈치랩 전략:</strong> 생성된 문서는 박인오 선생님 검토 후 최종 제출 권장
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /ailog-grid -->
+    </main>
+  </div>
+
+  <div class="toast-bar" id="toastBar" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--green-800);color:#fff;padding:13px 28px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);z-index:9999;"></div>
+
+  <script>
+  (function(){
+    /* 세션 */
+    const raw  = localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session');
+    const user = raw ? JSON.parse(raw) : null;
+    if (!user || !user.id) { location.href = '../login.html'; return; }
+    const ch   = (user.name||'김').charAt(0);
+    document.getElementById('sideAvatar').textContent = ch;
+    document.getElementById('sideName').textContent   = user.name || '김다빈';
+    document.getElementById('topAvatar').textContent  = ch;
+    document.getElementById('topName').textContent    = user.name || '김다빈';
+
+    /* 날짜 기본값 */
+    const today = new Date();
+    document.getElementById('useDateInput').value =
+      `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+    /* 태그 토글 */
+    let tags = { error:false, limit:false, insight:false };
+    ['tagError','tagLimit','tagInsight'].forEach(id => {
+      const key = id.replace('tag','').toLowerCase();
+      document.getElementById(id).addEventListener('click', function(){
+        tags[key] = !tags[key];
+        this.classList.toggle('selected', tags[key]);
+      });
+    });
+
+    /* 샘플 로드 */
+    window.loadSample = function(){
+      document.getElementById('subjectInput').value = '수학 – 이차방정식 심화 탐구 보고서';
+      document.getElementById('aiToolSelect').value = 'ChatGPT (GPT-4)';
+      document.getElementById('useDateInput').value = '2025-03-18';
+      document.getElementById('myQuestionInput').value =
+        '이차방정식의 판별식이 음수일 때 근이 존재하지 않는다고 하는데, 이를 실생활 예시와 함께 설명해줘. 그리고 판별식을 이용해 포물선이 x축과 만나는지 여부를 판단하는 방법도 알려줘.';
+      document.getElementById('aiAnswerInput').value =
+        'ChatGPT는 판별식 D = b² - 4ac < 0일 때 "이 방정식은 실수 범위에서 해가 없다"고 설명하며, 포물선이 x축과 만나지 않는다고 했습니다. 실생활 예시로 야구공 궤적 문제를 들었습니다.';
+      document.getElementById('myAnalysisInput').value =
+        'AI는 실수 범위에서만 설명하고 복소수 해의 존재는 언급하지 않았습니다. 고등 수준에서는 허수 해(복소수 해)가 존재하며, D < 0인 경우에도 허수 단위 i를 이용하면 해를 구할 수 있음을 교과서 p.142에서 확인하여 이 부분을 보고서에 추가로 서술했습니다. AI가 제시한 야구공 예시는 중력 가속도 값을 9.8이 아닌 10으로 단순화해 오차가 있어 실제 값으로 수정했습니다.';
+      document.getElementById('myApplicationInput').value =
+        'AI 설명을 출발점으로 삼아 실수 해의 판별 원리를 이해한 뒤, 복소수 범위까지 확장하여 보고서 3장(심화 분석)에 독자적 내용으로 추가 기술함. AI 제시 오류 2건(복소수 누락, 수치 오차)을 직접 수정하여 완성.';
+      tags.error = true; tags.limit = true;
+      document.getElementById('tagError').classList.add('selected');
+      document.getElementById('tagLimit').classList.add('selected');
+      showToast('샘플 데이터가 입력되었습니다. 문서 생성 버튼을 눌러보세요!');
+    };
+
+    /* 문서 생성 */
+    window.generateLog = function(){
+      const subject  = document.getElementById('subjectInput').value.trim();
+      const tool     = document.getElementById('aiToolSelect').value;
+      const useDate  = document.getElementById('useDateInput').value;
+      const question = document.getElementById('myQuestionInput').value.trim();
+      const aiAnswer = document.getElementById('aiAnswerInput').value.trim();
+      const myAnal   = document.getElementById('myAnalysisInput').value.trim();
+      const myApp    = document.getElementById('myApplicationInput').value.trim();
+
+      if (!subject || !question || !myAnal) {
+        showToast('⚠️ 과목명, 나의 질문, 비판적 분석 항목은 필수입니다.', true);
+        return;
+      }
+
+      const tagList = [];
+      if (tags.error)   tagList.push('<span style="background:rgba(239,68,68,.12);color:#dc2626;padding:2px 8px;border-radius:12px;font-size:11.5px;font-weight:700;">🚫 오류 발견</span>');
+      if (tags.limit)   tagList.push('<span style="background:rgba(245,158,11,.12);color:#d97706;padding:2px 8px;border-radius:12px;font-size:11.5px;font-weight:700;">⚠️ 한계점 발견</span>');
+      if (tags.insight) tagList.push('<span style="background:rgba(16,185,129,.12);color:#059669;padding:2px 8px;border-radius:12px;font-size:11.5px;font-weight:700;">💡 새로운 인사이트</span>');
+
+      const docNo = 'DVL-AI-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*9000)+1000);
+      const dateStr = useDate.replace(/-/g,'.') || today.toLocaleDateString('ko-KR');
+      const studentName = user.name || '김다빈';
+
+      document.getElementById('docOutput').innerHTML = `
+        <div class="doc-header-strip">
+          <p><strong style="color:var(--green-800);">AI 활용 학습 과정 기록서</strong><br/>
+          본 문서는 수행평가 AI 활용 과정의 투명한 공개를 위해 다빈치랩 AI 튜터링 로그 시스템으로 자동 생성되었습니다.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;font-size:13px;">
+          <div style="background:var(--bg-section);padding:10px 14px;border-radius:8px;">
+            <span style="color:var(--text-500);font-size:11px;display:block;margin-bottom:2px;">학생명</span>
+            <strong>${studentName}</strong>
+          </div>
+          <div style="background:var(--bg-section);padding:10px 14px;border-radius:8px;">
+            <span style="color:var(--text-500);font-size:11px;display:block;margin-bottom:2px;">과목 / 평가명</span>
+            <strong>${subject}</strong>
+          </div>
+          <div style="background:var(--bg-section);padding:10px 14px;border-radius:8px;">
+            <span style="color:var(--text-500);font-size:11px;display:block;margin-bottom:2px;">사용 AI 도구</span>
+            <strong>${tool}</strong>
+          </div>
+          <div style="background:var(--bg-section);padding:10px 14px;border-radius:8px;">
+            <span style="color:var(--text-500);font-size:11px;display:block;margin-bottom:2px;">활용 일시</span>
+            <strong>${dateStr}</strong>
+          </div>
+        </div>
+
+        ${tagList.length ? `<div style="margin-bottom:16px;display:flex;gap:6px;flex-wrap:wrap;">${tagList.join('')}</div>` : ''}
+
+        <div class="doc-section">
+          <div class="doc-section-label"><i class="fas fa-question-circle"></i> 1. 나의 질문 (프롬프트)</div>
+          <div class="doc-content-box">${question.replace(/\n/g,'<br/>')}</div>
+        </div>
+
+        ${aiAnswer ? `
+        <div class="doc-section">
+          <div class="doc-section-label"><i class="fas fa-robot"></i> 2. AI 답변 핵심 내용</div>
+          <div class="doc-content-box">${aiAnswer.replace(/\n/g,'<br/>')}</div>
+        </div>` : ''}
+
+        <div class="doc-section">
+          <div class="doc-section-label"><i class="fas fa-search"></i> 3. 비판적 분석 – 내가 발견한 오류·한계·인사이트</div>
+          <div class="doc-content-box critical">${myAnal.replace(/\n/g,'<br/>')}</div>
+        </div>
+
+        ${myApp ? `
+        <div class="doc-section">
+          <div class="doc-section-label"><i class="fas fa-pen-alt"></i> 4. 최종 활용 방식 (보고서 반영 내용)</div>
+          <div class="doc-content-box verified">${myApp.replace(/\n/g,'<br/>')}</div>
+        </div>` : ''}
+
+        <div style="margin-top:18px;padding:14px;background:rgba(22,58,51,.05);border-radius:8px;font-size:12.5px;color:var(--text-700);line-height:1.8;">
+          <strong style="color:var(--green-800);">✅ 확인 사항</strong><br/>
+          위 학생은 AI 도구를 학습 보조 수단으로 활용하였으며, AI 답변을 무비판적으로 수용하지 않고 오류 및 한계를 직접 검증·수정하여 자신의 언어로 재구성하였음을 다빈치랩이 확인합니다.
+        </div>
+
+        <div class="doc-stamp">
+          문서번호: <strong>${docNo}</strong> &nbsp;·&nbsp; 발급: 다빈치랩 학습관리시스템 &nbsp;·&nbsp; ${new Date().toLocaleDateString('ko-KR')}
+        </div>
+      `;
+
+      document.getElementById('resultEmpty').style.display  = 'none';
+      document.getElementById('docOutput').classList.add('visible');
+      showToast('✅ 증빙 문서가 생성되었습니다! PDF로 저장하거나 복사하세요.');
+    };
+
+    window.copyResult = function(){
+      const text = document.getElementById('docOutput').innerText;
+      if (!text.trim()) { showToast('먼저 문서를 생성해주세요.', true); return; }
+      navigator.clipboard.writeText(text).then(() => showToast('📋 클립보드에 복사되었습니다.'));
+    };
+
+    window.saveLog = function(){
+      if (!document.getElementById('docOutput').classList.contains('visible')) {
+        showToast('먼저 문서를 생성해주세요.', true); return;
+      }
+      showToast('💾 로그가 저장되었습니다.');
+    };
+
+    /* 사이드바 토글 (표준) */
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+    document.getElementById('logoutBtn')?.addEventListener('click', e => {
+      e.preventDefault(); ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)}); sessionStorage.clear(); window.location.href = '../login.html';
+    });
+
+    function showToast(msg, isErr) {
+      const t = document.getElementById('toastBar');
+      t.textContent = msg;
+      t.style.background = isErr ? '#dc2626' : 'var(--green-800)';
+      t.style.display = 'block';
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.style.display = 'none', 3500);
+    }
+    window.showToast = showToast;
+  })();
+  </script>
+</body>
+</html>

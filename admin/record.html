@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생부 열람 – 다빈치랩 관리자</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <style>
+    :root {
+      --adm-main: #163A33;
+      --adm-light: #e8f5f0;
+      --adm-border: #9fd3c0;
+      --adm-mid: #2d6a57;
+      --rec-main: #6d28d9;
+      --rec-light: #ede9fe;
+      --rec-border: #c4b5fd;
+      --teacher-main: #0369a1;
+      --teacher-light: #e0f2fe;
+      --teacher-border: #7dd3fc;
+    }
+
+    .adm-record-body { background: #f4f7f5; min-height: 100vh; }
+
+    /* ── 상단 바 ── */
+    .arec-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--adm-main);
+      color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 60px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.2);
+    }
+    .arec-topbar-left { display: flex; align-items: center; gap: 16px; }
+    .arec-topbar h1 { font-size: 16px; font-weight: 700; }
+    .arec-topbar .student-badge {
+      background: rgba(255,255,255,.15); border-radius: 8px;
+      padding: 4px 14px; font-size: 13.5px; font-weight: 600;
+    }
+    .arec-topbar .admin-badge {
+      background: rgba(255,255,255,.1); border-radius: 6px;
+      padding: 3px 10px; font-size: 12px; color: rgba(255,255,255,.8);
+    }
+    .arec-back-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 8px;
+      background: rgba(255,255,255,.15);
+      color: #fff; text-decoration: none; font-size: 13px; font-weight: 600;
+      transition: background .2s;
+    }
+    .arec-back-btn:hover { background: rgba(255,255,255,.25); }
+
+    /* ── 학생 선택 패널 ── */
+    .student-select-panel {
+      background: #fff; border-radius: 16px;
+      padding: 20px 24px; margin: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .student-select-label { font-size: 13.5px; font-weight: 700; color: var(--adm-main); white-space: nowrap; }
+    .student-select-wrap { display: flex; gap: 10px; flex: 1; min-width: 200px; }
+    .student-select-input {
+      flex: 1; padding: 9px 14px; border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: 14px; font-family: inherit;
+      color: var(--text-900); outline: none;
+    }
+    .student-select-input:focus { border-color: var(--adm-mid); }
+    .student-load-btn {
+      padding: 9px 20px; background: var(--adm-main); color: #fff;
+      border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+    }
+    .student-load-btn:hover { background: var(--adm-mid); }
+
+    /* ── 학생 정보 헤더 ── */
+    .student-info-bar {
+      background: linear-gradient(135deg, #163A33 0%, #2d6a57 60%, #1a4a3a 100%);
+      color: #fff; border-radius: 16px; margin: 0 20px 20px;
+      padding: 20px 28px; display: flex; align-items: center; gap: 20px;
+    }
+    .si-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; flex-shrink: 0;
+    }
+    .si-info h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .si-info p  { font-size: 13px; opacity: .8; }
+    .si-badges  { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    .si-badge {
+      background: rgba(255,255,255,.15); border-radius: 8px;
+      padding: 4px 12px; font-size: 12.5px; font-weight: 700;
+    }
+
+    /* ── 탭 바 ── */
+    .arec-tab-bar {
+      background: #fff; border-radius: 14px;
+      margin: 0 20px 16px; padding: 8px;
+      display: flex; gap: 4px; overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .arec-tab-btn {
+      flex: 1; min-width: 72px; padding: 8px 6px;
+      border: none; border-radius: 10px; background: transparent;
+      font-size: 11.5px; font-weight: 600; color: var(--text-500);
+      cursor: pointer; transition: all .2s; white-space: nowrap;
+      text-align: center;
+    }
+    .arec-tab-btn i { display: block; font-size: 14px; margin-bottom: 3px; }
+    .arec-tab-btn.active {
+      background: var(--adm-main); color: #fff;
+    }
+
+    /* ── 컨텐츠 영역 ── */
+    .arec-content { padding: 0 20px 60px; }
+    .arec-tab-panel { display: none; }
+    .arec-tab-panel.active { display: block; }
+
+    /* ── 섹션 ── */
+    .arec-section {
+      background: #fff; border-radius: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      overflow: hidden;
+    }
+    .arec-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; cursor: pointer;
+      border-bottom: 1.5px solid #f0f0f0;
+    }
+    .arec-section-header:hover { background: #fafafa; }
+    .arec-section-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 15px; font-weight: 700; color: var(--text-900);
+    }
+    .arec-section-num {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: var(--adm-main); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; flex-shrink: 0;
+    }
+    .arec-section-body { padding: 20px; }
+
+    /* ── 비교 그리드 ── */
+    .compare-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    @media (max-width: 768px) { .compare-grid { grid-template-columns: 1fr; } }
+
+    .compare-panel {
+      border-radius: 12px; padding: 14px;
+      border: 1.5px solid;
+    }
+    .compare-panel.student-side {
+      background: var(--rec-light); border-color: var(--rec-border);
+    }
+    .compare-panel.teacher-side {
+      background: var(--teacher-light); border-color: var(--teacher-border);
+    }
+    .compare-panel-label {
+      font-size: 12px; font-weight: 700; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .compare-panel.student-side .compare-panel-label { color: var(--rec-main); }
+    .compare-panel.teacher-side .compare-panel-label { color: var(--teacher-main); }
+    .compare-text {
+      font-size: 13.5px; color: var(--text-700); line-height: 1.7;
+      white-space: pre-wrap; min-height: 60px;
+    }
+    .compare-empty { color: var(--text-300); font-size: 13px; font-style: italic; }
+
+    .teacher-textarea {
+      width: 100%; box-sizing: border-box;
+      padding: 10px 12px; font-size: 13.5px; font-family: inherit;
+      line-height: 1.7; color: var(--text-900);
+      border: 1.5px solid var(--teacher-border); border-radius: 8px;
+      background: #fff; resize: vertical; min-height: 100px; outline: none;
+    }
+    .teacher-textarea:focus { border-color: var(--teacher-main); }
+
+    /* ── 저장 바 ── */
+    .arec-save-bar {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 10px; padding: 12px 0 0;
+    }
+    .arec-save-btn {
+      padding: 9px 22px; background: var(--teacher-main); color: #fff;
+      border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; transition: background .2s;
+    }
+    .arec-save-btn:hover { background: #0284c7; }
+    .arec-cancel-btn {
+      padding: 9px 18px; background: var(--bg-card); color: var(--text-500);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+
+    /* ── 인적사항 그리드 ── */
+    .info-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 600px) { .info-grid-2col { grid-template-columns: 1fr; } }
+    .info-field { display: flex; flex-direction: column; gap: 4px; }
+    .info-field-label { font-size: 12px; font-weight: 700; color: var(--text-400); }
+    .info-field-val {
+      font-size: 14px; color: var(--text-900); font-weight: 500;
+      background: var(--bg-page); border-radius: 8px; padding: 8px 12px;
+      min-height: 36px; line-height: 1.5;
+    }
+    .info-field-empty { color: var(--text-300); font-style: italic; font-size: 13px; }
+
+    /* ── 테이블 ── */
+    .arec-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .arec-table th {
+      background: #f4f7f5; padding: 10px 12px; font-weight: 700;
+      color: var(--text-500); text-align: left; border-bottom: 1.5px solid var(--border);
+    }
+    .arec-table td {
+      padding: 10px 12px; border-bottom: 1px solid #f0f0f0;
+      color: var(--text-700);
+    }
+    .arec-table tr:last-child td { border-bottom: none; }
+
+    /* ── 빈 상태 ── */
+    .arec-empty {
+      text-align: center; padding: 40px 20px;
+      color: var(--text-300); font-size: 14px;
+    }
+    .arec-empty i { font-size: 32px; display: block; margin-bottom: 10px; }
+
+    /* ── 토스트 ── */
+    .arec-toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--adm-main); color: #fff;
+      padding: 12px 20px; border-radius: 12px;
+      font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      z-index: 9999; pointer-events: none;
+      opacity: 0; transform: translateY(10px);
+      transition: all .3s ease;
+    }
+    .arec-toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── 로딩 ── */
+    .arec-loading {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-300); font-size: 15px;
+    }
+    .arec-loading i { font-size: 32px; display: block; margin-bottom: 12px; color: var(--adm-mid); }
+
+    /* ── 바이트 카운터 ── */
+    .byte-cnt { font-size: 12px; color: var(--text-300); margin-top: 4px; text-align: right; }
+    .byte-cnt.warn { color: #d97706; }
+    .byte-cnt.over { color: #dc2626; }
+
+    /* ── 행동특성 단독 패널 ── */
+    .behavior-readonly {
+      background: #f8f9fa; border-radius: 10px; padding: 14px;
+      font-size: 13.5px; color: var(--text-700); line-height: 1.7;
+      white-space: pre-wrap; min-height: 60px;
+      border: 1.5px solid #e9ecef;
+    }
+  </style>
+</head>
+<body class="adm-record-body">
+
+  <!-- 상단 바 -->
+  <div class="arec-topbar">
+    <div class="arec-topbar-left">
+      <h1><i class="fas fa-book-open" style="margin-right:8px;"></i>학생부 열람</h1>
+      <span class="student-badge" id="topbarStudentName">학생 선택 필요</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span class="admin-badge" id="topbarAdminName">관리자</span>
+      <a href="students.html" class="arec-back-btn">
+        <i class="fas fa-arrow-left"></i> 목록으로
+      </a>
+    </div>
+  </div>
+
+  <!-- 학생 선택 -->
+  <div class="student-select-panel">
+    <span class="student-select-label"><i class="fas fa-user-graduate" style="margin-right:6px;"></i>학생 선택</span>
+    <div class="student-select-wrap">
+      <select class="student-select-input" id="studentSelect" style="cursor:pointer;">
+        <option value="">-- 학생을 선택하세요 --</option>
+      </select>
+      <button class="student-load-btn" id="loadStudentBtn">
+        <i class="fas fa-search"></i> 학생부 보기
+      </button>
+    </div>
+    <span style="font-size:12px;color:var(--text-300);">* 학생이 입력한 내용을 확인하고 선생님 피드백을 작성할 수 있습니다.</span>
+  </div>
+
+  <!-- 학생 정보 헤더 -->
+  <div class="student-info-bar" id="studentInfoBar" style="display:none;">
+    <div class="si-avatar" id="siAvatar">?</div>
+    <div class="si-info">
+      <h2 id="siName">-</h2>
+      <p id="siMeta">학교 · 학년 · 단계</p>
+    </div>
+    <div class="si-badges" id="siBadges"></div>
+  </div>
+
+  <!-- 탭 바 -->
+  <div class="arec-tab-bar" id="arecTabBar">
+    <button class="arec-tab-btn active" data-tab="tab1"><i class="fas fa-user"></i>①인적</button>
+    <button class="arec-tab-btn" data-tab="tab2"><i class="fas fa-calendar-check"></i>②출결</button>
+    <button class="arec-tab-btn" data-tab="tab3"><i class="fas fa-award"></i>③수상</button>
+    <button class="arec-tab-btn" data-tab="tab4"><i class="fas fa-certificate"></i>④자격증</button>
+    <button class="arec-tab-btn" data-tab="tab5"><i class="fas fa-route"></i>⑤진로</button>
+    <button class="arec-tab-btn" data-tab="tab6"><i class="fas fa-users"></i>⑥창체</button>
+    <button class="arec-tab-btn" data-tab="tab7"><i class="fas fa-microscope"></i>⑦세특</button>
+    <button class="arec-tab-btn" data-tab="tab8"><i class="fas fa-book"></i>⑧독서</button>
+    <button class="arec-tab-btn" data-tab="tab9"><i class="fas fa-star"></i>⑨행동</button>
+  </div>
+
+  <!-- 컨텐츠 -->
+  <div class="arec-content">
+
+    <!-- 미선택 안내 -->
+    <div id="noStudentMsg" class="arec-empty">
+      <i class="fas fa-user-graduate"></i>
+      <strong>학생을 선택하면 학생부 내용을 열람할 수 있습니다.</strong>
+      <p style="margin-top:8px;font-size:13px;">위에서 학생을 선택하고 [학생부 보기] 버튼을 클릭하세요.</p>
+    </div>
+
+    <!-- 로딩 -->
+    <div id="loadingMsg" class="arec-loading" style="display:none;">
+      <i class="fas fa-spinner fa-spin"></i>
+      학생부 데이터를 불러오는 중...
+    </div>
+
+    <!-- ① 인적·학적사항 -->
+    <div class="arec-tab-panel active" id="tab1" style="display:none;">
+      <div class="arec-section">
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">1</div>
+            인적·학적사항
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);transition:transform .2s;"></i>
+        </div>
+        <div class="arec-section-body">
+          <div class="info-grid-2col" id="sec1PersonalGrid"></div>
+          <div style="margin-top:16px;">
+            <div style="font-size:13px;font-weight:700;color:var(--text-500);margin-bottom:8px;">학적 변동</div>
+            <table class="arec-table">
+              <thead><tr><th>날짜</th><th>내용</th></tr></thead>
+              <tbody id="sec1HistTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ② 출결사항 -->
+    <div class="arec-tab-panel" id="tab2" style="display:none;">
+      <div class="arec-section">
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">2</div>
+            출결사항
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body">
+          <div style="overflow-x:auto;">
+            <table class="arec-table" id="sec2Table" style="min-width:600px;">
+              <thead>
+                <tr>
+                  <th>학년</th>
+                  <th>수업일수</th>
+                  <th>결석(질병)</th><th>결석(미인정)</th><th>결석(기타)</th>
+                  <th>지각(질병)</th><th>지각(미인정)</th><th>지각(기타)</th>
+                  <th>조퇴(질병)</th><th>조퇴(미인정)</th><th>조퇴(기타)</th>
+                  <th>특기사항</th>
+                </tr>
+              </thead>
+              <tbody id="sec2Tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 수상경력 -->
+    <div class="arec-tab-panel" id="tab3" style="display:none;">
+      <div class="arec-section">
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">3</div>
+            수상경력
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body" id="sec3Body">
+          <div class="arec-empty"><i class="fas fa-award"></i>수상 내역이 없습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 자격증 -->
+    <div class="arec-tab-panel" id="tab4" style="display:none;">
+      <div class="arec-section">
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">4</div>
+            자격증·인증
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body" id="sec4Body">
+          <div class="arec-empty"><i class="fas fa-certificate"></i>자격증 내역이 없습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 진로희망사항 -->
+    <div class="arec-tab-panel" id="tab5" style="display:none;">
+      <div class="arec-section">
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">5</div>
+            진로희망사항
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body" id="sec5Body"></div>
+      </div>
+    </div>
+
+    <!-- ⑥ 창의적 체험활동 -->
+    <div class="arec-tab-panel" id="tab6" style="display:none;">
+      <div id="sec6Content"></div>
+    </div>
+
+    <!-- ⑦ 교과 세특 -->
+    <div class="arec-tab-panel" id="tab7" style="display:none;">
+      <div id="sec7Content"></div>
+    </div>
+
+    <!-- ⑧ 독서활동 -->
+    <div class="arec-tab-panel" id="tab8" style="display:none;">
+      <div class="arec-section">
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">8</div>
+            독서활동상황
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body" id="sec8Body">
+          <div class="arec-empty"><i class="fas fa-book"></i>독서 내역이 없습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑨ 행동특성 및 종합의견 -->
+    <div class="arec-tab-panel" id="tab9" style="display:none;">
+      <div id="sec9Content"></div>
+    </div>
+
+  </div><!-- /arec-content -->
+
+  <!-- 토스트 -->
+  <div class="arec-toast" id="arecToast">
+    <i class="fas fa-check-circle"></i>
+    <span id="arecToastMsg">저장되었습니다.</span>
+  </div>
+
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script>
+  /* ═══════════════════════════════════════════
+     관리자 학생부 열람 v1
+  ═══════════════════════════════════════════ */
+
+  const TABLE_PROFILES = 'student_profiles';
+  const TABLE_RECORDS  = 'student_records';
+
+  let currentStudentId   = null;
+  let studentProfileData = null;
+  let studentRecordMap   = {};  // section → value
+
+  /* ── 관리자 정보 표시 (dvl-session.js 통일) ── */
+  (function() {
+    const s = window._dvlAdminSession;
+    if (s?.name && document.getElementById('topbarAdminName'))
+      document.getElementById('topbarAdminName').textContent = s.name;
+  })();
+
+  /* ── URL 파라미터에서 학생 ID 읽기 ── */
+  const urlParams = new URLSearchParams(window.location.search);
+  const preselect = urlParams.get('student') || sessionStorage.getItem('admin_viewing_student');
+
+  /* ═══════════════════════════════════════
+     학생 목록 로드 & 드롭다운 채우기
+  ═══════════════════════════════════════ */
+  async function loadStudentList() {
+    try {
+      const res = await fetch(`../tables/${TABLE_PROFILES}?limit=200&sort=student_id`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      // 승인된 학생(재원/active)만 표시 — 가짜/미승인/휴원/졸업 모두 제외
+      const students = (data.data || []).filter(r =>
+        (r.status === '재원' || r.status === 'active') &&
+        r.student_id && r.name
+      );
+
+      const sel = document.getElementById('studentSelect');
+      // 학년별로 그룹화
+      const groups = { '고3':[], '고2':[], '고1':[], '중3':[], '기타':[] };
+      students.forEach(s => {
+        const g = s.grade || '기타';
+        if (groups[g]) groups[g].push(s);
+        else groups['기타'].push(s);
+      });
+
+      Object.entries(groups).forEach(([g, list]) => {
+        if (!list.length) return;
+        const og = document.createElement('optgroup');
+        og.label = g + ' (' + list.length + '명)';
+        list.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.student_id;
+          opt.textContent = `${s.name} (${s.school} · ${s.stage || '미설정'})`;
+          og.appendChild(opt);
+        });
+        sel.appendChild(og);
+      });
+
+      if (preselect) {
+        sel.value = preselect;
+        loadStudentRecord(preselect);
+      }
+    } catch(e) {
+      console.warn('학생 목록 로드 실패:', e);
+    }
+  }
+
+  /* ═══════════════════════════════════════
+     학생부 데이터 로드
+  ═══════════════════════════════════════ */
+  async function loadStudentRecord(studentId) {
+    if (!studentId) return;
+    currentStudentId = studentId;
+
+    document.getElementById('noStudentMsg').style.display = 'none';
+    document.getElementById('loadingMsg').style.display = 'block';
+    document.querySelectorAll('.arec-tab-panel').forEach(p => p.style.display = 'none');
+
+    try {
+      /* 1. 학생 프로필 */
+      const profRes = await fetch(`../tables/${TABLE_PROFILES}?search=${encodeURIComponent(studentId)}&limit=5`);
+      const profData = await profRes.json();
+      const profile = (profData.data || []).find(r => r.student_id === studentId);
+      studentProfileData = profile;
+
+      /* 2. 학생부 레코드 (all sections) */
+      const recRes = await fetch(`../tables/${TABLE_RECORDS}?search=${encodeURIComponent(studentId)}&limit=500`);
+      const recData = await recRes.json();
+      const rows = (recData.data || []).filter(r => r.student_id === studentId);
+
+      studentRecordMap = {};
+      rows.forEach(r => { studentRecordMap[r.section] = r.value; });
+
+      /* localStorage 폴백 */
+      if (Object.keys(studentRecordMap).length === 0) {
+        // localStorage에서 읽기 (같은 브라우저에서 학생이 입력한 경우)
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(`dvl_record_${studentId}_`)) {
+            const section = key.replace(`dvl_record_${studentId}_`, '');
+            studentRecordMap[section] = localStorage.getItem(key);
+          }
+        }
+      }
+
+      renderStudentHeader(profile, studentId);
+      renderAllSections();
+
+      document.getElementById('loadingMsg').style.display = 'none';
+      document.getElementById('studentInfoBar').style.display = 'flex';
+      document.getElementById('arecTabBar').style.display = 'flex';
+
+      // 첫 탭 활성화
+      switchTab('tab1');
+
+    } catch(e) {
+      document.getElementById('loadingMsg').style.display = 'none';
+      document.getElementById('noStudentMsg').style.display = 'block';
+      document.getElementById('noStudentMsg').innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#d97706;"></i>
+        데이터를 불러오는 중 오류가 발생했습니다.<br><small>${e.message}</small>`;
+      console.error(e);
+    }
+  }
+
+  /* ── 헤더 렌더링 ── */
+  function renderStudentHeader(profile, studentId) {
+    const name   = profile?.name   || studentId;
+    const school = profile?.school || '-';
+    const grade  = profile?.grade  || '';
+    const stage  = profile?.stage  || '미설정';
+
+    document.getElementById('siAvatar').textContent = name[0];
+    document.getElementById('siName').textContent   = name;
+    document.getElementById('siMeta').textContent   = `${school} · ${stage}`;
+    document.getElementById('topbarStudentName').textContent = `${name} (${grade})`;
+
+    document.getElementById('siBadges').innerHTML = [
+      `<span class="si-badge">${school}</span>`,
+      `<span class="si-badge">${grade || '-'}</span>`,
+      `<span class="si-badge">${stage}</span>`,
+    ].join('');
+  }
+
+  /* ═══════════════════════════════════════
+     탭 전환
+  ═══════════════════════════════════════ */
+  function switchTab(tabId) {
+    document.querySelectorAll('.arec-tab-panel').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+    document.querySelectorAll('.arec-tab-btn').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById(tabId);
+    if (panel) { panel.style.display = 'block'; panel.classList.add('active'); }
+    const btn = document.querySelector(`.arec-tab-btn[data-tab="${tabId}"]`);
+    if (btn) btn.classList.add('active');
+  }
+
+  document.getElementById('arecTabBar').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-tab]');
+    if (btn) switchTab(btn.dataset.tab);
+  });
+
+  /* ═══════════════════════════════════════
+     전체 섹션 렌더링
+  ═══════════════════════════════════════ */
+  function get(section) { return studentRecordMap[section] || null; }
+  function getVal(section, fallback='') {
+    const v = get(section);
+    return (v !== null && v !== undefined) ? v : fallback;
+  }
+
+  function renderAllSections() {
+    renderSec1();
+    renderSec2();
+    renderSec3();
+    renderSec4();
+    renderSec5();
+    renderSec6();
+    renderSec7();
+    renderSec8();
+    renderSec9();
+  }
+
+  /* ① 인적·학적사항 */
+  function renderSec1() {
+    const fields = [
+      { label:'이름',        key:'r1_name' },
+      { label:'생년월일',    key:'r1_birth' },
+      { label:'성별',        key:'r1_gender' },
+      { label:'주민번호 앞6', key:'r1_jumin' },
+      { label:'주소',        key:'r1_addr' },
+      { label:'보호자',      key:'r1_parent' },
+      { label:'학교',        key:'r1_school' },
+      { label:'학교코드',    key:'r1_schoolcode' },
+      { label:'학교주소',    key:'r1_schooladdr' },
+      { label:'학년',        key:'r1_grade' },
+      { label:'반',          key:'r1_class' },
+      { label:'번호',        key:'r1_num' },
+    ];
+
+    const grid = document.getElementById('sec1PersonalGrid');
+    grid.innerHTML = fields.map(f => {
+      const val = getVal(f.key);
+      return `<div class="info-field">
+        <div class="info-field-label">${f.label}</div>
+        <div class="info-field-val ${!val ? 'info-field-empty' : ''}">${val || '미입력'}</div>
+      </div>`;
+    }).join('');
+
+    // 학적 변동
+    const hist = JSON.parse(getVal('hist', '[]'));
+    const tbody = document.getElementById('sec1HistTbody');
+    if (hist.length) {
+      tbody.innerHTML = hist.map(r => `<tr><td>${r.date||'-'}</td><td>${r.content||'-'}</td></tr>`).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="2" style="color:var(--text-300);font-style:italic;">입력된 학적 변동 내역이 없습니다.</td></tr>';
+    }
+  }
+
+  /* ② 출결사항 */
+  function renderSec2() {
+    const GRADES = ['1학년','2학년','3학년'];
+    const PFXS   = ['att1','att2','att3'];
+    const tbody  = document.getElementById('sec2Tbody');
+    tbody.innerHTML = GRADES.map((g, gi) => {
+      const pfx = PFXS[gi];
+      const d   = (k) => getVal(`${pfx}_${k}`);
+      return `<tr>
+        <td>${g}</td>
+        <td>${d('days')||'-'}</td>
+        <td>${d('abs_sick')||'-'}</td><td>${d('abs_unauth')||'-'}</td><td>${d('abs_etc')||'-'}</td>
+        <td>${d('late_sick')||'-'}</td><td>${d('late_unauth')||'-'}</td><td>${d('late_etc')||'-'}</td>
+        <td>${d('early_sick')||'-'}</td><td>${d('early_unauth')||'-'}</td><td>${d('early_etc')||'-'}</td>
+        <td>${d('note')||'-'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ③ 수상경력 */
+  function renderSec3() {
+    const awards = JSON.parse(getVal('awards', '[]'));
+    const body   = document.getElementById('sec3Body');
+    if (!awards.length) {
+      body.innerHTML = '<div class="arec-empty"><i class="fas fa-award"></i>입력된 수상경력이 없습니다.</div>';
+      return;
+    }
+    body.innerHTML = `<table class="arec-table">
+      <thead><tr><th>수상명</th><th>등급</th><th>날짜</th><th>수여기관</th><th>수상자수</th></tr></thead>
+      <tbody>${awards.map(r=>`<tr>
+        <td>${r.name||'-'}</td><td>${r.rank||'-'}</td><td>${r.date||'-'}</td>
+        <td>${r.org||'-'}</td><td>${r.cnt||'-'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  /* ④ 자격증 */
+  function renderSec4() {
+    const certs = JSON.parse(getVal('certs', '[]'));
+    const body  = document.getElementById('sec4Body');
+    if (!certs.length) {
+      body.innerHTML = '<div class="arec-empty"><i class="fas fa-certificate"></i>입력된 자격증이 없습니다.</div>';
+      return;
+    }
+    body.innerHTML = `<table class="arec-table">
+      <thead><tr><th>자격증명</th><th>자격번호</th><th>취득일</th><th>발급기관</th></tr></thead>
+      <tbody>${certs.map(r=>`<tr>
+        <td>${r.name||'-'}</td><td>${r.num||'-'}</td>
+        <td>${r.date||'-'}</td><td>${r.org||'-'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  /* ⑤ 진로희망사항 */
+  function renderSec5() {
+    const GRADES = ['1학년','2학년','3학년'];
+    const body   = document.getElementById('sec5Body');
+    body.innerHTML = GRADES.map((g, i) => {
+      const n = i+1;
+      const skill   = getVal(`ca${n}_skill`);
+      const student = getVal(`ca${n}_student`);
+      const parent  = getVal(`ca${n}_parent`);
+      if (!skill && !student && !parent) return '';
+      return `<div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text-500);margin-bottom:8px;
+          display:flex;align-items:center;gap:6px;">
+          <span style="background:var(--adm-light);color:var(--adm-main);padding:2px 10px;border-radius:10px;">${g}</span>
+        </div>
+        <div class="info-grid-2col" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="info-field">
+            <div class="info-field-label">희망직업</div>
+            <div class="info-field-val ${!skill?'info-field-empty':''}">${skill||'미입력'}</div>
+          </div>
+          <div class="info-field">
+            <div class="info-field-label">학생 사유</div>
+            <div class="info-field-val ${!student?'info-field-empty':''}">${student||'미입력'}</div>
+          </div>
+          <div class="info-field">
+            <div class="info-field-label">학부모 사유</div>
+            <div class="info-field-val ${!parent?'info-field-empty':''}">${parent||'미입력'}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('') || '<div class="arec-empty"><i class="fas fa-route"></i>입력된 진로희망이 없습니다.</div>';
+  }
+
+  /* ⑥ 창의적 체험활동 */
+  function renderSec6() {
+    const GRADES = ['1학년','2학년','3학년'];
+    const CCA_TYPES = [
+      { key:'auto',      name:'자율활동' },
+      { key:'club',      name:'동아리활동' },
+      { key:'volunteer', name:'봉사활동' },
+      { key:'career',    name:'진로활동' },
+    ];
+    const container = document.getElementById('sec6Content');
+    container.innerHTML = '';
+
+    CCA_TYPES.forEach(type => {
+      const section = document.createElement('div');
+      section.className = 'arec-section';
+      section.innerHTML = `
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">6</div>
+            ${type.name}
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body">
+          ${GRADES.map((g, gi) => {
+            const blockId = `cca_${type.key}_g${gi+1}`;
+            const saved   = JSON.parse(getVal(blockId, '{}'));
+            const selfVal    = saved.self    || '';
+            const teacherVal = saved.teacher || '';
+            return `<div style="margin-bottom:20px;">
+              <div style="font-size:12.5px;font-weight:700;color:var(--text-500);margin-bottom:10px;">
+                <span style="background:var(--adm-light);color:var(--adm-main);padding:2px 10px;border-radius:10px;">${g}</span>
+              </div>
+              <div class="compare-grid">
+                <div class="compare-panel student-side">
+                  <div class="compare-panel-label"><i class="fas fa-pen"></i> 학생 자기평가서</div>
+                  <div class="compare-text ${!selfVal?'compare-empty':''}">${selfVal || '학생이 아직 입력하지 않았습니다.'}</div>
+                </div>
+                <div class="compare-panel teacher-side">
+                  <div class="compare-panel-label"><i class="fas fa-chalkboard-teacher"></i> 선생님 세특 기재 내용</div>
+                  <div class="compare-text ${!teacherVal?'compare-empty':''}">${teacherVal || '선생님이 아직 입력하지 않았습니다.'}</div>
+                </div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      container.appendChild(section);
+    });
+  }
+
+  /* ⑦ 교과 세특 */
+  function renderSec7() {
+    const setechList = JSON.parse(getVal('setechList', '[]'));
+    const container  = document.getElementById('sec7Content');
+
+    if (!setechList.length) {
+      container.innerHTML = '<div class="arec-empty"><i class="fas fa-microscope"></i>등록된 교과 세특이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    setechList.forEach(item => {
+      const saved      = JSON.parse(getVal(item.id, '{}'));
+      const selfVal    = saved.self    || '';
+      const teacherVal = saved.teacher || '';
+
+      const sec = document.createElement('div');
+      sec.className = 'arec-section';
+      sec.innerHTML = `
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">7</div>
+            ${item.grade} · ${item.subject} (${item.credit}단위)
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body">
+          <div class="compare-grid">
+            <div class="compare-panel student-side">
+              <div class="compare-panel-label"><i class="fas fa-pen"></i> 학생 자기평가서</div>
+              <div class="compare-text ${!selfVal?'compare-empty':''}">${selfVal || '학생이 아직 입력하지 않았습니다.'}</div>
+            </div>
+            <div class="compare-panel teacher-side">
+              <div class="compare-panel-label"><i class="fas fa-chalkboard-teacher"></i> 선생님 세특 기재 내용</div>
+              <div class="compare-text ${!teacherVal?'compare-empty':''}">${teacherVal || '선생님이 아직 입력하지 않았습니다.'}</div>
+            </div>
+          </div>
+        </div>`;
+      container.appendChild(sec);
+    });
+  }
+
+  /* ⑧ 독서활동 */
+  function renderSec8() {
+    const books = JSON.parse(getVal('books', '[]'));
+    const body  = document.getElementById('sec8Body');
+    if (!books.length) {
+      body.innerHTML = '<div class="arec-empty"><i class="fas fa-book"></i>입력된 독서활동이 없습니다.</div>';
+      return;
+    }
+    body.innerHTML = `<table class="arec-table">
+      <thead><tr><th>학년</th><th>교과</th><th>도서명</th><th>저자</th></tr></thead>
+      <tbody>${books.map(r=>`<tr>
+        <td>${r.grade||'-'}</td><td>${r.subject||'-'}</td>
+        <td>${r.title||'-'}</td><td>${r.author||'-'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+
+  /* ⑨ 행동특성 및 종합의견 */
+  function renderSec9() {
+    const GRADES = ['1학년','2학년','3학년'];
+    const container = document.getElementById('sec9Content');
+    container.innerHTML = '';
+
+    GRADES.forEach((g, gi) => {
+      const blockId = `behavior_g${gi+1}`;
+      const saved   = JSON.parse(getVal(blockId, '{}'));
+      const content = saved.content || '';
+
+      const sec = document.createElement('div');
+      sec.className = 'arec-section';
+      sec.innerHTML = `
+        <div class="arec-section-header">
+          <div class="arec-section-title">
+            <div class="arec-section-num">9</div>
+            ${g} 행동특성 및 종합의견
+          </div>
+          <i class="fas fa-chevron-down" style="color:var(--text-300);"></i>
+        </div>
+        <div class="arec-section-body">
+          <div style="font-size:12px;font-weight:700;color:var(--teacher-main);margin-bottom:8px;">
+            <i class="fas fa-chalkboard-teacher"></i> 선생님 기재 내용 (학생 복사 입력)
+          </div>
+          <div class="behavior-readonly ${!content?'compare-empty':''}">${content || '학생이 아직 입력하지 않았습니다.'}</div>
+          ${content ? `<div style="text-align:right;margin-top:6px;font-size:12px;color:var(--text-300);">
+            ${getByteLen(content)} 바이트
+          </div>` : ''}
+        </div>`;
+      container.appendChild(sec);
+    });
+  }
+
+  /* ── 바이트 계산 ── */
+  function getByteLen(str) {
+    let b = 0;
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      b += c <= 0x7f ? 1 : c <= 0x7ff ? 2 : 3;
+    }
+    return b;
+  }
+
+  /* ═══════════════════════════════════════
+     학생 선택 버튼
+  ═══════════════════════════════════════ */
+  document.getElementById('loadStudentBtn').addEventListener('click', () => {
+    const sel = document.getElementById('studentSelect');
+    if (!sel.value) {
+      showToast('⚠️ 학생을 선택해주세요.', 'warn');
+      return;
+    }
+    loadStudentRecord(sel.value);
+  });
+
+  document.getElementById('studentSelect').addEventListener('change', () => {
+    const sel = document.getElementById('studentSelect');
+    if (sel.value) loadStudentRecord(sel.value);
+  });
+
+  /* ═══════════════════════════════════════
+     토스트
+  ═══════════════════════════════════════ */
+  let _toastT = null;
+  function showToast(msg, type='ok') {
+    const el = document.getElementById('arecToast');
+    const ms = document.getElementById('arecToastMsg');
+    ms.textContent = msg;
+    el.style.background = type === 'warn' ? '#92400e' : '#163A33';
+    el.classList.add('show');
+    if (_toastT) clearTimeout(_toastT);
+    _toastT = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  /* ═══════════════════════════════════════
+     초기화
+  ═══════════════════════════════════════ */
+  document.getElementById('arecTabBar').style.display = 'none';
+  loadStudentList();
+  </script>
+</body>
+</html>

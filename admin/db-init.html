@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>DB 초기화 – 다빈치랩 내부 도구</title>
+  <style>
+    body { font-family: sans-serif; padding: 30px; background: #f4f7f5; }
+    h2 { color: #163A33; }
+    #log { background: #fff; border-radius: 10px; padding: 20px; margin-top: 20px;
+           font-size: 13px; line-height: 1.8; max-height: 500px; overflow-y: auto;
+           border: 1px solid #ddd; white-space: pre-wrap; font-family: monospace; }
+    button { padding: 12px 28px; background: #163A33; color: #fff; border: none;
+             border-radius: 8px; font-size: 15px; cursor: pointer; margin: 6px; }
+    button:hover { background: #2d6a57; }
+    .warn { color: #d97706; } .ok { color: #16a34a; } .err { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <h2>🛠 다빈치랩 DB 초기화 도구</h2>
+  <p>이 페이지는 내부 관리용입니다. 아래 버튼으로 student_profiles 테이블에 비밀번호를 일괄 업데이트합니다.</p>
+  <button onclick="runPatch()">▶ 50명 비밀번호 일괄 업데이트 (dvl2024!)</button>
+  <button onclick="checkAccounts()">🔍 현재 계정 현황 확인</button>
+  <button onclick="window.location.href='fix-account.html'" style="background:#4f46e5;">🔧 계정 개별 수정/추가</button>
+  <div id="log">준비 완료. 버튼을 클릭하세요.</div>
+
+  <script>
+  const TABLE = 'student_profiles';
+  const log   = document.getElementById('log');
+
+  function appendLog(msg, cls='') {
+    log.innerHTML += `<span class="${cls}">${msg}</span>\n`;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  async function checkAccounts() {
+    log.innerHTML = '';
+    appendLog('=== 현재 student_profiles 계정 현황 ===\n');
+    try {
+      const res  = await fetch(`tables/${TABLE}?limit=200&sort=student_id`);
+      const data = await res.json();
+      const rows = data.data || [];
+      appendLog(`총 ${rows.length}명 등록됨\n`, 'ok');
+      rows.forEach(r => {
+        const hasPw = r.password ? '✅ 비밀번호 있음' : '⚠️ 비밀번호 없음';
+        appendLog(`  ${r.student_id}  ${r.name}  (${r.grade}/${r.stage})  ${hasPw}`,
+          r.password ? 'ok' : 'warn');
+      });
+    } catch(e) {
+      appendLog('오류: ' + e.message, 'err');
+    }
+  }
+
+  async function runPatch() {
+    log.innerHTML = '';
+    appendLog('=== 50명 비밀번호 일괄 업데이트 시작 ===\n');
+
+    try {
+      /* 1. 전체 목록 가져오기 */
+      const res  = await fetch(`tables/${TABLE}?limit=200&sort=student_id`);
+      const data = await res.json();
+      const rows = (data.data || []).filter(r => r.student_id && r.student_id.startsWith('s'));
+      appendLog(`대상: ${rows.length}명\n`, 'ok');
+
+      let ok = 0, fail = 0;
+      for (const row of rows) {
+        try {
+          /* 이미 비밀번호가 있으면 스킵 */
+          if (row.password === 'dvl2024!') {
+            appendLog(`  ⏭ ${row.student_id} ${row.name} – 이미 설정됨`, 'ok');
+            ok++;
+            continue;
+          }
+          const patchRes = await fetch(`tables/${TABLE}/${row.id}`, {
+            method:  'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ password: 'dvl2024!' }),
+          });
+          if (patchRes.ok) {
+            appendLog(`  ✅ ${row.student_id} ${row.name} – 업데이트 완료`, 'ok');
+            ok++;
+          } else {
+            appendLog(`  ❌ ${row.student_id} ${row.name} – 실패 (${patchRes.status})`, 'err');
+            fail++;
+          }
+        } catch(e) {
+          appendLog(`  ❌ ${row.student_id} – 오류: ${e.message}`, 'err');
+          fail++;
+        }
+        /* 너무 빠른 요청 방지 */
+        await new Promise(r => setTimeout(r, 80));
+      }
+
+      appendLog(`\n=== 완료 ===`, 'ok');
+      appendLog(`성공: ${ok}명 / 실패: ${fail}명`, ok > 0 ? 'ok' : 'err');
+      appendLog('\n이제 login.html에서 API 인증이 작동합니다.', 'ok');
+    } catch(e) {
+      appendLog('치명적 오류: ' + e.message, 'err');
+    }
+  }
+  </script>
+</body>
+</html>

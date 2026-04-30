@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시험 플래너 – 다빈치랩 학부모</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <style>
+    :root {
+      --ep-main: #4f46e5; --ep-light: #e0e7ff;
+      --ep-success: #10b981; --ep-warn: #f59e0b; --ep-danger: #ef4444;
+    }
+    .ep-wrap { padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    /* D-day 배너 */
+    .dday-banner {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      border-radius: 16px; padding: 24px 32px; color: white; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .dday-banner h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+    .dday-banner p  { font-size: .9rem; opacity: .85; }
+    .dday-num { font-size: 3rem; font-weight: 800; text-align: center; }
+    .dday-num small { display: block; font-size: .85rem; opacity: .8; font-weight: 400; }
+    .dday-num.urgent { color: #fbbf24; }
+
+    /* 진도 카드 */
+    .prog-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 14px; margin-bottom: 24px; }
+    .prog-card {
+      background: white; border-radius: 12px; padding: 16px; text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .prog-card .pc-name { font-size: .82rem; font-weight: 700; color: #374151; margin-bottom: 10px; }
+    .prog-ring {
+      width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; color: #1e1b4b;
+    }
+    .prog-card .pc-sub { font-size: .75rem; color: #9ca3af; }
+
+    /* 주간 달력 */
+    .week-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px; }
+    .week-card h3 { font-size: 1rem; font-weight: 700; color: #1e1b4b; margin-bottom: 16px; }
+    .parent-week-cal { display: flex; flex-direction: column; gap: 8px; }
+    .pwc-row { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: start; }
+    .pwc-day { font-size: .78rem; font-weight: 700; color: #9ca3af; text-align: center; padding-top: 4px; }
+    .pwc-day .pwc-num { display: block; font-size: 1rem; font-weight: 800; color: #1e1b4b; }
+    .pwc-day.today-d .pwc-num { background: var(--ep-main); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+    .pwc-day.exam-d .pwc-num  { background: var(--ep-danger); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+    .pwc-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .pwc-chip { font-size: .78rem; padding: 3px 8px; border-radius: 6px; }
+    .pwc-chip.done-c { opacity: .45; text-decoration: line-through; }
+    .math-c  { background: #dbeafe; color: #1d4ed8; }
+    .eng-c   { background: #d1fae5; color: #065f46; }
+    .kor-c   { background: #ede9fe; color: #5b21b6; }
+    .sci-c   { background: #fef3c7; color: #92400e; }
+    .soc-c   { background: #fce7f3; color: #9d174d; }
+    .hist-c  { background: #fee2e2; color: #991b1b; }
+    .etc-c   { background: #f3f4f6; color: #374151; }
+    .exam-c  { background: #fee2e2; color: #991b1b; font-weight: 700; }
+
+    /* 주차 탭 */
+    .week-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    .w-tab {
+      padding: 5px 12px; border-radius: 7px; font-size: .82rem; font-weight: 600;
+      cursor: pointer; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; transition: all .2s;
+    }
+    .w-tab.active { background: var(--ep-main); color: white; border-color: var(--ep-main); }
+
+    /* 시험 일정 */
+    .schedule-card { background: white; border-radius: 14px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px; }
+    .schedule-card h3 { font-size: 1rem; font-weight: 700; color: #1e1b4b; margin-bottom: 14px; }
+    .sched-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .sched-table th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 700; color: #374151; border-bottom: 1.5px solid #e5e7eb; }
+    .sched-table td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; color: #4b5563; }
+
+    /* 관리자 코멘트 */
+    .comment-card { background: #fffbeb; border-radius: 14px; padding: 20px 24px; border: 1.5px solid #fde68a; margin-bottom: 24px; }
+    .comment-card h3 { font-size: 1rem; font-weight: 700; color: #92400e; margin-bottom: 12px; }
+    .comment-card p { font-size: .9rem; color: #374151; line-height: 1.7; white-space: pre-line; }
+
+    /* 노 플래너 */
+    .no-planner { text-align: center; padding: 80px 24px; color: #9ca3af; }
+    .no-planner i { font-size: 3rem; margin-bottom: 16px; display: block; }
+
+    /* 토스트 */
+    .ep-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e1b4b; color: white; padding: 12px 24px; border-radius: 30px; font-size: .9rem; font-weight: 600; z-index: 99999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .ep-toast.show { opacity: 1; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">부</div>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarParentName">학부모</strong>
+        <span id="sidebarChildName">자녀: –</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">자녀 현황</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 현황</span></a>
+        <a href="exam.html" class="nav-item active"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 내역</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../login.html" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>시험 플래너</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="topbarAvatar">부</div>
+          <span id="topbarName">학부모</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="ep-wrap" id="epWrap">
+      <div class="no-planner" id="noPlannerMsg" style="display:none">
+        <i class="fas fa-calendar-times"></i>
+        <p>현재 등록된 시험 플래너가 없습니다.<br>담당 선생님께 문의해주세요.</p>
+      </div>
+
+      <!-- 플래너 내용 (로드 후 표시) -->
+      <div id="plannerContent" style="display:none">
+
+        <!-- D-day 배너 -->
+        <div class="dday-banner">
+          <div>
+            <h2 id="bannerExamName">–</h2>
+            <p id="bannerChildInfo">자녀: –</p>
+            <p id="bannerExamDate">시험 기간: –</p>
+          </div>
+          <div class="dday-num" id="ddayNum">–<small>시험까지 남은 날</small></div>
+        </div>
+
+        <!-- 과목별 진도율 -->
+        <h3 style="font-size:1rem;font-weight:700;color:#1e1b4b;margin-bottom:14px">
+          <i class="fas fa-chart-pie" style="color:var(--ep-main);margin-right:8px"></i>과목별 진도율
+        </h3>
+        <div class="prog-cards" id="progCards"></div>
+
+        <!-- 시험 시간표 -->
+        <div class="schedule-card" id="scheduleCard" style="display:none">
+          <h3><i class="fas fa-list-ol" style="color:var(--ep-danger);margin-right:6px"></i>시험 시간표</h3>
+          <table class="sched-table">
+            <thead><tr><th>날짜</th><th>과목</th><th>시간</th><th>시험 범위</th></tr></thead>
+            <tbody id="scheduleTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- 주간 달력 -->
+        <div class="week-card">
+          <h3><i class="fas fa-calendar-week" style="color:var(--ep-main);margin-right:6px"></i>주간 학습 계획</h3>
+          <div class="week-tabs" id="weekTabs"></div>
+          <div class="parent-week-cal" id="parentWeekCal"></div>
+        </div>
+
+        <!-- 관리자 코멘트 -->
+        <div class="comment-card" id="commentCard" style="display:none">
+          <h3><i class="fas fa-comment-dots" style="margin-right:8px"></i>선생님 코멘트</h3>
+          <p id="commentText"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ep-toast" id="epToast"></div>
+
+  <script>
+  const TABLE_PLANNERS  = 'exam_planners';
+  const TABLE_TASKS     = 'planner_tasks';
+  const TABLE_SCHEDULES = 'exam_schedules';
+
+  let childId    = sessionStorage.getItem('childId') || sessionStorage.getItem('userId') || 's001';
+  let childName  = sessionStorage.getItem('childName') || '자녀';
+  let parentName = sessionStorage.getItem('userName') || '학부모';
+
+  let currentPlanner  = null;
+  let allTasks        = [];
+  let allSchedules    = [];
+  let currentWeekOffset = 0;
+  let plannerStartDate  = null;
+
+  const SUBJECT_COLORS = { '수학':'math', '영어':'eng', '국어':'kor', '과학':'sci', '사회':'soc', '한국사':'hist' };
+  function getColor(name) {
+    for (const [k, v] of Object.entries(SUBJECT_COLORS)) { if (name.includes(k)) return v; }
+    return 'etc';
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('sidebarParentName').textContent = parentName;
+    document.getElementById('sidebarChildName').textContent  = `자녀: ${childName}`;
+    document.getElementById('topbarName').textContent = parentName;
+    document.getElementById('sidebarAvatar').textContent = parentName[0] || '부';
+    document.getElementById('topbarAvatar').textContent  = parentName[0] || '부';
+
+    // 사이드바 토글 (표준)
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+    document.getElementById('logoutBtn').addEventListener('click', e => {
+      e.preventDefault(); sessionStorage.clear(); location.href = '../login.html';
+    });
+
+    await loadData();
+  });
+
+  async function loadData() {
+    try {
+      const [planRes, taskRes, schedRes] = await Promise.all([
+        fetch(`../tables/${TABLE_PLANNERS}?search=${childId}&limit=50`),
+        fetch(`../tables/${TABLE_TASKS}?search=${childId}&limit=500`),
+        fetch(`../tables/${TABLE_SCHEDULES}?search=${childId}&limit=100`),
+      ]);
+      const [planData, taskData, schedData] = await Promise.all([
+        planRes.json(), taskRes.json(), schedRes.json()
+      ]);
+
+      const planners = (planData.data || []).filter(p => p.student_id === childId && p.status !== '완료');
+      if (planners.length === 0) {
+        document.getElementById('noPlannerMsg').style.display = 'block';
+        return;
+      }
+      currentPlanner = planners.sort((a, b) => b.created_at - a.created_at)[0];
+      allTasks       = (taskData.data || []).filter(t => t.student_id === childId && t.planner_id === currentPlanner.id);
+      allSchedules   = (schedData.data || []).filter(s => s.student_id === childId && s.planner_id === currentPlanner.id);
+      plannerStartDate = new Date(currentPlanner.plan_start_date);
+
+      document.getElementById('plannerContent').style.display = 'block';
+      renderBanner();
+      renderProgCards();
+      renderScheduleTable();
+      renderWeekTabs();
+      renderWeekCal(0);
+      renderComment();
+    } catch(e) {
+      document.getElementById('noPlannerMsg').style.display = 'block';
+    }
+  }
+
+  function renderBanner() {
+    const p = currentPlanner;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const exam  = new Date(p.exam_start_date); exam.setHours(0,0,0,0);
+    const diff  = Math.ceil((exam - today) / 86400000);
+    document.getElementById('bannerExamName').textContent  = `${p.year}년 ${p.semester} ${p.exam_type}`;
+    document.getElementById('bannerChildInfo').textContent = `자녀: ${childName}`;
+    document.getElementById('bannerExamDate').textContent  = `시험 기간: ${fmt(p.exam_start_date)} ~ ${fmt(p.exam_end_date)}`;
+    const el = document.getElementById('ddayNum');
+    if (diff > 0)       { el.innerHTML = `D-${diff}<small>시험까지 남은 날</small>`; if(diff<=7) el.classList.add('urgent'); }
+    else if (diff === 0){ el.innerHTML = `D-DAY<small>오늘이 시험날!</small>`; el.classList.add('urgent'); }
+    else                { el.innerHTML = `D+${Math.abs(diff)}<small>시험 종료</small>`; }
+  }
+
+  function renderProgCards() {
+    const subjects = Array.isArray(currentPlanner.subjects) ? currentPlanner.subjects : [];
+    const container = document.getElementById('progCards');
+    container.innerHTML = '';
+    const colorMap = { math:'#3b82f6', eng:'#10b981', kor:'#8b5cf6', sci:'#f59e0b', soc:'#ec4899', hist:'#ef4444', etc:'#6b7280' };
+    subjects.forEach(subject => {
+      const subTasks  = allTasks.filter(t => t.subject === subject);
+      const doneTasks = subTasks.filter(t => t.is_done);
+      const pct = subTasks.length ? Math.round(doneTasks.length / subTasks.length * 100) : 0;
+      const c = colorMap[getColor(subject)] || '#6b7280';
+      const card = document.createElement('div');
+      card.className = 'prog-card';
+      card.innerHTML = `
+        <div class="pc-name">${subject}</div>
+        <div class="prog-ring" style="background:conic-gradient(${c} ${pct*3.6}deg, #f3f4f6 0)">
+          <div style="width:44px;height:44px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:800;color:#1e1b4b">
+            ${pct}%
+          </div>
+        </div>
+        <div class="pc-sub">${doneTasks.length}/${subTasks.length} 완료</div>`;
+      container.appendChild(card);
+    });
+  }
+
+  function renderScheduleTable() {
+    if (allSchedules.length === 0) return;
+    document.getElementById('scheduleCard').style.display = 'block';
+    const tbody = document.getElementById('scheduleTableBody');
+    tbody.innerHTML = allSchedules.sort((a,b) => a.exam_date.localeCompare(b.exam_date)).map(s => `
+      <tr>
+        <td>${fmt(s.exam_date)} (${getDayName(s.exam_date)})</td>
+        <td><strong>${s.subject}</strong></td>
+        <td>${s.exam_time || '-'}</td>
+        <td style="font-size:.82rem;color:#6b7280">${s.exam_scope || '-'}</td>
+      </tr>`).join('');
+  }
+
+  function renderWeekTabs() {
+    const container = document.getElementById('weekTabs');
+    container.innerHTML = '';
+    const WEEK_LABELS = ['1주차 – 개념 정리', '2주차 – 문제풀이', '3주차 – 기출 집중', '4주차 – 오답 마무리'];
+    WEEK_LABELS.forEach((label, i) => {
+      const btn = document.createElement('button');
+      btn.className = `w-tab${i === 0 ? ' active' : ''}`;
+      btn.textContent = label;
+      btn.onclick = () => {
+        document.querySelectorAll('.w-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentWeekOffset = i;
+        renderWeekCal(i);
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  function renderWeekCal(weekOffset) {
+    const weekStart = new Date(plannerStartDate);
+    weekStart.setDate(weekStart.getDate() + weekOffset * 7);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const container = document.getElementById('parentWeekCal');
+    container.innerHTML = '';
+    const dayNames = ['일','월','화','수','목','금','토'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart); d.setDate(d.getDate() + i);
+      const dateStr  = d.toISOString().split('T')[0];
+      const isToday  = d.getTime() === today.getTime();
+      const isExam   = allSchedules.some(s => s.exam_date === dateStr);
+      const dayTasks = allTasks.filter(t => t.task_date === dateStr);
+
+      const row = document.createElement('div');
+      row.className = 'pwc-row';
+      let dayClass = 'pwc-day';
+      if (isToday) dayClass += ' today-d';
+      if (isExam)  dayClass += ' exam-d';
+
+      const doneCount = dayTasks.filter(t => t.is_done).length;
+      const totalCount = dayTasks.length;
+
+      row.innerHTML = `
+        <div class="${dayClass}">
+          <span>${dayNames[d.getDay()]}</span>
+          <span class="pwc-num">${d.getDate()}</span>
+          ${totalCount > 0 ? `<span style="font-size:.65rem;color:var(--ep-success);margin-top:2px">${doneCount}/${totalCount}</span>` : ''}
+        </div>
+        <div class="pwc-chips">
+          ${isExam ? allSchedules.filter(s => s.exam_date === dateStr).map(s =>
+            `<span class="pwc-chip exam-c">📝 ${s.subject}시험</span>`).join('') : ''}
+          ${dayTasks.map(t =>
+            `<span class="pwc-chip ${getColor(t.subject)}-c ${t.is_done ? 'done-c' : ''}">
+              ${t.subject}: ${t.task_content.length > 18 ? t.task_content.substring(0,18)+'…' : t.task_content}
+            </span>`).join('')}
+          ${dayTasks.length === 0 && !isExam ? '<span style="font-size:.75rem;color:#e5e7eb">–</span>' : ''}
+        </div>`;
+      container.appendChild(row);
+    }
+  }
+
+  function renderComment() {
+    const comment = currentPlanner.scope;
+    if (!comment) return;
+    document.getElementById('commentCard').style.display = 'block';
+    document.getElementById('commentText').textContent = comment;
+  }
+
+  function fmt(dateStr) {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${y}.${m}.${d}`;
+  }
+  function getDayName(dateStr) {
+    const d = new Date(dateStr);
+    return ['일','월','화','수','목','금','토'][d.getDay()];
+  }
+  </script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--parent" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-home"></i><span>홈</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="exam.html" class="mobile-nav-item active"><i class="fas fa-calendar-alt"></i><span>플래너</span></a>
+      <a href="attendance.html" class="mobile-nav-item"><i class="fas fa-calendar-check"></i><span>출결</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+</body>
+</html>

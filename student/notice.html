@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>공지사항 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <style>
+    :root { --nc-main: #4f46e5; --nc-light: #e0e7ff; }
+    .nc-wrap { padding: 24px; max-width: 860px; margin: 0 auto; }
+
+    /* 공지 카드 */
+    .nc-list { display: flex; flex-direction: column; gap: 10px; }
+    .nc-card {
+      background: white; border-radius: 14px; padding: 18px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05); border: 1.5px solid transparent;
+      cursor: pointer; transition: all .2s;
+    }
+    .nc-card:hover  { border-color: var(--nc-light); transform: translateY(-1px); }
+    .nc-card.pinned { border-color: #fde68a; background: #fffbeb; }
+    .nc-card.important { border-left: 4px solid #ef4444; }
+    .nc-card.unread .nc-title { font-weight: 800; }
+
+    .nc-badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .nc-badge { font-size: .72rem; padding: 2px 9px; border-radius: 99px; font-weight: 700; }
+    .cat-exam    { background: #fee2e2; color: #991b1b; }
+    .cat-event   { background: #dbeafe; color: #1d4ed8; }
+    .cat-student { background: #d1fae5; color: #065f46; }
+    .cat-parent  { background: #fce7f3; color: #9d174d; }
+    .cat-general { background: #f3f4f6; color: #374151; }
+    .pin-tag     { background: #fef3c7; color: #92400e; }
+    .imp-tag     { background: #fee2e2; color: #991b1b; }
+    .new-tag     { background: #ede9fe; color: #5b21b6; }
+
+    .nc-title { font-size: .98rem; font-weight: 600; color: #1e1b4b; margin-bottom: 6px; }
+    .nc-meta  { font-size: .78rem; color: #9ca3af; display: flex; gap: 10px; flex-wrap: wrap; }
+    .nc-preview { font-size: .85rem; color: #6b7280; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.6; }
+
+    /* 상세 모달 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 620px; max-height: 90vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #9ca3af; }
+    .detail-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .detail-title { font-size: 1.2rem; font-weight: 800; color: #1e1b4b; margin-bottom: 8px; }
+    .detail-meta  { font-size: .82rem; color: #9ca3af; display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6; }
+    .detail-content { font-size: .95rem; color: #374151; line-height: 1.9; white-space: pre-line; }
+
+    /* 필터 */
+    .nc-filter-tabs { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
+    .nc-tab { padding: 6px 14px; border-radius: 20px; font-size: .82rem; font-weight: 600; cursor: pointer; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; transition: all .2s; }
+    .nc-tab.active { background: var(--nc-main); color: white; border-color: var(--nc-main); }
+
+    .nc-empty { text-align: center; padding: 60px; color: #9ca3af; }
+    .nc-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">김</div>
+        <span class="stu-stage-badge" id="sidebarStage">2단계</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">김다빈</strong>
+        <span id="sidebarStudentSchool">○○고등학교 2학년</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+        <a href="exam.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item active"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="message.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>선생님께 질문</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>공지사항</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="topbarAvatar">김</div>
+          <span id="topbarName">김다빈</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="nc-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e1b4b">
+          <i class="fas fa-bullhorn" style="color:var(--nc-main);margin-right:8px"></i>공지사항
+        </h2>
+        <span id="unreadBadge" style="display:none;font-size:.8rem;background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:99px;font-weight:700"></span>
+      </div>
+
+      <div class="nc-filter-tabs">
+        <button class="nc-tab active" data-cat="">전체</button>
+        <button class="nc-tab" data-cat="시험공지">📝 시험</button>
+        <button class="nc-tab" data-cat="행사공지">🎉 행사</button>
+        <button class="nc-tab" data-cat="학생공지">🎓 학생</button>
+      </div>
+
+      <div class="nc-list" id="noticeList"></div>
+      <div class="nc-empty" id="noticeEmpty" style="display:none">
+        <i class="fas fa-bell-slash"></i>
+        <p>공지사항이 없습니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 모달 -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeDetail()"><i class="fas fa-times"></i></button>
+      <div class="detail-badges" id="detailBadges"></div>
+      <div class="detail-title" id="detailTitle"></div>
+      <div class="detail-meta" id="detailMeta"></div>
+      <div class="detail-content" id="detailContent"></div>
+    </div>
+  </div>
+
+  <script>
+  const TABLE_NOTICES = 'notices';
+  const _noticeSession = (() => { try { const r = localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}'; if(r&&r!=='{}'){sessionStorage.setItem('dvl_user',r);sessionStorage.setItem('dvl_session',r);} return JSON.parse(r); } catch(e) { return {}; } })();
+  if (!_noticeSession.id) { location.href = '../login.html'; }
+  const STUDENT_ID    = _noticeSession.id || sessionStorage.getItem('userId') || '';
+  let allNotices   = [];
+  let readSet      = new Set();
+  let currentFilter = '';
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const name   = _noticeSession.name   || sessionStorage.getItem('userName')   || '학생';
+    const school = _noticeSession.school || sessionStorage.getItem('userSchool') || '';
+    const grade  = _noticeSession.grade  || sessionStorage.getItem('userGrade')  || '';
+    document.getElementById('sidebarStudentName').textContent = name;
+    document.getElementById('sidebarStudentSchool').textContent = `${school} ${grade}`;
+    document.getElementById('topbarName').textContent = name;
+    const av = name[0] || '학';
+    document.getElementById('sidebarAvatar').textContent = av;
+    document.getElementById('topbarAvatar').textContent  = av;
+
+    document.getElementById('menuToggle').addEventListener('click', () =>
+      document.getElementById('sidebar').classList.toggle('open'));
+    document.getElementById('sidebarClose').addEventListener('click', () =>
+      document.getElementById('sidebar').classList.remove('open'));
+    document.getElementById('logoutBtn')?.addEventListener('click', e => {
+      e.preventDefault(); ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)}); sessionStorage.clear(); location.href = '../login.html';
+    });
+
+    // 필터 탭
+    document.querySelectorAll('.nc-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nc-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        currentFilter = tab.dataset.cat;
+        renderNotices();
+      });
+    });
+
+    // 읽음 기록 복원
+    const saved = localStorage.getItem(`dvl_read_notices_${STUDENT_ID}`);
+    if (saved) readSet = new Set(JSON.parse(saved));
+
+    await loadNotices();
+  });
+
+  async function loadNotices() {
+    try {
+      const res  = await fetch(`../tables/${TABLE_NOTICES}?limit=200`);
+      const data = await res.json();
+      allNotices = (data.data || [])
+        .filter(n => n.status === '발행' && (n.target === '전체' || n.target === '학생' || n.target === '특정학생'))
+        .sort((a, b) => {
+          if (a.is_pinned && !b.is_pinned) return -1;
+          if (!a.is_pinned && b.is_pinned) return 1;
+          return b.created_at - a.created_at;
+        });
+
+      const unread = allNotices.filter(n => !readSet.has(n.id)).length;
+      const badge  = document.getElementById('unreadBadge');
+      if (unread > 0) { badge.style.display = 'inline'; badge.textContent = `새 공지 ${unread}개`; }
+      else badge.style.display = 'none';
+
+      renderNotices();
+    } catch(e) {}
+  }
+
+  function renderNotices() {
+    const list  = document.getElementById('noticeList');
+    const empty = document.getElementById('noticeEmpty');
+    const filtered = currentFilter
+      ? allNotices.filter(n => n.category === currentFilter)
+      : allNotices;
+
+    if (filtered.length === 0) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+
+    const catClass = { '시험공지':'cat-exam','행사공지':'cat-event','학생공지':'cat-student','학부모공지':'cat-parent' };
+    const isNew = id => {
+      const n = allNotices.find(x => x.id === id);
+      if (!n) return false;
+      return (Date.now() - (n.created_at || 0)) < 3 * 24 * 3600 * 1000;
+    };
+
+    list.innerHTML = filtered.map(n => {
+      const cc      = catClass[n.category] || 'cat-general';
+      const unread  = !readSet.has(n.id);
+      const dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString('ko-KR') : '';
+      const preview = (n.content || '').replace(/\n/g,' ').substring(0, 60);
+      return `
+        <div class="nc-card ${n.is_pinned?'pinned':''} ${n.is_important?'important':''} ${unread?'unread':''}"
+          onclick="openDetail('${n.id}')">
+          <div class="nc-badges">
+            <span class="nc-badge ${cc}">${n.category}</span>
+            ${n.is_pinned ? '<span class="nc-badge pin-tag">📌 고정</span>' : ''}
+            ${n.is_important ? '<span class="nc-badge imp-tag">🔴 중요</span>' : ''}
+            ${isNew(n.id) ? '<span class="nc-badge new-tag">NEW</span>' : ''}
+          </div>
+          <div class="nc-title">${unread ? '🔵 ' : ''}${n.title}</div>
+          <div class="nc-meta">
+            <span><i class="fas fa-user"></i> ${n.author_name}</span>
+            <span><i class="fas fa-clock"></i> ${dateStr}</span>
+          </div>
+          <div class="nc-preview">${preview}${(n.content||'').length>60?'…':''}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function openDetail(id) {
+    const n = allNotices.find(x => x.id === id);
+    if (!n) return;
+
+    // 읽음 처리
+    readSet.add(id);
+    localStorage.setItem(`dvl_read_notices_${STUDENT_ID}`, JSON.stringify([...readSet]));
+    renderNotices();
+
+    const catClass = { '시험공지':'cat-exam','행사공지':'cat-event','학생공지':'cat-student','학부모공지':'cat-parent' };
+    const cc = catClass[n.category] || 'cat-general';
+    document.getElementById('detailBadges').innerHTML = `
+      <span class="nc-badge ${cc}">${n.category}</span>
+      ${n.is_important ? '<span class="nc-badge imp-tag">🔴 중요</span>' : ''}
+      ${n.is_pinned ? '<span class="nc-badge pin-tag">📌 고정</span>' : ''}`;
+    document.getElementById('detailTitle').textContent = n.title;
+    document.getElementById('detailMeta').innerHTML = `
+      <span><i class="fas fa-user"></i> ${n.author_name}</span>
+      <span><i class="fas fa-clock"></i> ${n.created_at ? new Date(n.created_at).toLocaleDateString('ko-KR') : ''}</span>
+      <span><i class="fas fa-users"></i> 수신: ${n.target}</span>`;
+    document.getElementById('detailContent').textContent = n.content || '';
+    document.getElementById('detailModal').classList.add('open');
+
+    // 조회수 증가
+    fetch(`../tables/notices/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ view_count: (n.view_count || 0) + 1 }),
+    }).catch(() => {});
+  }
+
+  function closeDetail() {
+    document.getElementById('detailModal').classList.remove('open');
+  }
+  </script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--student" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+      <a href="assessment.html" class="mobile-nav-item">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+      <a href="grades.html" class="mobile-nav-item">
+        <i class="fas fa-chart-line"></i><span>성적</span>
+      </a>
+      <a href="notice.html" class="mobile-nav-item active">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+      <button class="mobile-nav-item morenav-toggle" id="moreNavBtn" onclick="openMoreNav()">
+        <i class="fas fa-ellipsis"></i><span>더보기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div class="morenav-overlay" id="moreNavOverlay" onclick="closeMoreNav()"></div>
+  <div class="morenav-drawer morenav--student" id="moreNavDrawer">
+    <div class="morenav-handle"></div>
+    <div class="morenav-profile">
+      <div class="morenav-avatar" id="moreNavAvatar">학</div>
+      <div>
+        <div class="morenav-name" id="moreNavName">–</div>
+        <div class="morenav-sub" id="moreNavSub">–</div>
+      </div>
+    </div>
+    <div class="morenav-header">전체 메뉴</div>
+    <div class="morenav-grid">
+      <a href="attendance.html" class="morenav-item">
+        <i class="fas fa-calendar-check"></i><span>출결</span>
+      </a>
+      <a href="plan.html" class="morenav-item">
+        <i class="fas fa-tasks"></i><span>학습플랜</span>
+      </a>
+      <a href="exam.html" class="morenav-item">
+        <i class="fas fa-calendar-alt"></i><span>시험플래너</span>
+      </a>
+      <a href="consult.html" class="morenav-item">
+        <i class="fas fa-comments"></i><span>상담</span>
+      </a>
+      <a href="record.html" class="morenav-item">
+        <i class="fas fa-id-card"></i><span>학생부</span>
+      </a>
+      <a href="report.html" class="morenav-item">
+        <i class="fas fa-chart-bar"></i><span>역량리포트</span>
+      </a>
+      <a href="notice.html" class="morenav-item active">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+    </div>
+  </div>
+  <script>
+  function openMoreNav() {
+    document.getElementById('moreNavDrawer').classList.add('open');
+    document.getElementById('moreNavOverlay').classList.add('show');
+    document.getElementById('moreNavBtn').classList.add('open');
+    try {
+      const s = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+      const name = s.name || s.userName || '';
+      const school = s.school || s.userSchool || '';
+      if (name) {
+        document.getElementById('moreNavAvatar').textContent = name.charAt(0);
+        document.getElementById('moreNavName').textContent = name;
+        document.getElementById('moreNavSub').textContent = school;
+      }
+    } catch(e) {}
+  }
+  function closeMoreNav() {
+    document.getElementById('moreNavDrawer').classList.remove('open');
+    document.getElementById('moreNavOverlay').classList.remove('show');
+    document.getElementById('moreNavBtn').classList.remove('open');
+  }
+  </script>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <script>
+    (async function(){if(!('serviceWorker'in navigator))return;try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)));const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()));}catch(e){}})();
+    // ── 사이드바 토글 (표준) ──
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+  </script>
+</body>
+</html>

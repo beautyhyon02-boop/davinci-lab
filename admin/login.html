@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>관리자 로그인 – 다빈치랩</title>
+  <!-- admin/login.html은 루트 login.html로 통합 – 즉시 리디렉트 -->
+  <script>location.replace('../login.html');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+
+  <!-- 관리자 전용 PWA 설정 -->
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-900: #0f1f1a;
+      --green-800: #163A33;
+      --green-700: #1e4f44;
+      --green-600: #245A4E;
+      --green-400: #34a08a;
+      --green-300: #4fc3a1;
+      --accent:    #F59E0B;
+      --text-100:  #f1f5f9;
+      --text-200:  #cbd5e1;
+      --text-400:  #94a3b8;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--green-900);
+      color: var(--text-100);
+    }
+
+    /* ── 배경 패턴 ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(22,58,51,.7) 0%, transparent 70%),
+        radial-gradient(circle at 80% 80%, rgba(52,160,138,.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ── 로고 ── */
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      text-decoration: none;
+    }
+    .login-logo-icon {
+      width: 48px; height: 48px;
+      background: var(--green-600);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 20px rgba(79,195,161,.2);
+    }
+    .login-logo-text {
+      font-size: 20px; font-weight: 800;
+      color: var(--text-100);
+      letter-spacing: -.3px;
+    }
+
+    /* ── 관리자 배지 ── */
+    .admin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,158,11,.15);
+      border: 1px solid rgba(245,158,11,.35);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 32px;
+      letter-spacing: .5px;
+    }
+
+    /* ── 카드 ── */
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: rgba(22,58,51,.5);
+      border: 1px solid rgba(79,195,161,.15);
+      border-radius: 20px;
+      padding: 36px 32px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-100);
+    }
+    .card-sub {
+      font-size: 13.5px;
+      color: var(--text-400);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    /* ── 빠른 로그인 버튼 ── */
+    .quick-accounts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .quick-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(36,90,78,.45);
+      border: 1px solid rgba(79,195,161,.18);
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--text-200);
+      font-size: 12.5px;
+      font-family: inherit;
+      transition: all .18s;
+      text-align: left;
+    }
+    .quick-btn:hover, .quick-btn:active {
+      background: rgba(36,90,78,.8);
+      border-color: rgba(79,195,161,.4);
+      color: var(--text-100);
+      transform: translateY(-1px);
+    }
+    .quick-avatar {
+      width: 28px; height: 28px;
+      background: var(--green-600);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--green-300);
+      flex-shrink: 0;
+    }
+    .quick-info strong { display: block; font-size: 12px; font-weight: 600; color: var(--text-100); }
+    .quick-info span { font-size: 10.5px; color: var(--text-400); }
+
+    /* ── 구분선 ── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-400);
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(79,195,161,.15);
+    }
+
+    /* ── 입력 폼 ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-200);
+      margin-bottom: 7px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 13px 16px;
+      background: rgba(15,31,26,.6);
+      border: 1.5px solid rgba(79,195,161,.2);
+      border-radius: 10px;
+      color: var(--text-100);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+    .form-control::placeholder { color: var(--text-400); }
+    .form-control:focus {
+      border-color: var(--green-400);
+      box-shadow: 0 0 0 3px rgba(52,160,138,.15);
+    }
+
+    /* ── 로그인 버튼 ── */
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: var(--green-600);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 15.5px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      box-shadow: 0 4px 16px rgba(22,58,51,.5);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-login:hover { background: var(--green-700); transform: translateY(-1px); }
+    .btn-login:active { transform: scale(.98); }
+    .btn-login:disabled { opacity: .6; cursor: default; transform: none; }
+
+    /* ── 에러 메시지 ── */
+    .error-msg {
+      display: none;
+      padding: 11px 14px;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.35);
+      border-radius: 8px;
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── 자동 로그인 상태 표시 ── */
+    .auto-login-info {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: rgba(52,160,138,.12);
+      border: 1px solid rgba(52,160,138,.3);
+      border-radius: 10px;
+      color: var(--green-300);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .auto-login-info.show { display: flex; }
+
+    /* ── 알림 권한 배너 ── */
+    .notif-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(245,158,11,.1);
+      border: 1px solid rgba(245,158,11,.3);
+      border-radius: 10px;
+      color: #fbbf24;
+      font-size: 12.5px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .notif-banner.show { display: flex; }
+    .notif-banner:hover { background: rgba(245,158,11,.18); }
+
+    /* ── 안내 링크 ── */
+    .back-link {
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-400);
+      text-align: center;
+    }
+    .back-link a {
+      color: var(--green-300);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* ── 설치 배너 (Android) ── */
+    #pwaInstallBanner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--green-800);
+      color: white;
+      padding: 16px 20px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index: 9999;
+      animation: slideUp .35s ease;
+      border-top: 1px solid rgba(79,195,161,.2);
+    }
+    @keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+    #pwaInstallBanner .pwa-inner {
+      display: flex; align-items: center; gap: 14px; max-width: 480px; margin: 0 auto;
+    }
+    #pwaInstallBanner img { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; }
+    #pwaInstallBanner .pwa-text { flex: 1; }
+    #pwaInstallBanner .pwa-text strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    #pwaInstallBanner .pwa-text span { font-size: 12px; opacity: .75; }
+    #pwaInstallBanner .pwa-btns { display: flex; gap: 8px; flex-shrink: 0; }
+    #pwaInstallBtn {
+      background: var(--accent); color: #111; border: none; padding: 9px 18px;
+      border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;
+      font-family: inherit; white-space: nowrap;
+    }
+    #pwaDismissBtn {
+      background: rgba(255,255,255,.15); color: white; border: none;
+      padding: 9px 14px; border-radius: 20px; font-size: 13px;
+      cursor: pointer; font-family: inherit;
+    }
+
+    /* iOS 배너 */
+    #iosBanner {
+      display: none;
+      position: fixed;
+      bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: white; color: #1e293b;
+      padding: 20px 22px; border-radius: 18px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.3);
+      z-index: 9999; width: 300px; text-align: center;
+      animation: popIn .35s ease;
+    }
+    @keyframes popIn { from { transform:translateX(-50%) scale(.9); opacity:0; } to { transform:translateX(-50%) scale(1); opacity:1; } }
+    #iosBanner img { width: 52px; height: 52px; border-radius: 14px; margin-bottom: 10px; }
+    #iosBanner h4 { font-size: 15px; font-weight: 700; margin: 0 0 6px; }
+    #iosBanner p { font-size: 12.5px; color: #64748b; line-height: 1.6; margin: 0 0 12px; }
+    #iosBanner button { background: #163A33; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .ios-arrow { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid white; }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <a href="../index.html" class="login-logo">
+    <div class="login-logo-icon">◈</div>
+    <span class="login-logo-text">DaVinci LaB</span>
+  </a>
+
+  <div class="admin-badge">
+    <i class="fas fa-shield-alt"></i> 관리자 전용
+  </div>
+
+  <div class="login-card">
+    <h2 class="card-title">관리자 로그인</h2>
+    <p class="card-sub">다빈치랩 관리자 계정으로 로그인하세요.</p>
+
+    <!-- 로그인 폼 -->
+    <form id="loginForm" autocomplete="on" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="userId">관리자 아이디</label>
+        <input type="text" id="userId" name="username" class="form-control"
+          placeholder="아이디 입력" autocomplete="username"
+          inputmode="text" spellcheck="false" autocorrect="off" autocapitalize="off" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">비밀번호</label>
+        <input type="password" id="password" name="password" class="form-control"
+          placeholder="비밀번호 입력" autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn-login" id="loginBtn">
+        <i class="fas fa-shield-alt"></i> 관리자 로그인
+      </button>
+    </form>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- 알림 권한 요청 배너 -->
+    <div class="notif-banner" id="notifBanner" onclick="requestNotifPermission()">
+      <i class="fas fa-bell"></i>
+      <span><strong>실시간 알림 활성화</strong> — 새 수행평가·상담 알림을 받으려면 탭하세요</span>
+      <i class="fas fa-chevron-right" style="margin-left:auto;opacity:.6;"></i>
+    </div>
+  </div>
+
+  <p class="back-link">
+    일반 사용자 로그인 → <a href="../login.html">학생/학부모 앱</a>
+  </p>
+  <p class="back-link" style="margin-top:8px;">
+    관리자 계정이 없으신가요? → <a href="register.html">가입 신청</a>
+  </p>
+</div>
+
+<!-- PWA 설치 배너 (Android) -->
+<div id="pwaInstallBanner">
+  <div class="pwa-inner">
+    <img src="../images/icon-192.png" alt="DVL관리자">
+    <div class="pwa-text">
+      <strong>관리자 앱 설치</strong>
+      <span>홈화면에 추가하면 항상 로그인 상태가 유지돼요</span>
+    </div>
+    <div class="pwa-btns">
+      <button id="pwaInstallBtn">설치</button>
+      <button id="pwaDismissBtn">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- iOS 설치 안내 -->
+<div id="iosBanner">
+  <div class="ios-arrow"></div>
+  <img src="../images/icon-192.png" alt="DVL관리자">
+  <h4>관리자 앱 홈화면 추가</h4>
+  <p>Safari 하단의 <strong>공유 버튼 <i class="fas fa-share-square"></i></strong> 을 누른 뒤<br>
+    <strong>"홈 화면에 추가"</strong>를 선택하세요.</p>
+  <button onclick="document.getElementById('iosBanner').style.display='none'">확인</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   관리자 로그인 스크립트 (자동로그인 없음)
+   - 아이디 + 비밀번호 직접 입력만으로 로그인
+   - localStorage 자동로그인 완전 제거
+   - 기존 세션 잔재 강제 초기화
+══════════════════════════════════════════════ */
+
+/* ── 페이지 진입 시 localStorage 학생/학부모 잔재만 제거 (admin 세션은 유지) ── */
+(function clearOldSessions() {
+  // 학생/학부모 세션만 제거 (admin 세션은 건드리지 않음)
+  ['dvl_admin_id','dvl_user','dvl_session',
+   'dvl_student_session','dvl_parent_session'].forEach(k => localStorage.removeItem(k));
+  // sessionStorage는 건드리지 않음 → dashboard→login 이동 시 세션 보존
+})();
+
+/* ── SHA-256 해시 유틸 ── */
+async function sha256(msg) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ── UI 헬퍼 ── */
+function setBtnLoading() {
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 로그인 중...';
+}
+function setBtnReady() {
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-shield-alt"></i> 관리자 로그인';
+}
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearError() {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '';
+  el.classList.remove('show');
+}
+
+/* ── 로그인 성공 시 세션 저장 ── */
+function saveAdminSession(id, name, role, title) {
+  if (typeof DVL_SESSION !== 'undefined') {
+    /* DVL_SESSION 모듈이 로드된 경우 — 단일 소스로 저장 */
+    DVL_SESSION.saveAdmin({ id, name, role, title });
+    return;
+  }
+  /* 폴백: DVL_SESSION 없을 경우 직접 저장 */
+  const userData = {
+    id, name, role,
+    title: title || (role === 'master' ? '총괄 관리자' : '관리자'),
+    school: '다빈치랩',
+    grade: '', gradeNum: 0, stage: '', child: '', childName: '',
+  };
+  const json = JSON.stringify(userData);
+  localStorage.setItem('dvl_admin_session',     json);
+  localStorage.setItem('dvl_admin_tab_session', json);
+  sessionStorage.setItem('dvl_admin_session', json);
+  sessionStorage.setItem('dvl_user',          json);
+  sessionStorage.setItem('dvl_session',       json);
+  sessionStorage.setItem('dvSession',         json);
+}
+
+/* ── 메인 로그인 핸들러 ── */
+async function handleLogin(e) {
+  e.preventDefault();
+  const id  = (document.getElementById('userId').value || '').trim();
+  const pw  = document.getElementById('password').value || '';
+  if (!id || !pw) { showError('아이디와 비밀번호를 모두 입력해주세요.'); return; }
+  if (document.getElementById('loginBtn').disabled) return;
+
+  setBtnLoading();
+  clearError();
+
+  try {
+    const inputHash = await sha256(pw);
+
+    /* ── 1순위: DB에서 계정 조회 ── */
+    let acc = null;
+    try {
+      const res  = await fetch(`../tables/admin_accounts?limit=100`);
+      if (res.ok) {
+        const data = await res.json();
+        acc = (data.data || []).find(a => a.admin_id === id) || null;
+      }
+    } catch(e) { /* 네트워크 오류 → 하드코딩 폴백으로 진행 */ }
+
+    if (acc) {
+      /* DB 계정 발견 */
+      if (acc.status === 'pending') {
+        setBtnReady();
+        showError('승인 대기 중입니다. 마스터 관리자의 승인 후 로그인 가능합니다.');
+        return;
+      }
+      if (acc.status === 'inactive') {
+        setBtnReady();
+        showError('비활성화된 계정입니다. 관리자에게 문의하세요.');
+        return;
+      }
+      if (inputHash !== acc.pw_hash) {
+        setBtnReady();
+        showError('비밀번호가 올바르지 않습니다.');
+        return;
+      }
+      /* 성공 */
+      try {
+        await fetch(`../tables/admin_accounts/${acc.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ last_login: new Date().toISOString() }),
+        });
+      } catch(e) {}
+      saveAdminSession(
+        acc.admin_id,
+        acc.name,
+        acc.role === 'master' ? 'master' : 'admin',
+        acc.title || ''
+      );
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    /* ── 2순위: 하드코딩 계정 (DB 조회 실패 또는 계정 미등록 시 폴백) ── */
+    const HARD = [
+      { id:'admin',  name:'박소현', role:'master', title:'총괄 관리자' },
+      { id:'admin1', name:'관리자1', role:'admin',  title:'관리자' },
+      { id:'admin2', name:'관리자2', role:'admin',  title:'관리자' },
+      { id:'admin3', name:'관리자3', role:'admin',  title:'관리자' },
+      { id:'admin4', name:'관리자4', role:'admin',  title:'관리자' },
+    ];
+    const masterHash = await sha256('dvlAdmin!');
+    const hard = HARD.find(a => a.id === id);
+    if (hard && inputHash === masterHash) {
+      saveAdminSession(hard.id, hard.name, hard.role, hard.title);
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    /* ── 일치 없음 ── */
+    setBtnReady();
+    showError('아이디 또는 비밀번호가 올바르지 않습니다.');
+
+  } catch(err) {
+    console.error('[admin-login]', err);
+    setBtnReady();
+    showError('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }
+}
+
+/* ── 이벤트 바인딩 ── */
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginForm').addEventListener('submit', handleLogin);
+  document.getElementById('password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin(e);
+  });
+  document.getElementById('userId').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('password').focus();
+  });
+});
+window.addEventListener('pageshow', setBtnReady);
+</script>
+</body>
+</html>

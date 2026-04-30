@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>출결 현황 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <style>
+    :root {
+      --att-attend: #10b981;
+      --att-late:   #f59e0b;
+      --att-absent: #ef4444;
+      --att-leave:  #8b5cf6;
+    }
+    .att-wrap { padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    /* 요약 카드 */
+    .att-summary-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px; margin-bottom: 24px;
+    }
+    .att-sum-card {
+      background: white; border-radius: 14px; padding: 16px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .att-sum-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .att-sum-icon.green  { background: #d1fae5; color: var(--att-attend); }
+    .att-sum-icon.yellow { background: #fef3c7; color: var(--att-late); }
+    .att-sum-icon.red    { background: #fee2e2; color: var(--att-absent); }
+    .att-sum-icon.purple { background: #ede9fe; color: var(--att-leave); }
+    .att-sum-val  { font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .att-sum-lbl  { font-size: .78rem; color: #94a3b8; margin-top: 2px; }
+
+    /* 월 캘린더 */
+    .att-cal-card {
+      background: white; border-radius: 16px; padding: 20px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px;
+    }
+    .att-cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .att-cal-title { font-size: 1rem; font-weight: 700; color: #1e293b; }
+    .att-cal-nav { display: flex; gap: 6px; }
+    .att-cal-nav button {
+      width: 30px; height: 30px; border-radius: 8px;
+      border: 1.5px solid #e5e7eb; background: white;
+      cursor: pointer; font-size: .85rem; color: #374151;
+      transition: all .2s;
+    }
+    .att-cal-nav button:hover { border-color: var(--att-attend); color: var(--att-attend); }
+
+    .att-cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    }
+    .att-cal-dayname {
+      text-align: center; font-size: .75rem; font-weight: 700;
+      color: #94a3b8; padding: 4px 0;
+    }
+    .att-cal-dayname.sun { color: #f87171; }
+    .att-cal-dayname.sat { color: #60a5fa; }
+    .att-cal-cell {
+      aspect-ratio: 1; border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; font-size: .8rem; font-weight: 600;
+      color: #374151; cursor: default; position: relative;
+      transition: all .15s;
+    }
+    .att-cal-cell.today { border: 2px solid var(--att-attend); background: #f0fdf4; }
+    .att-cal-cell.attend { background: #d1fae5; color: #065f46; }
+    .att-cal-cell.late   { background: #fef3c7; color: #92400e; }
+    .att-cal-cell.absent { background: #fee2e2; color: #991b1b; }
+    .att-cal-cell.leave_early { background: #ede9fe; color: #5b21b6; }
+    .att-cal-cell.future { color: #cbd5e1; }
+    .att-cal-cell.empty  { background: none; }
+    .att-cal-cell.sun { color: #f87171; }
+    .att-cal-cell.sat { color: #60a5fa; }
+
+    .att-status-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      position: absolute; bottom: 4px;
+    }
+    .att-status-dot.attend { background: var(--att-attend); }
+    .att-status-dot.late   { background: var(--att-late); }
+    .att-status-dot.absent { background: var(--att-absent); }
+    .att-status-dot.leave_early { background: var(--att-leave); }
+
+    /* 범례 */
+    .att-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+    .att-leg-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .78rem; color: #64748b;
+    }
+    .att-leg-dot {
+      width: 12px; height: 12px; border-radius: 3px;
+    }
+    .att-leg-dot.attend { background: #d1fae5; border: 1.5px solid var(--att-attend); }
+    .att-leg-dot.late   { background: #fef3c7; border: 1.5px solid var(--att-late); }
+    .att-leg-dot.absent { background: #fee2e2; border: 1.5px solid var(--att-absent); }
+    .att-leg-dot.leave_early { background: #ede9fe; border: 1.5px solid var(--att-leave); }
+
+    /* 이력 테이블 */
+    .att-hist-card {
+      background: white; border-radius: 16px; padding: 20px 22px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); margin-bottom: 24px;
+    }
+    .att-hist-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+    }
+    .att-hist-header h3 { font-size: .95rem; font-weight: 700; color: #1e293b; }
+    .att-month-filter { display: flex; gap: 6px; }
+    .att-month-filter select {
+      padding: 6px 10px; border-radius: 8px; border: 1.5px solid #e5e7eb;
+      font-size: .85rem; color: #374151; font-family: inherit;
+    }
+
+    .att-hist-table { width: 100%; border-collapse: collapse; }
+    .att-hist-table th {
+      background: #f8fafc; padding: 10px 14px;
+      font-size: .8rem; font-weight: 700; color: #64748b;
+      text-align: left; border-bottom: 1.5px solid #e2e8f0;
+    }
+    .att-hist-table td {
+      padding: 10px 14px; font-size: .88rem;
+      color: #374151; border-bottom: 1px solid #f1f5f9;
+    }
+    .att-hist-table tr:last-child td { border-bottom: none; }
+
+    .att-status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: .78rem; font-weight: 700;
+    }
+    .att-status-badge.attend { background: #d1fae5; color: #065f46; }
+    .att-status-badge.late   { background: #fef3c7; color: #92400e; }
+    .att-status-badge.absent { background: #fee2e2; color: #991b1b; }
+    .att-status-badge.leave_early { background: #ede9fe; color: #5b21b6; }
+
+    /* 빈 상태 */
+    .att-empty { text-align: center; padding: 40px; color: #94a3b8; }
+    .att-empty i { font-size: 2rem; margin-bottom: 10px; display: block; }
+
+    @media (max-width: 600px) {
+      .att-wrap { padding: 14px; }
+      .att-summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .att-cal-cell { font-size: .7rem; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">김</div>
+        <span class="stu-stage-badge" id="sidebarStage">1단계</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">학생</strong>
+        <span id="sidebarStudentSchool">학교</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="attendance.html" class="nav-item active"><i class="fas fa-calendar-check"></i><span>출결 현황</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+        <a href="exam.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+        <a href="report.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>역량 리포트</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item"><i class="fas fa-robot"></i><span>AI 튜터링 로그</span></a>
+        <a href="golden-time.html" class="nav-item"><i class="fas fa-star"></i><span>골든타임 미션</span></a>
+        <a href="incubating.html" class="nav-item"><i class="fas fa-lightbulb"></i><span>질문 아카이브</span></a>
+        <a href="clinic.html" class="nav-item"><i class="fas fa-file-medical"></i><span>학생부 클리닉</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="message.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>선생님께 질문</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- MAIN -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>출결 현황</span></div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar student-avatar-color" id="topbarAvatar">김</div>
+          <span class="topbar-user-name" id="topbarName">학생</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="att-wrap">
+
+      <!-- 이달 출결 요약 -->
+      <div class="att-summary-grid">
+        <div class="att-sum-card">
+          <div class="att-sum-icon green"><i class="fas fa-check-circle"></i></div>
+          <div><div class="att-sum-val" id="sumAttend">0</div><div class="att-sum-lbl">등원 일수</div></div>
+        </div>
+        <div class="att-sum-card">
+          <div class="att-sum-icon yellow"><i class="fas fa-clock"></i></div>
+          <div><div class="att-sum-val" id="sumLate">0</div><div class="att-sum-lbl">지각 횟수</div></div>
+        </div>
+        <div class="att-sum-card">
+          <div class="att-sum-icon red"><i class="fas fa-times-circle"></i></div>
+          <div><div class="att-sum-val" id="sumAbsent">0</div><div class="att-sum-lbl">결석 일수</div></div>
+        </div>
+        <div class="att-sum-card">
+          <div class="att-sum-icon purple"><i class="fas fa-chart-pie"></i></div>
+          <div><div class="att-sum-val" id="sumRate">-</div><div class="att-sum-lbl">이달 출석률</div></div>
+        </div>
+      </div>
+
+      <!-- 월 캘린더 -->
+      <div class="att-cal-card">
+        <div class="att-cal-header">
+          <div class="att-cal-title" id="calTitle">2026년 3월</div>
+          <div class="att-cal-nav">
+            <button id="calPrev"><i class="fas fa-chevron-left"></i></button>
+            <button id="calToday" style="width:auto;padding:0 8px;">오늘</button>
+            <button id="calNext"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="att-cal-grid" id="calDaynames"></div>
+        <div class="att-cal-grid" id="calGrid" style="margin-top:4px;"></div>
+        <div class="att-legend">
+          <div class="att-leg-item"><div class="att-leg-dot attend"></div>등원</div>
+          <div class="att-leg-item"><div class="att-leg-dot late"></div>지각</div>
+          <div class="att-leg-item"><div class="att-leg-dot absent"></div>결석</div>
+          <div class="att-leg-item"><div class="att-leg-dot leave_early"></div>조퇴</div>
+        </div>
+      </div>
+
+      <!-- 이력 테이블 -->
+      <div class="att-hist-card">
+        <div class="att-hist-header">
+          <h3><i class="fas fa-list-ul" style="color:var(--att-attend);margin-right:6px;"></i>출결 이력</h3>
+          <div class="att-month-filter">
+            <select id="histYear"></select>
+            <select id="histMonth">
+              <option value="">전체</option>
+              <script>for(let m=1;m<=12;m++) document.write(`<option value="${m}">${m}월</option>`);</script>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="att-hist-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>상태</th>
+                <th>등원 시간</th>
+                <th>퇴원 시간</th>
+                <th>메모</th>
+              </tr>
+            </thead>
+            <tbody id="histTbody">
+              <tr><td colspan="5"><div class="att-empty"><i class="fas fa-calendar-times"></i><p>출결 데이터가 없습니다.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--student" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+      <a href="assessment.html" class="mobile-nav-item">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+      <a href="grades.html" class="mobile-nav-item">
+        <i class="fas fa-chart-line"></i><span>성적</span>
+      </a>
+      <a href="notice.html" class="mobile-nav-item">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+      <button class="mobile-nav-item morenav-toggle" id="moreNavBtn" onclick="openMoreNav()">
+        <i class="fas fa-ellipsis"></i><span>더보기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div class="morenav-overlay" id="moreNavOverlay" onclick="closeMoreNav()"></div>
+  <div class="morenav-drawer morenav--student" id="moreNavDrawer">
+    <div class="morenav-handle"></div>
+    <div class="morenav-profile">
+      <div class="morenav-avatar" id="moreNavAvatar">학</div>
+      <div>
+        <div class="morenav-name" id="moreNavName">–</div>
+        <div class="morenav-sub" id="moreNavSub">–</div>
+      </div>
+    </div>
+    <div class="morenav-header">전체 메뉴</div>
+    <div class="morenav-grid">
+      <a href="attendance.html" class="morenav-item active">
+        <i class="fas fa-calendar-check"></i><span>출결</span>
+      </a>
+      <a href="plan.html" class="morenav-item">
+        <i class="fas fa-tasks"></i><span>학습플랜</span>
+      </a>
+      <a href="exam.html" class="morenav-item">
+        <i class="fas fa-calendar-alt"></i><span>시험플래너</span>
+      </a>
+      <a href="consult.html" class="morenav-item">
+        <i class="fas fa-comments"></i><span>상담</span>
+      </a>
+      <a href="record.html" class="morenav-item">
+        <i class="fas fa-id-card"></i><span>학생부</span>
+      </a>
+      <a href="report.html" class="morenav-item">
+        <i class="fas fa-chart-bar"></i><span>역량리포트</span>
+      </a>
+      <a href="dashboard.html" class="morenav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+    </div>
+  </div>
+  <script>
+  function openMoreNav() {
+    document.getElementById('moreNavDrawer').classList.add('open');
+    document.getElementById('moreNavOverlay').classList.add('show');
+    document.getElementById('moreNavBtn').classList.add('open');
+    try {
+      const s = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+      const name = s.name || s.userName || '';
+      const school = s.school || s.userSchool || '';
+      if (name) {
+        document.getElementById('moreNavAvatar').textContent = name.charAt(0);
+        document.getElementById('moreNavName').textContent = name;
+        document.getElementById('moreNavSub').textContent = school;
+      }
+    } catch(e) {}
+  }
+  function closeMoreNav() {
+    document.getElementById('moreNavDrawer').classList.remove('open');
+    document.getElementById('moreNavOverlay').classList.remove('show');
+    document.getElementById('moreNavBtn').classList.remove('open');
+  }
+  </script>
+
+  <script>
+    const TABLE_ATT = 'attendance';
+    let session = null;
+    let myRecords = [];
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+
+    const WEEK_DAYS = ['일','월','화','수','목','금','토'];
+    const STATUS_LABEL = { attend:'등원', late:'지각', absent:'결석', leave_early:'조퇴' };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      session = JSON.parse(sessionStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || 'null');
+      if (!session || session.role !== 'student') { location.href = '../login.html'; return; }
+      initSidebar();
+      initHistFilter();
+      await loadRecords();
+      renderCalendar();
+      renderHistory();
+    });
+
+    function initSidebar() {
+      const av = session.name ? session.name[0] : '학';
+      document.getElementById('sidebarAvatar').textContent      = av;
+      document.getElementById('sidebarStudentName').textContent  = session.name || '학생';
+      document.getElementById('sidebarStudentSchool').textContent = (session.school||'') + ' ' + (session.grade||'');
+      document.getElementById('sidebarStage').textContent       = (session.stage || '1') + '단계';
+      document.getElementById('topbarAvatar').textContent       = av;
+      document.getElementById('topbarName').textContent         = session.name || '학생';
+      // ── 사이드바 토글 (표준) ──
+      (function() {
+        const sb  = document.getElementById('sidebar');
+        const dim = document.getElementById('sidebarDim');
+        if (!sb || !dim) return;
+        const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+        const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+        ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+        document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+        dim.addEventListener('click', close);
+      })();
+      document.getElementById('logoutBtn')?.addEventListener('click', e => {
+        e.preventDefault(); ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)}); sessionStorage.clear(); location.href = '../login.html';
+      });
+    }
+
+    function initHistFilter() {
+      const ySel = document.getElementById('histYear');
+      const cur  = new Date().getFullYear();
+      for (let y = cur; y >= cur - 2; y--) {
+        ySel.innerHTML += `<option value="${y}">${y}년</option>`;
+      }
+      ySel.addEventListener('change', renderHistory);
+      document.getElementById('histMonth').addEventListener('change', renderHistory);
+    }
+
+    async function loadRecords() {
+      const sid = session.id || session.username;
+      try {
+        const r = await fetch(`tables/${TABLE_ATT}?limit=500`);
+        const d = await r.json();
+        myRecords = (d.data || []).filter(x => x.student_id === sid);
+        updateSummary();
+      } catch(e) { myRecords = []; }
+    }
+
+    function updateSummary() {
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const monthRecs = myRecords.filter(x => (x.att_date||'').startsWith(monthStr));
+      const attend = monthRecs.filter(x => ['attend','late','leave_early'].includes(x.status)).length;
+      const late   = monthRecs.filter(x => x.status === 'late').length;
+      const absent = monthRecs.filter(x => x.status === 'absent').length;
+      const rate   = monthRecs.length ? Math.round(attend / monthRecs.length * 100) : 0;
+      document.getElementById('sumAttend').textContent = attend;
+      document.getElementById('sumLate').textContent   = late;
+      document.getElementById('sumAbsent').textContent = absent;
+      document.getElementById('sumRate').textContent   = monthRecs.length ? rate + '%' : '-';
+    }
+
+    function renderCalendar() {
+      document.getElementById('calTitle').textContent = `${calYear}년 ${calMonth+1}월`;
+      const monthStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+
+      // 요일 헤더
+      const daynames = document.getElementById('calDaynames');
+      daynames.innerHTML = WEEK_DAYS.map((d,i) =>
+        `<div class="att-cal-dayname ${i===0?'sun':i===6?'sat':''}">${d}</div>`).join('');
+
+      // 날짜 셀
+      const today    = new Date();
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const lastDate = new Date(calYear, calMonth+1, 0).getDate();
+      const recMap   = {};
+      myRecords.filter(x => (x.att_date||'').startsWith(monthStr))
+               .forEach(x => { const day=parseInt(x.att_date.split('-')[2]); recMap[day] = x.status; });
+
+      const grid = document.getElementById('calGrid');
+      let html = '';
+      for (let i = 0; i < firstDay; i++) html += '<div class="att-cal-cell empty"></div>';
+      for (let d = 1; d <= lastDate; d++) {
+        const dt      = new Date(calYear, calMonth, d);
+        const isToday = dt.toDateString() === today.toDateString();
+        const isFuture= dt > today;
+        const isSun   = dt.getDay() === 0;
+        const isSat   = dt.getDay() === 6;
+        const status  = recMap[d];
+        let cls = 'att-cal-cell';
+        if (isToday)  cls += ' today';
+        else if (!isFuture && !isSun && status) cls += ' ' + status;
+        else if (isFuture) cls += ' future';
+        if (isSun && !status) cls += ' sun';
+        if (isSat && !status) cls += ' sat';
+        html += `<div class="${cls}">${d}${status&&!isToday?`<div class="att-status-dot ${status}"></div>`:''}</div>`;
+      }
+      grid.innerHTML = html;
+
+      document.getElementById('calPrev').onclick = () => { if(calMonth===0){calMonth=11;calYear--;}else{calMonth--;} renderCalendar(); };
+      document.getElementById('calNext').onclick = () => { if(calMonth===11){calMonth=0;calYear++;}else{calMonth++;} renderCalendar(); };
+      document.getElementById('calToday').onclick = () => { calYear=new Date().getFullYear(); calMonth=new Date().getMonth(); renderCalendar(); };
+    }
+
+    function renderHistory() {
+      const year  = parseInt(document.getElementById('histYear').value)  || 0;
+      const month = parseInt(document.getElementById('histMonth').value) || 0;
+      let list = [...myRecords];
+      if (year)  list = list.filter(x => parseInt((x.att_date||'').split('-')[0]) === year);
+      if (month) list = list.filter(x => parseInt((x.att_date||'').split('-')[1]) === month);
+      list.sort((a,b) => (b.att_date||'').localeCompare(a.att_date||''));
+
+      const tbody = document.getElementById('histTbody');
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="att-empty"><i class="fas fa-calendar-times"></i><p>출결 데이터가 없습니다.</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(r => `
+        <tr>
+          <td><strong>${r.att_date||'-'}</strong></td>
+          <td><span class="att-status-badge ${r.status||'absent'}">${STATUS_LABEL[r.status]||r.status||'-'}</span></td>
+          <td>${r.in_time||'-'}</td>
+          <td>${r.out_time||'-'}</td>
+          <td style="font-size:.82rem;color:#64748b;">${r.memo||'-'}</td>
+        </tr>`).join('');
+    }
+  </script>
+</body>
+</html>

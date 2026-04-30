@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생 대시보드 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- 학생 프로필 영역 -->
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">학</div>
+        <span class="stu-stage-badge" id="sidebarStage">–</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">–</strong>
+        <span id="sidebarStudentSchool">–</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item active" data-page="dashboard">
+          <i class="fas fa-th-large"></i><span>홈 대시보드</span>
+        </a>
+        <a href="attendance.html" class="nav-item" data-page="attendance">
+          <i class="fas fa-calendar-check"></i><span>출결 현황</span>
+        </a>
+        <a href="plan.html" class="nav-item" data-page="plan">
+          <i class="fas fa-tasks"></i><span>학습 플랜</span>
+        </a>
+        <a href="exam.html" class="nav-item" data-page="exam">
+          <i class="fas fa-calendar-alt"></i><span>시험 플래너</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item" data-page="assessment">
+          <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+          <span class="nav-badge nav-badge--alert">2</span>
+        </a>
+        <a href="grades.html" class="nav-item" data-page="grades">
+          <i class="fas fa-chart-line"></i><span>성적 관리</span>
+        </a>
+        <a href="record.html" class="nav-item" data-page="record">
+          <i class="fas fa-id-card"></i><span>학생부 관리</span>
+        </a>
+        <a href="report.html" class="nav-item" data-page="report">
+          <i class="fas fa-chart-bar"></i><span>역량 리포트</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item" data-page="ai-log">
+          <i class="fas fa-robot"></i><span>AI 튜터링 로그</span>
+        </a>
+        <a href="golden-time.html" class="nav-item" data-page="golden-time">
+          <i class="fas fa-star"></i><span>골든타임 미션</span>
+        </a>
+        <a href="incubating.html" class="nav-item" data-page="incubating">
+          <i class="fas fa-lightbulb"></i><span>질문 아카이브</span>
+        </a>
+        <a href="clinic.html" class="nav-item" data-page="clinic">
+          <i class="fas fa-file-medical"></i><span>학생부 클리닉</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item" data-page="notice">
+          <i class="fas fa-bullhorn"></i><span>공지사항</span>
+          <span class="nav-badge">1</span>
+        </a>
+        <a href="message.html" class="nav-item" data-page="message">
+          <i class="fas fa-comment-dots"></i><span>선생님께 질문</span>
+        </a>
+        <a href="consult.html" class="nav-item" data-page="consult">
+          <i class="fas fa-comments"></i><span>상담 신청</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn" onclick="(function(e){e.preventDefault();['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)});sessionStorage.clear();location.href='../login.html';})(event)"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>홈 대시보드</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-icon-btn" id="notifBtn" title="알림">
+          <i class="fas fa-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <div class="topbar-user" id="topbarUser">
+          <div class="topbar-avatar student-avatar-color">김</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topbarName">–</span>
+            <span class="topbar-user-role student-role-label" id="topbarRole">학생</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="admin-content">
+
+      <!-- ▶ 관리자 대리열람 배너 (관리자가 학생 화면을 열람할 때만 표시) -->
+      <div id="adminProxyBanner" style="display:none;background:#163A33;color:#fff;padding:12px 20px;border-radius:12px;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-user-shield" style="font-size:18px;color:#4fc3a1;"></i>
+          <span style="font-size:13.5px;font-weight:700;">
+            관리자 대리 열람 중 —
+            <span id="proxyStudentName" style="color:#4fc3a1;"></span>
+            학생 화면을 보고 있습니다
+          </span>
+          <span id="proxyAdminName" style="font-size:12px;color:rgba(255,255,255,.65);"></span>
+        </div>
+        <button onclick="closeProxyView()"
+          style="background:#4fc3a1;color:#163A33;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;">
+          <i class="fas fa-arrow-left"></i> 관리자 화면으로 돌아가기
+        </button>
+      </div>
+
+      <!-- 환영 배너 -->
+      <div class="student-welcome-banner">
+        <div class="welcome-text">
+          <p class="welcome-date" id="welcomeDate">2025년 3월 22일 토요일</p>
+          <h2>안녕하세요, <span id="welcomeName">–</span> 학생! 👋</h2>
+          <p class="welcome-sub">오늘도 다빈치랩과 함께 성장하는 하루 되세요.</p>
+        </div>
+        <div class="welcome-dday">
+          <div class="dday-card" id="ddayCard1">
+            <span class="dday-label">다음 수업까지</span>
+            <span class="dday-num">–</span>
+            <span class="dday-date">미등록</span>
+          </div>
+          <div class="dday-card dday-card--alert" id="ddayCard2">
+            <span class="dday-label">수행평가 마감</span>
+            <span class="dday-num">–</span>
+            <span class="dday-date">미등록</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI 카드 -->
+      <div class="kpi-grid" style="margin-top:24px;">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--green"><i class="fas fa-calendar-check"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">이번달 출석률</span>
+            <div class="kpi-value" id="kpiAttRate">–<span class="kpi-unit">%</span></div>
+            <span class="kpi-sub" id="kpiAttSub">이번 달 기록 없음</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--blue"><i class="fas fa-tasks"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">학습 플랜 달성률</span>
+            <div class="kpi-value" id="kpiPlanRate">–<span class="kpi-unit">%</span></div>
+            <span class="kpi-sub" id="kpiPlanSub">이번 주 플랜 없음</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--orange"><i class="fas fa-clipboard-check"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">수행평가 제출</span>
+            <div class="kpi-value" id="kpiAssessCnt">0<span class="kpi-unit">건</span></div>
+            <span class="kpi-sub" id="kpiAssessSub">모두 제출 완료 ✅</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--purple"><i class="fas fa-star"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">누적 학습 시간</span>
+            <div class="kpi-value" id="kpiStudyHr">0<span class="kpi-unit">h</span></div>
+            <span class="kpi-sub" id="kpiStudySub">이번 달 0h 학습</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 다빈치 전략 도구 바로가기 -->
+      <div style="margin-top:20px;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h3 style="font-size:15px;font-weight:700;color:var(--text-900);"><i class="fas fa-rocket" style="color:var(--teal-400);margin-right:8px;"></i>다빈치 전략 도구</h3>
+          <span style="font-size:12px;color:var(--text-300);">나만의 학생부를 만드는 도구들</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+          <a href="ai-log.html" style="text-decoration:none;">
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:16px 14px;border:1.5px solid var(--border);text-align:center;transition:all .22s ease;cursor:pointer;" onmouseover="this.style.borderColor='var(--teal-400)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+              <div style="width:40px;height:40px;border-radius:10px;background:rgba(59,130,246,.1);color:#3b82f6;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">🤖</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-900);margin-bottom:3px;">AI 로그</div>
+              <div style="font-size:11.5px;color:var(--text-500);">AI 활용 증빙 문서</div>
+            </div>
+          </a>
+          <a href="golden-time.html" style="text-decoration:none;">
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:16px 14px;border:1.5px solid var(--border);text-align:center;transition:all .22s ease;cursor:pointer;" onmouseover="this.style.borderColor='var(--teal-400)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+              <div style="width:40px;height:40px;border-radius:10px;background:rgba(251,191,36,.1);color:#d97706;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">⭐</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-900);margin-bottom:3px;">골든타임</div>
+              <div style="font-size:11.5px;color:var(--text-500);">수업 중 질문 설계</div>
+            </div>
+          </a>
+          <a href="incubating.html" style="text-decoration:none;">
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:16px 14px;border:1.5px solid var(--border);text-align:center;transition:all .22s ease;cursor:pointer;" onmouseover="this.style.borderColor='var(--teal-400)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+              <div style="width:40px;height:40px;border-radius:10px;background:rgba(245,158,11,.1);color:#d97706;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">💡</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-900);margin-bottom:3px;">질문 아카이브</div>
+              <div style="font-size:11.5px;color:var(--text-500);">탐구 질문 기록</div>
+            </div>
+          </a>
+          <a href="clinic.html" style="text-decoration:none;">
+            <div style="background:var(--bg-card);border-radius:var(--radius-md);padding:16px 14px;border:1.5px solid var(--border);text-align:center;transition:all .22s ease;cursor:pointer;" onmouseover="this.style.borderColor='var(--teal-400)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+              <div style="width:40px;height:40px;border-radius:10px;background:rgba(244,63,94,.1);color:#f43f5e;font-size:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">📄</div>
+              <div style="font-size:13px;font-weight:700;color:var(--text-900);margin-bottom:3px;">학생부 클리닉</div>
+              <div style="font-size:11.5px;color:var(--text-500);">AI 톤 탈피 교정</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- 메인 그리드: 왼쪽(학습플랜 + 수행평가) / 오른쪽(알림 + 출결) -->
+      <div class="student-main-grid">
+
+        <!-- 왼쪽 컬럼 -->
+        <div class="student-col-left">
+
+          <!-- 이번 주 학습 플랜 -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-tasks"></i> 이번 주 학습 플랜</h3>
+              <a href="plan.html" class="card-link">전체 보기</a>
+            </div>
+            <div class="card-body">
+              <div class="weekly-plan-list" id="weeklyPlanList">
+                <!-- JS로 렌더 -->
+              </div>
+              <div class="plan-progress-wrap">
+                <div class="plan-progress-label">
+                  <span>주간 달성률</span>
+                  <strong>78%</strong>
+                </div>
+                <div class="plan-progress-bar">
+                  <div class="plan-progress-fill" style="width:78%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 수행평가 현황 -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-clipboard-check"></i> 수행평가 현황</h3>
+              <a href="assessment.html" class="card-link">전체 보기</a>
+            </div>
+            <div class="card-body">
+              <div class="assess-list" id="assessList">
+                <!-- JS로 렌더 -->
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 오른쪽 컬럼 -->
+        <div class="student-col-right">
+
+          <!-- 이번 달 출결 캘린더 -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-calendar-alt"></i> 이번 달 출결</h3>
+              <a href="attendance.html" class="card-link">상세 보기</a>
+            </div>
+            <div class="card-body">
+              <div class="mini-calendar" id="miniCalendar">
+                <!-- JS로 렌더 -->
+              </div>
+              <div class="attend-legend">
+                <span><i class="fas fa-circle legend-present"></i> 출석</span>
+                <span><i class="fas fa-circle legend-absent"></i> 결석</span>
+                <span><i class="fas fa-circle legend-today"></i> 오늘</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 선생님 피드백 -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-comment-alt"></i> 최근 피드백</h3>
+            </div>
+            <div class="card-body">
+              <div class="feedback-list" id="feedbackList">
+                <!-- JS로 렌더 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 공지사항 -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-bullhorn"></i> 공지사항</h3>
+              <a href="notice.html" class="card-link">전체 보기</a>
+            </div>
+            <div class="card-body">
+              <ul class="notice-list" id="noticeList">
+                <!-- JS로 렌더 -->
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /student-main-grid -->
+
+    </main>
+  </div><!-- /admin-main -->
+
+  <!-- 알림 패널 -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h4>알림</h4>
+      <button id="notifClose"><i class="fas fa-times"></i></button>
+    </div>
+    <ul class="notif-list" id="notifList"></ul>
+  </div>
+  <div class="notif-overlay" id="notifOverlay"></div>
+
+  <script src="../js/student-dashboard.js"></script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--student" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item active">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+      <a href="assessment.html" class="mobile-nav-item">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+      <a href="grades.html" class="mobile-nav-item">
+        <i class="fas fa-chart-line"></i><span>성적</span>
+      </a>
+      <a href="notice.html" class="mobile-nav-item">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+      <button class="mobile-nav-item morenav-toggle" id="moreNavBtn" onclick="openMoreNav()">
+        <i class="fas fa-ellipsis"></i><span>더보기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div class="morenav-overlay" id="moreNavOverlay" onclick="closeMoreNav()"></div>
+  <div class="morenav-drawer morenav--student" id="moreNavDrawer">
+    <div class="morenav-handle"></div>
+    <div class="morenav-profile" id="moreNavProfile">
+      <div class="morenav-avatar" id="moreNavAvatar">학</div>
+      <div>
+        <div class="morenav-name" id="moreNavName">–</div>
+        <div class="morenav-sub" id="moreNavSub">–</div>
+      </div>
+    </div>
+    <div class="morenav-header">전체 메뉴</div>
+    <div class="morenav-grid">
+      <a href="attendance.html" class="morenav-item">
+        <i class="fas fa-calendar-check"></i><span>출결</span>
+      </a>
+      <a href="plan.html" class="morenav-item">
+        <i class="fas fa-tasks"></i><span>학습플랜</span>
+      </a>
+      <a href="exam.html" class="morenav-item">
+        <i class="fas fa-calendar-alt"></i><span>시험플래너</span>
+      </a>
+      <a href="consult.html" class="morenav-item">
+        <i class="fas fa-comments"></i><span>상담</span>
+      </a>
+      <a href="record.html" class="morenav-item">
+        <i class="fas fa-id-card"></i><span>학생부</span>
+      </a>
+      <a href="report.html" class="morenav-item">
+        <i class="fas fa-chart-bar"></i><span>역량리포트</span>
+      </a>
+      <a href="dashboard.html" class="morenav-item active">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function openMoreNav() {
+      document.getElementById('moreNavDrawer').classList.add('open');
+      document.getElementById('moreNavOverlay').classList.add('show');
+      document.getElementById('moreNavBtn').classList.add('open');
+      // 프로필 정보 채우기
+      try {
+        const s = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+        const name = s.name || s.userName || '';
+        const school = s.school || s.userSchool || '';
+        if (name) {
+          document.getElementById('moreNavAvatar').textContent = name.charAt(0);
+          document.getElementById('moreNavName').textContent = name;
+          document.getElementById('moreNavSub').textContent = school;
+        }
+      } catch(e) {}
+    }
+    function closeMoreNav() {
+      document.getElementById('moreNavDrawer').classList.remove('open');
+      document.getElementById('moreNavOverlay').classList.remove('show');
+      document.getElementById('moreNavBtn').classList.remove('open');
+    }
+  </script>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- SW 완전 비활성화 -->
+  <script>
+    (async function() {
+      if (!('serviceWorker' in navigator)) return;
+      try {
+        const ks = await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k)));
+        const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r=>r.unregister()));
+      } catch(e) {}
+    })();
+    // ── 사이드바 토글 (표준) ──
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      document.getElementById('menuToggle')?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); });
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+  </script>
+</body>
+</html>

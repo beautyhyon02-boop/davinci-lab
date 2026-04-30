@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학부모 관리 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <style>
+    .pm-wrap { padding: 24px; max-width: 1100px; margin: 0 auto; }
+    .pm-topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+    .pm-topbar h2 { font-size: 1.15rem; font-weight: 700; color: #1e1b4b; }
+    .pm-search { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pm-search input { padding: 9px 14px; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: .9rem; font-family: inherit; width: 200px; }
+    .pm-search input:focus { outline: none; border-color: #4f46e5; }
+
+    /* 요약 */
+    .pm-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    @media(max-width:900px){ .pm-summary { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:480px){ .pm-summary { grid-template-columns: 1fr 1fr; } }
+    .pm-sum-card { background: white; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.05); display: flex; align-items: center; gap: 14px; cursor: default; }
+    .pm-sum-card.pending-card { border: 2px solid #f59e0b; background: #fffbeb; cursor: pointer; transition: box-shadow .15s; }
+    .pm-sum-card.pending-card:hover { box-shadow: 0 0 0 3px #fde68a; }
+    .pm-sum-icon { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .pm-sum-card .sv { font-size: 1.7rem; font-weight: 800; color: #1e1b4b; }
+    .pm-sum-card.pending-card .sv { color: #d97706; }
+    .pm-sum-card .sl { font-size: .8rem; color: #6b7280; }
+    .pm-sum-card.pending-card .sl { color: #92400e; font-weight: 700; }
+
+    /* 테이블 */
+    .pm-table-wrap { background: white; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
+    .pm-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .pm-table th { background: #f9fafb; padding: 12px 16px; text-align: left; font-weight: 700; color: #374151; border-bottom: 1.5px solid #e5e7eb; white-space: nowrap; }
+    .pm-table td { padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #4b5563; vertical-align: middle; }
+    .pm-table tr:hover td { background: #fafafa; }
+    .pm-table tr:last-child td { border-bottom: none; }
+    .pm-id-badge { font-size: .75rem; background: #ede9fe; color: #5b21b6; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
+    .pm-rel-badge { font-size: .75rem; padding: 2px 8px; border-radius: 99px; font-weight: 700; }
+    .pm-rel-badge.mom { background: #fce7f3; color: #9d174d; }
+    .pm-rel-badge.dad { background: #dbeafe; color: #1d4ed8; }
+
+    .btn-pm { padding: 5px 12px; border-radius: 6px; font-size: .78rem; font-weight: 600; cursor: pointer; border: none; transition: background .15s; }
+    .btn-pm-edit { background: #e0e7ff; color: #4f46e5; }
+    .btn-pm-edit:hover { background: #c7d2fe; }
+    .btn-pm-msg  { background: #d1fae5; color: #065f46; }
+    .btn-pm-msg:hover  { background: #a7f3d0; }
+
+    /* 수정 모달 */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 16px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: white; border-radius: 16px; padding: 30px; width: 100%; max-width: 480px; position: relative; }
+    .modal-box h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; color: #1e1b4b; }
+    .modal-close { position: absolute; top: 14px; right: 14px; background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #9ca3af; }
+    .mf { display: flex; flex-direction: column; gap: 12px; }
+    .mf label { font-size: .83rem; font-weight: 600; color: #374151; display: block; margin-bottom: 3px; }
+    .mf input, .mf select { width: 100%; padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 7px; font-size: .9rem; font-family: inherit; box-sizing: border-box; }
+    .mf input:focus, .mf select:focus { outline: none; border-color: #4f46e5; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 6px; }
+    .btn-mc { flex: 1; padding: 11px; border-radius: 9px; border: 1.5px solid #e5e7eb; background: white; font-weight: 600; cursor: pointer; font-size: .9rem; }
+    .btn-ms { flex: 2; padding: 11px; border-radius: 9px; border: none; background: #4f46e5; color: white; font-weight: 700; cursor: pointer; font-size: .9rem; }
+
+    .pm-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #1e1b4b; color: white; padding: 12px 24px; border-radius: 30px; font-size: .9rem; font-weight: 600; z-index: 99999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .pm-toast.show { opacity: 1; }
+  </style>
+</head>
+<body class="admin-body">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+        <a href="students.html" class="nav-item"><i class="fas fa-users"></i><span>학생 목록</span><span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">소통</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지/알림</span></a>
+        <a href="parents.html" class="nav-item active"><i class="fas fa-user-friends"></i><span>학부모 관리</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../login.html" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>학부모 관리</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
+          <i class="fas fa-bell"></i>
+        </button>
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="topbarAvatar">박</div>
+          <span id="topbarName">박소현</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="pm-wrap">
+      <!-- 요약 -->
+      <div class="pm-summary">
+        <div class="pm-sum-card">
+          <div class="pm-sum-icon" style="background:#e0e7ff"><i class="fas fa-user-friends" style="color:#4f46e5"></i></div>
+          <div><div class="sv" id="sumTotal">0</div><div class="sl">전체 학부모</div></div>
+        </div>
+        <div class="pm-sum-card">
+          <div class="pm-sum-icon" style="background:#d1fae5"><i class="fas fa-check-circle" style="color:#10b981"></i></div>
+          <div><div class="sv" id="sumActive">0</div><div class="sl">활성 계정</div></div>
+        </div>
+        <div class="pm-sum-card">
+          <div class="pm-sum-icon" style="background:#fce7f3"><i class="fas fa-female" style="color:#ec4899"></i></div>
+          <div><div class="sv" id="sumMom">0</div><div class="sl">모 계정</div></div>
+        </div>
+        <div class="pm-sum-card pending-card" id="pendingSumCard" onclick="scrollToPending()" title="클릭하면 대기 목록으로 이동">
+          <div class="pm-sum-icon" style="background:#fef3c7"><i class="fas fa-user-clock" style="color:#d97706"></i></div>
+          <div><div class="sv" id="sumPending">0</div><div class="sl">승인 대기</div></div>
+        </div>
+      </div>
+
+      <!-- 승인 대기 배지 -->
+      <div id="parentPendingBadge" style="display:none;background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:14px 18px;margin-bottom:16px;font-size:13.5px;font-weight:700;color:#92400e;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-user-clock" style="font-size:18px;"></i>
+          <span id="parentPendingBadgeText"></span>
+          <span style="font-weight:400;color:#b45309;"> — 아래 목록 상단에서 승인/거절하세요</span>
+        </div>
+      </div>
+
+      <!-- 액션바 -->
+      <div class="pm-topbar">
+        <h2><i class="fas fa-user-friends" style="color:#4f46e5;margin-right:8px"></i>학부모 계정 목록</h2>
+        <div class="pm-search">
+          <input type="text" id="searchInput" placeholder="이름 또는 자녀 검색..." oninput="filterList()" />
+        </div>
+      </div>
+
+      <!-- 테이블 -->
+      <div class="pm-table-wrap" style="overflow-x:auto">
+        <table class="pm-table">
+          <thead>
+            <tr>
+              <th>계정 ID</th>
+              <th>학부모 이름</th>
+              <th>관계</th>
+              <th>자녀</th>
+              <th>연락처</th>
+              <th>상태</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="parentTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 수정 모달 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+      <h3><i class="fas fa-edit" style="color:#4f46e5;margin-right:8px"></i>학부모 정보 수정</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+      <input type="hidden" id="editId" />
+      <div class="mf">
+        <div>
+          <label>학부모 이름</label>
+          <input type="text" id="editName" />
+        </div>
+        <div>
+          <label>관계</label>
+          <select id="editRel">
+            <option value="모">모</option>
+            <option value="부">부</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div>
+          <label>연락처</label>
+          <input type="text" id="editPhone" placeholder="010-0000-0000" />
+        </div>
+        <div>
+          <label>비밀번호 변경 (비워두면 유지)</label>
+          <input type="text" id="editPw" placeholder="새 비밀번호 입력..." />
+        </div>
+        <div>
+          <label>상태</label>
+          <select id="editStatus">
+            <option value="활성">활성</option>
+            <option value="비활성">비활성</option>
+          </select>
+        </div>
+        <div>
+          <label>메모</label>
+          <input type="text" id="editMemo" placeholder="관리자 메모..." />
+        </div>
+        <div class="modal-actions">
+          <button class="btn-mc" onclick="closeModal()">취소</button>
+          <button class="btn-ms" onclick="saveEdit()"><i class="fas fa-save"></i> 저장</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pm-toast" id="pmToast"></div>
+
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script>
+  const TABLE_PARENTS = 'parent_profiles';
+  let allParents = [], filtered = [];
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const session = window._dvlAdminSession;
+    if (!session) return;
+    const name = session.name || '관리자';
+    if (document.getElementById('topbarName'))   document.getElementById('topbarName').textContent   = name;
+    if (document.getElementById('topbarAvatar')) document.getElementById('topbarAvatar').textContent = name[0] || '관';
+    await loadParents();
+  });
+
+  async function loadParents() {
+    try {
+      const res = await fetch(`../tables/${TABLE_PARENTS}?limit=200&sort=parent_id`);
+      const data = await res.json();
+      allParents = data.data || [];
+      filtered = [...allParents];
+      renderSummary();
+      renderTable();
+    } catch(e) { showToast('⚠️ 데이터 로드 실패'); }
+  }
+
+  function renderSummary() {
+    const pendingParents = allParents.filter(p => p.status === 'pending');
+
+    document.getElementById('sumTotal').textContent  = allParents.length;
+    document.getElementById('sumActive').textContent = allParents.filter(p => p.status === '활성').length;
+    document.getElementById('sumMom').textContent    = allParents.filter(p => p.relationship === '모').length;
+    document.getElementById('sumPending').textContent = pendingParents.length;
+
+    // 승인 대기 카드 강조
+    const pendingSumCard = document.getElementById('pendingSumCard');
+    if (pendingSumCard) {
+      if (pendingParents.length > 0) {
+        pendingSumCard.style.boxShadow = '0 0 0 3px #fde68a';
+        pendingSumCard.style.opacity = '1';
+        pendingSumCard.style.cursor = 'pointer';
+      } else {
+        pendingSumCard.style.boxShadow = '';
+        pendingSumCard.style.opacity = '0.6';
+        pendingSumCard.style.cursor = 'default';
+        pendingSumCard.onclick = null;
+      }
+    }
+
+    // 승인 대기 배지 (테이블 위) — display:none → block으로 전환 (flex는 인라인 중첩 충돌 방지)
+    const pendingBadge = document.getElementById('parentPendingBadge');
+    const pendingBadgeText = document.getElementById('parentPendingBadgeText');
+    if (pendingBadge) {
+      if (pendingParents.length > 0) {
+        if (pendingBadgeText) pendingBadgeText.textContent = `학부모 가입 승인 대기 ${pendingParents.length}명`;
+        pendingBadge.style.display = 'block';
+      } else {
+        pendingBadge.style.display = 'none';
+      }
+    }
+  }
+
+  // 승인 대기 섹션으로 스크롤
+  function scrollToPending() {
+    const target = document.getElementById('pendingSection')
+                || document.querySelector('#parentTableBody tr[data-pending="true"]');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const rows = document.querySelectorAll('#parentTableBody tr[data-pending="true"]');
+      rows.forEach(r => {
+        r.style.outline = '2px solid #f59e0b';
+        setTimeout(() => { r.style.outline = ''; }, 2000);
+      });
+    }
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('parentTableBody');
+    // pending 항목이 있으면 filtered가 0이어도 조기 리턴하지 않음
+    const pendingAll = allParents.filter(p => p.status === 'pending');
+    if (filtered.length === 0 && pendingAll.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">검색 결과가 없습니다.</td></tr>`;
+      return;
+    }
+    // filtered에 pending이 없는데 allParents에 pending이 있으면, pending을 강제로 표시
+    const filteredHasPending = filtered.some(p => p.status === 'pending');
+    const displayList = (!filteredHasPending && pendingAll.length > 0)
+      ? [...new Map([...pendingAll, ...filtered].map(p => [p.id, p])).values()]
+      : filtered;
+
+    // pending 항목 먼저 상단에 표시
+    const sorted = [...displayList].sort((a, b) => {
+      if (a.status === 'pending' && b.status !== 'pending') return -1;
+      if (a.status !== 'pending' && b.status === 'pending') return 1;
+      return 0;
+    });
+
+    const pendingCount = sorted.filter(p => p.status === 'pending').length;
+    const pendingHeader = pendingCount > 0
+      ? `<tr id="pendingSection"><td colspan="7" style="background:#fffbeb;padding:8px 16px;border-bottom:2px solid #f59e0b;">
+           <span style="font-size:12px;font-weight:700;color:#92400e;">
+             <i class="fas fa-user-clock" style="margin-right:5px;"></i>가입 승인 대기 (${pendingCount}명)
+           </span>
+         </td></tr>`
+      : '';
+
+    tbody.innerHTML = pendingHeader + sorted.map(p => {
+      const isPending = p.status === 'pending';
+      const statusBg    = isPending ? '#fef3c7' : (p.status==='활성'?'#d1fae5':'#f3f4f6');
+      const statusColor = isPending ? '#92400e' : (p.status==='활성'?'#065f46':'#6b7280');
+      const statusLabel = isPending ? '승인 대기' : (p.status || '-');
+      return `
+      <tr style="${isPending ? 'background:#fffbeb;' : ''}" ${isPending ? 'data-pending="true"' : ''}>
+        <td><span class="pm-id-badge">${p.parent_id || '-'}</span></td>
+        <td><strong>${p.parent_name || '-'}</strong></td>
+        <td><span class="pm-rel-badge ${p.relationship==='모'?'mom':'dad'}">${p.relationship || '-'}</span></td>
+        <td>
+          <strong>${p.child_name || '-'}</strong>
+          <small style="color:#9ca3af;margin-left:4px">${p.child_id || p.child_ids || '-'}</small>
+        </td>
+        <td>${p.phone || '-'}</td>
+        <td>
+          <span style="font-size:.78rem;padding:3px 9px;border-radius:99px;font-weight:700;background:${statusBg};color:${statusColor};">
+            ${statusLabel}
+          </span>
+        </td>
+        <td>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            ${isPending ? `
+              <button class="btn-pm" style="background:#22c55e;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;" onclick="approveParent('${p.id}', '${p.parent_name}')">
+                <i class="fas fa-check"></i> 승인
+              </button>
+              <button class="btn-pm" style="background:#fff;color:#ef4444;border:1.5px solid #ef4444;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;" onclick="rejectParent('${p.id}', '${p.parent_name}')">
+                <i class="fas fa-times"></i> 거절
+              </button>
+            ` : `
+              <button class="btn-pm btn-pm-edit" onclick="openEdit('${p.id}')">
+                <i class="fas fa-edit"></i> 수정
+              </button>
+            `}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function approveParent(recordId, name) {
+    if (!confirm(`'${name}' 학부모 가입을 승인하시겠습니까?`)) return;
+    try {
+      const res = await fetch(`../tables/parent_profiles/${recordId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: '활성' }),
+      });
+      if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+      showToast(`✅ ${name} 학부모 승인 완료!`);
+      await loadParents();
+    } catch(e) {
+      showToast('⚠️ 승인 처리 오류: ' + e.message);
+    }
+  }
+
+  async function rejectParent(recordId, name) {
+    if (!confirm(`'${name}' 학부모 가입 신청을 거절하시겠습니까?\n해당 계정이 삭제됩니다.`)) return;
+    try {
+      const res = await fetch(`../tables/parent_profiles/${recordId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+      showToast(`${name} 학부모 가입 신청이 거절되었습니다.`);
+      await loadParents();
+    } catch(e) {
+      showToast('⚠️ 거절 처리 오류: ' + e.message);
+    }
+  }
+
+  function filterList() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    filtered = q
+      ? allParents.filter(p =>
+          (p.parent_name||'').includes(q) ||
+          (p.child_name||'').includes(q) ||
+          (p.parent_id||'').includes(q))
+      : [...allParents];
+    renderTable();
+  }
+
+  function openEdit(recordId) {
+    const p = allParents.find(x => x.id === recordId);
+    if (!p) return;
+    document.getElementById('editId').value     = recordId;
+    document.getElementById('editName').value   = p.parent_name || '';
+    document.getElementById('editRel').value    = p.relationship || '모';
+    document.getElementById('editPhone').value  = p.phone || '';
+    document.getElementById('editPw').value     = '';
+    document.getElementById('editStatus').value = p.status || '활성';
+    document.getElementById('editMemo').value   = p.memo || '';
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  async function saveEdit() {
+    const id      = document.getElementById('editId').value;
+    const newName = document.getElementById('editName').value.trim();
+    const newRel  = document.getElementById('editRel').value;
+    const newPhone= document.getElementById('editPhone').value.trim();
+    const newPw   = document.getElementById('editPw').value.trim();
+    const newSt   = document.getElementById('editStatus').value;
+    const newMemo = document.getElementById('editMemo').value.trim();
+
+    const patch = { parent_name: newName, relationship: newRel, phone: newPhone, status: newSt, memo: newMemo };
+    if (newPw) patch.password = newPw;
+
+    try {
+      await fetch(`../tables/${TABLE_PARENTS}/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      const idx = allParents.findIndex(p => p.id === id);
+      if (idx >= 0) allParents[idx] = { ...allParents[idx], ...patch };
+      filtered = [...allParents];
+      renderSummary(); renderTable();
+      closeModal();
+      showToast('✅ 저장되었습니다!');
+    } catch(e) { showToast('⚠️ 저장 실패'); }
+  }
+
+  function closeModal() { document.getElementById('editModal').classList.remove('open'); }
+  function showToast(msg) {
+    const el = document.getElementById('pmToast');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+  </script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="parents.html" class="mobile-nav-item active"><i class="fas fa-user-friends"></i><span>학부모</span></a>
+      <a href="consult.html" class="mobile-nav-item"><i class="fas fa-comments"></i><span>상담</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <!-- admin-common.js는 위의 인라인 스크립트 앞에서 로드됨 -->
+</body>
+</html>

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>골든타임 미션 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <style>
+    /* ══ 골든타임 전용 ══ */
+    .gt-hero {
+      background: linear-gradient(135deg, #1e3a5f 0%, #163A33 50%, #0d2318 100%);
+      border-radius: var(--radius-xl);
+      padding: 32px 36px;
+      color: #fff;
+      margin-bottom: 28px;
+      display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    }
+    .gt-hero-icon {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+      box-shadow: 0 8px 24px rgba(251,191,36,.35);
+    }
+    .gt-hero-text h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .gt-hero-text p  { font-size: 13.5px; color: rgba(255,255,255,.7); line-height: 1.7; max-width: 560px; }
+    .gt-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px;
+      background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.3);
+      border-radius: 30px; font-size: 12px; font-weight: 600; color: #fde68a;
+      margin-top: 10px;
+    }
+
+    /* 수업 주제 + 미션 */
+    .gt-main-grid {
+      display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start;
+    }
+    @media (max-width: 1050px) { .gt-main-grid { grid-template-columns: 1fr; } }
+
+    /* 과목 카드 */
+    .subject-mission-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+    }
+    .smc-header {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .smc-icon {
+      width: 40px; height: 40px; border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; flex-shrink: 0;
+    }
+    .smc-info { flex: 1; }
+    .smc-subject { font-size: 15px; font-weight: 700; color: var(--text-900); }
+    .smc-topic   { font-size: 12.5px; color: var(--text-500); margin-top: 2px; }
+    .smc-time    { font-size: 12px; color: var(--text-300); }
+
+    .smc-body { padding: 16px 20px; }
+
+    /* 미션 설정 영역 */
+    .mission-set-label {
+      font-size: 12px; font-weight: 700; color: var(--text-500);
+      text-transform: uppercase; letter-spacing:.04em;
+      margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .mission-templates {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .mission-tmpl-btn {
+      padding: 5px 12px; border-radius: 20px;
+      border: 1.5px solid var(--border);
+      font-size: 12px; color: var(--text-500);
+      cursor: pointer; background: var(--bg-section);
+      transition: all var(--transition);
+    }
+    .mission-tmpl-btn:hover { border-color: var(--teal-400); color: var(--green-700); }
+
+    .mission-input-wrap {
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .mission-input-wrap textarea {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13.5px; font-family: inherit;
+      resize: none; min-height: 72px; line-height: 1.6;
+      transition: border-color var(--transition);
+    }
+    .mission-input-wrap textarea:focus { outline:none; border-color:var(--teal-400); }
+    .mission-save-btn {
+      padding: 10px 16px;
+      background: var(--green-800); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+    .mission-save-btn:hover { background: var(--green-700); }
+
+    /* 저장된 미션 */
+    .mission-saved-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .mission-saved-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-section);
+      border-left: 3px solid var(--teal-400);
+    }
+    .mission-saved-item.done-mission { border-left-color: var(--border); opacity: 0.6; }
+    .mission-saved-item.done-mission .mission-saved-text { text-decoration: line-through; }
+    .mission-check-btn {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid var(--border);
+      background: none; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #fff; transition: all var(--transition);
+    }
+    .mission-check-btn.checked { background: var(--teal-400); border-color: var(--teal-400); }
+    .mission-saved-text { font-size: 13.5px; color: var(--text-700); flex: 1; line-height: 1.5; }
+    .mission-del-btn {
+      background: none; border: none; color: var(--text-300);
+      cursor: pointer; font-size: 12px;
+      padding: 2px 4px; flex-shrink: 0;
+    }
+    .mission-del-btn:hover { color: var(--red); }
+
+    /* 오른쪽 패널 */
+    .gt-tip-card {
+      background: linear-gradient(135deg, var(--green-800), var(--green-900));
+      border-radius: var(--radius-xl); padding: 24px; color: #fff; margin-bottom: 20px;
+    }
+    .gt-tip-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+    .tip-item {
+      display: flex; gap: 10px; margin-bottom: 12px; font-size: 13px; line-height: 1.6;
+      color: rgba(255,255,255,.85);
+    }
+    .tip-item i { color: #fde68a; flex-shrink: 0; margin-top: 2px; }
+
+    /* 주간 미션 요약 */
+    .weekly-summary {
+      background: var(--bg-card); border-radius: var(--radius-xl);
+      padding: 22px; box-shadow: var(--shadow-sm);
+    }
+    .ws-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border-light);
+      font-size: 13px;
+    }
+    .ws-row:last-child { border-bottom: none; }
+    .ws-day-badge {
+      width: 36px; height: 24px; border-radius: 20px;
+      background: var(--bg-section); color: var(--text-500);
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .ws-day-badge.active-day { background: var(--green-800); color: #fff; }
+    .ws-missions { flex: 1; color: var(--text-700); }
+    .ws-cnt {
+      font-size: 12px; font-weight: 700; color: var(--teal-400); flex-shrink: 0;
+    }
+
+    /* 박인오 선생님 코멘트 */
+    .teacher-comment-card {
+      background: var(--bg-card); border-radius: var(--radius-xl);
+      padding: 22px; box-shadow: var(--shadow-sm); margin-top: 20px;
+    }
+    .tc-teacher { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .tc-avatar  {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-700), var(--green-800));
+      color: #fff; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tc-name    { font-size: 13.5px; font-weight: 700; color: var(--text-900); }
+    .tc-role    { font-size: 12px; color: var(--text-500); }
+    .tc-message {
+      background: var(--bg-section); border-radius: var(--radius-sm);
+      padding: 14px 16px; font-size: 13.5px; color: var(--text-700);
+      line-height: 1.8; border-left: 3px solid var(--teal-400);
+    }
+    .tc-date { font-size: 11.5px; color: var(--text-300); margin-top: 8px; text-align: right; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sideAvatar">김</div>
+        <span class="stu-stage-badge">2단계</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sideName">김다빈</strong>
+        <span>○○중학교 2학년</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 현황</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+        <a href="report.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>역량 리포트</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item"><i class="fas fa-robot"></i><span>AI 튜터링 로그</span></a>
+        <a href="golden-time.html" class="nav-item active"><i class="fas fa-star"></i><span>골든타임 미션</span></a>
+        <a href="incubating.html" class="nav-item"><i class="fas fa-lightbulb"></i><span>질문 아카이브</span></a>
+        <a href="clinic.html" class="nav-item"><i class="fas fa-file-medical"></i><span>학생부 클리닉</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="message.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>선생님께 질문</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <a href="dashboard.html">홈</a>
+          <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+          <span>골든타임 미션</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar student-avatar-color" id="topAvatar">김</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topName">김다빈</span>
+            <span class="topbar-user-role student-role-label">학생 · 2단계</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+
+      <!-- 히어로 -->
+      <div class="dv-hero dv-hero--amber">
+        <div class="dv-hero-icon dv-icon--amber">
+          <i class="fas fa-bolt-lightning"></i>
+        </div>
+        <div class="dv-hero-body">
+          <h2>오늘의 골든타임 미션</h2>
+          <p>수업 시간에 <strong style="color:#fcd34d;">딥 하나의 질문</strong>을 던지는 것이 모든 것을 바꿉니다. 오늘 각 수업에서 어떤 질문을 할지 미리 설계하고, 교사가 직접 관찰하는 '수업 중 행동 특성'을 만들어내세요.</p>
+          <span class="dv-badge"><i class="fas fa-crosshairs"></i> 교사 관찰 기록 유도 전략</span>
+          <span class="dv-badge"><i class="fas fa-calendar-pen"></i> 수업 전 미션 설계</span>
+        </div>
+      </div>
+
+      <div class="gt-main-grid">
+        <!-- 왼쪽: 과목별 미션 -->
+        <div id="subjectMissionArea">
+          <!-- JS 렌더 -->
+        </div>
+
+        <!-- 오른쪽 -->
+        <div>
+          <!-- 박인오 선생님 코멘트 -->
+          <div class="teacher-comment-card">
+            <div class="tc-teacher">
+              <div class="tc-avatar">박</div>
+              <div>
+                <div class="tc-name">박인오 소장님의 오늘 미션 코멘트</div>
+                <div class="tc-role">다빈치랩 대표 컨설턴트</div>
+              </div>
+            </div>
+            <div class="tc-message" id="teacherComment">
+              오늘 수학 시간에 이차방정식 풀이를 배운다면, 풀이 과정 중 "선생님, 이 방법 외에 다른 접근이 가능한가요?"라고 질문해보세요. 단순히 답을 맞히는 것이 아니라 사고의 확장을 보여주는 질문입니다. 이런 질문 한 마디가 학생부에 "수업 중 심화 질문을 통해 다양한 풀이 방법을 탐구하는 태도를 보임"으로 기록될 수 있어요.
+            </div>
+            <div class="tc-date">2025. 03. 22</div>
+          </div>
+
+          <!-- 골든타임 팁 -->
+          <div class="gt-tip-card" style="margin-top:20px;">
+            <h3><i class="fas fa-lightbulb" style="color:#fde68a;margin-right:8px;"></i>골든타임 질문 설계 팁</h3>
+            <div class="tip-item"><i class="fas fa-check-circle"></i><span><strong>Why (왜):</strong> "선생님, 이 공식은 왜 이런 형태가 됐나요?"</span></div>
+            <div class="tip-item"><i class="fas fa-check-circle"></i><span><strong>How (어떻게):</strong> "다른 방법으로도 풀 수 있나요?"</span></div>
+            <div class="tip-item"><i class="fas fa-check-circle"></i><span><strong>What if (만약에):</strong> "만약 조건이 바뀐다면 어떻게 되나요?"</span></div>
+            <div class="tip-item"><i class="fas fa-check-circle"></i><span><strong>Connect (연결):</strong> "이걸 실생활에 어떻게 적용할 수 있나요?"</span></div>
+            <div class="tip-item"><i class="fas fa-check-circle"></i><span style="color:#fde68a;font-weight:600;">단 하나의 좋은 질문이 열 개의 숙제보다 강합니다.</span></div>
+          </div>
+
+          <!-- 주간 미션 요약 -->
+          <div class="weekly-summary" style="margin-top:20px;">
+            <div class="card-header" style="padding:0 0 12px;">
+              <h3 class="card-title" style="font-size:14px;"><i class="fas fa-calendar-week"></i> 이번 주 골든타임 요약</h3>
+            </div>
+            <div id="weeklySummary"><!-- JS 렌더 --></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="toast-bar" id="toastBar" style="display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--green-800);color:#fff;padding:13px 28px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);z-index:9999;"></div>
+
+  <script>
+  (function(){
+    const raw  = localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session');
+    const user = raw ? JSON.parse(raw) : null;
+    if (!user || !user.id) { location.href = '../login.html'; return; }
+    const ch   = (user.name||'김').charAt(0);
+    ['sideAvatar','topAvatar'].forEach(id => document.getElementById(id).textContent = ch);
+    ['sideName','topName'].forEach(id => document.getElementById(id).textContent = user.name||'김다빈');
+
+    /* 날짜 */
+    const DAYS = ['일','월','화','수','목','금','토'];
+    const today = new Date();
+    /* 오늘 날짜만 사용 */
+    const todayObj = {
+      date: today,
+      dayName: DAYS[today.getDay()],
+      dateNum: today.getDate(),
+      isToday: true,
+      key: `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`,
+    };
+
+    /* 과목 데이터 (요일별) */
+    const SUBJECTS_BY_DAY = {
+      0: [], // 일
+      1: [
+        { subject:'수학', topic:'이차방정식 풀이법 심화', time:'1·2교시', color:'#3b82f6', icon:'∑' },
+        { subject:'국어', topic:'현대시 감상 – 김소월 작품', time:'3교시', color:'#d97706', icon:'국' },
+        { subject:'과학', topic:'힘과 운동 단원 정리', time:'5교시', color:'#ec4899', icon:'⚗' },
+      ],
+      2: [
+        { subject:'영어', topic:'Reading – 환경 주제 논설문', time:'2교시', color:'#059669', icon:'A' },
+        { subject:'사회', topic:'민주주의 정치 제도 비교', time:'4교시', color:'#7c3aed', icon:'⊕' },
+      ],
+      3: [
+        { subject:'수학', topic:'이차함수 그래프와 판별식', time:'2·3교시', color:'#3b82f6', icon:'∑' },
+        { subject:'국어', topic:'비문학 독해 실전 – 사설', time:'5교시', color:'#d97706', icon:'국' },
+      ],
+      4: [
+        { subject:'영어', topic:'Grammar – 관계대명사 심화', time:'1교시', color:'#059669', icon:'A' },
+        { subject:'탐구', topic:'사회·문화 통계 자료 해석', time:'3·4교시', color:'#7c3aed', icon:'⊕' },
+        { subject:'수학', topic:'연습문제 풀이 및 오답 분석', time:'6교시', color:'#3b82f6', icon:'∑' },
+      ],
+      5: [
+        { subject:'국어', topic:'화법과 작문 – 토론 형식', time:'2교시', color:'#d97706', icon:'국' },
+        { subject:'과학', topic:'에너지 전환과 보존', time:'4교시', color:'#ec4899', icon:'⚗' },
+      ],
+      6: [], // 토
+    };
+
+    /* 미션 저장소 */
+    let missionStore = {};
+
+    /* 과목 미션 렌더 */
+    function renderSubjectMissions(dayObj) {
+      const subjects = SUBJECTS_BY_DAY[dayObj.date.getDay()] || [];
+      const area = document.getElementById('subjectMissionArea');
+
+      if (subjects.length === 0) {
+        area.innerHTML = `
+          <div style="text-align:center;padding:60px 20px;background:var(--bg-card);border-radius:var(--radius-xl);">
+            <i class="fas fa-calendar-times" style="font-size:36px;color:var(--text-300);display:block;margin-bottom:12px;"></i>
+            <p style="font-size:14px;color:var(--text-500);">이 날은 등록된 수업이 없습니다.</p>
+            <p style="font-size:13px;color:var(--text-300);margin-top:6px;">수업 시간표는 선생님이 업데이트합니다.</p>
+          </div>`;
+        return;
+      }
+
+      if (!missionStore[dayObj.key]) {
+        missionStore[dayObj.key] = subjects.map(s => ({ ...s, missions: [] }));
+      }
+
+      area.innerHTML = missionStore[dayObj.key].map((s, si) => {
+        const missionListHtml = s.missions.length > 0
+          ? `<div class="mission-saved-list">${s.missions.map((m, mi) => `
+              <div class="mission-saved-item ${m.done ? 'done-mission' : ''}" id="msitem-${si}-${mi}">
+                <button class="mission-check-btn ${m.done ? 'checked' : ''}" onclick="toggleMission('${dayObj.key}',${si},${mi})">
+                  ${m.done ? '<i class="fas fa-check"></i>' : ''}
+                </button>
+                <span class="mission-saved-text">${m.text}</span>
+                <button class="mission-del-btn" onclick="deleteMission('${dayObj.key}',${si},${mi})"><i class="fas fa-times"></i></button>
+              </div>`).join('')}
+            </div>` : `<p style="font-size:13px;color:var(--text-300);padding:8px 0;">아직 설정된 미션이 없습니다. 아래에서 추가하세요.</p>`;
+
+        const TEMPLATES = {
+          '수학': ['이 공식은 왜 이런 형태가 되었나요?', '다른 풀이 방법도 있나요?', '실생활에 어떻게 쓰이나요?'],
+          '영어': ['이 문법 규칙의 예외 케이스가 있나요?', '원어민은 이 표현을 실제로 쓰나요?', '본문에서 작가의 의도가 드러나는 부분은?'],
+          '국어': ['시인이 이 단어를 선택한 이유가 있을까요?', '이 시의 다른 해석도 가능한가요?', '현대에 이 작품을 쓴다면 어떻게 바뀔까요?'],
+          '과학': ['이 현상의 예외 조건이 있나요?', '일상에서 이 원리를 찾을 수 있나요?', '이 실험에서 변인을 다르게 한다면?'],
+          '사회': ['이 제도의 문제점은 무엇인가요?', '다른 나라는 이 문제를 어떻게 해결했나요?', '통계 자료가 나타내지 못하는 것은?'],
+          '탐구': ['이 데이터 해석에 한계가 있나요?', '반론 가능한 시각은 무엇인가요?', '추가 조사가 필요한 부분은?'],
+        };
+        const tmplList = TEMPLATES[s.subject] || ['선생님, 이 개념의 실제 적용 사례가 있나요?', '더 깊이 탐구할 수 있는 방향이 있나요?'];
+
+        return `
+          <div class="subject-mission-card">
+            <div class="smc-header">
+              <div class="smc-icon" style="background:${s.color}18;color:${s.color};">${s.icon}</div>
+              <div class="smc-info">
+                <div class="smc-subject">${s.subject}</div>
+                <div class="smc-topic">${s.topic}</div>
+              </div>
+              <div class="smc-time"><i class="fas fa-clock" style="margin-right:4px;"></i>${s.time}</div>
+            </div>
+            <div class="smc-body">
+              <div class="mission-set-label">
+                <span>골든타임 미션</span>
+                <span style="color:var(--teal-400);font-weight:600;">${s.missions.filter(m=>m.done).length}/${s.missions.length} 완료</span>
+              </div>
+              ${missionListHtml}
+              <div style="margin-top:12px;">
+                <div class="mission-set-label" style="margin-bottom:6px;"><span>질문 템플릿 (클릭하면 입력됨)</span></div>
+                <div class="mission-templates">
+                  ${tmplList.map(t => `<button class="mission-tmpl-btn" onclick="fillMission(${si},'${t.replace(/'/g,"\\'")}')">${t.substring(0,20)}…</button>`).join('')}
+                </div>
+                <div class="mission-input-wrap">
+                  <textarea id="missionInput-${si}" placeholder="직접 미션 질문을 입력하세요.&#10;예) 오늘 수업에서 통계 자료의 한계에 대해 질문하기"></textarea>
+                  <button class="mission-save-btn" onclick="addMission('${dayObj.key}',${si})">
+                    <i class="fas fa-plus" style="margin-right:4px;"></i>추가
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      renderWeeklySummary();
+    }
+
+    window.fillMission = function(si, text) {
+      const el = document.getElementById(`missionInput-${si}`);
+      if (el) el.value = text;
+    };
+
+    window.addMission = function(dayKey, si) {
+      const el = document.getElementById(`missionInput-${si}`);
+      if (!el || !el.value.trim()) { showToast('미션 내용을 입력해주세요.', true); return; }
+      missionStore[dayKey][si].missions.push({ text: el.value.trim(), done: false });
+      el.value = '';
+      renderSubjectMissions(todayObj);
+      showToast('✅ 미션이 추가되었습니다!');
+    };
+
+    window.toggleMission = function(dayKey, si, mi) {
+      missionStore[dayKey][si].missions[mi].done = !missionStore[dayKey][si].missions[mi].done;
+      renderSubjectMissions(todayObj);
+    };
+
+    window.deleteMission = function(dayKey, si, mi) {
+      missionStore[dayKey][si].missions.splice(mi, 1);
+      renderSubjectMissions(todayObj);
+    };
+
+    /* 오늘 미션 요약 */
+    function renderWeeklySummary() {
+      const el = document.getElementById('weeklySummary');
+      const store = missionStore[todayObj.key];
+      if (!store) {
+        el.innerHTML = `<div class="ws-row"><span class="ws-day-badge active-day">${todayObj.dayName}</span><span class="ws-missions" style="color:var(--text-300);">미션 없음</span></div>`;
+        return;
+      }
+      const total = store.reduce((s,sub)=>s+sub.missions.length,0);
+      const done  = store.reduce((s,sub)=>s+sub.missions.filter(m=>m.done).length,0);
+      if (total === 0) {
+        el.innerHTML = `<div class="ws-row"><span class="ws-day-badge active-day">${todayObj.dayName}</span><span class="ws-missions" style="color:var(--text-300);">설정된 미션 없음</span></div>`;
+        return;
+      }
+      const subjects = store.filter(s=>s.missions.length>0).map(s=>s.subject).join('·');
+      el.innerHTML = `
+        <div class="ws-row">
+          <span class="ws-day-badge active-day">${todayObj.dayName}</span>
+          <span class="ws-missions">${subjects}</span>
+          <span class="ws-cnt">${done}/${total}</span>
+        </div>`;
+    }
+
+    /* 사이드바 토글 (표준) */
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+    document.getElementById('logoutBtn')?.addEventListener('click', e => {
+      e.preventDefault(); ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)}); sessionStorage.clear(); window.location.href = '../login.html';
+    });
+
+    function showToast(msg, isErr) {
+      const t = document.getElementById('toastBar');
+      t.textContent = msg;
+      t.style.background = isErr ? '#dc2626' : 'var(--green-800)';
+      t.style.display = 'block';
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    /* 초기 렌더 */
+    renderSubjectMissions(todayObj);
+    renderWeeklySummary();
+
+  })();
+  </script>
+</body>
+</html>

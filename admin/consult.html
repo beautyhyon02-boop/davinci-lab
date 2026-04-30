@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>상담 관리 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <style>
+    :root {
+      --cs-main: #0ea5e9;   /* sky-500 */
+      --cs-dark: #0369a1;   /* sky-700 */
+      --cs-light: #e0f2fe;  /* sky-100 */
+      --cs-success: #10b981;
+      --cs-warn: #f59e0b;
+      --cs-danger: #ef4444;
+      --cs-purple: #8b5cf6;
+    }
+
+    /* ── 레이아웃 ── */
+    .cs-wrap { padding: 24px; max-width: 1300px; margin: 0 auto; }
+
+    /* 탭 */
+    .cs-tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 24px; }
+    .cs-tab {
+      padding: 10px 22px; font-size: .9rem; font-weight: 600;
+      color: #6b7280; cursor: pointer; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: all .2s;
+    }
+    .cs-tab.active { color: var(--cs-main); border-bottom-color: var(--cs-main); }
+    .cs-tab-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%; font-size: .72rem; font-weight: 700;
+      background: var(--cs-danger); color: white; margin-left: 5px;
+    }
+
+    /* 통계 카드 */
+    .cs-stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+    .cs-stat-card {
+      background: white; border-radius: 14px; padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); display: flex; align-items: center; gap: 14px;
+    }
+    .cs-stat-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .cs-stat-icon.sky   { background: var(--cs-light); color: var(--cs-main); }
+    .cs-stat-icon.green { background: #d1fae5; color: var(--cs-success); }
+    .cs-stat-icon.warn  { background: #fef3c7; color: var(--cs-warn); }
+    .cs-stat-icon.red   { background: #fee2e2; color: var(--cs-danger); }
+    .cs-stat-val { font-size: 1.6rem; font-weight: 800; color: #1e293b; line-height: 1; }
+    .cs-stat-lbl { font-size: .8rem; color: #94a3b8; margin-top: 3px; }
+
+    /* 필터/검색 바 */
+    .cs-filter-bar {
+      display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
+    }
+    .cs-filter-bar select, .cs-filter-bar input {
+      padding: 8px 12px; border-radius: 9px; border: 1.5px solid #e5e7eb;
+      font-size: .88rem; color: #374151; background: white;
+      font-family: inherit;
+    }
+    .cs-filter-bar input { flex: 1; min-width: 180px; }
+    .cs-filter-bar select:focus, .cs-filter-bar input:focus {
+      outline: none; border-color: var(--cs-main);
+    }
+    .btn-cs-primary {
+      padding: 9px 18px; border-radius: 9px; background: var(--cs-main); color: white;
+      border: none; font-size: .88rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: background .2s;
+    }
+    .btn-cs-primary:hover { background: var(--cs-dark); }
+
+    /* 캘린더 뷰 */
+    .cs-calendar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cs-calendar-header h3 { font-size: 1.05rem; font-weight: 700; color: #1e293b; }
+    .cs-calendar-nav { display: flex; gap: 6px; }
+    .cs-calendar-nav button {
+      width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid #e5e7eb;
+      background: white; cursor: pointer; font-size: .9rem; color: #374151;
+      transition: all .2s;
+    }
+    .cs-calendar-nav button:hover { border-color: var(--cs-main); color: var(--cs-main); }
+    .cs-cal-grid {
+      display: grid; grid-template-columns: repeat(7,1fr);
+      gap: 6px; margin-bottom: 8px;
+    }
+    .cs-cal-dayname {
+      text-align: center; font-size: .78rem; font-weight: 700;
+      color: #94a3b8; padding: 6px 0;
+    }
+    .cs-cal-dayname.sun { color: #f87171; }
+    .cs-cal-dayname.sat { color: #60a5fa; }
+    .cs-cal-cell {
+      min-height: 72px; border-radius: 10px; padding: 6px;
+      background: #f8fafc; border: 1.5px solid #f1f5f9;
+      cursor: pointer; transition: all .2s;
+    }
+    .cs-cal-cell:hover { border-color: var(--cs-light); background: white; }
+    .cs-cal-cell.today { border-color: var(--cs-main); background: var(--cs-light); }
+    .cs-cal-cell.has-event { border-color: #bae6fd; }
+    .cs-cal-date {
+      font-size: .82rem; font-weight: 600; color: #374151;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cs-cal-date.sun { color: #f87171; }
+    .cs-cal-date.sat { color: #60a5fa; }
+    .cs-cal-date.other-month { color: #cbd5e1; }
+    .cs-event-dot {
+      display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px;
+    }
+    .cs-event-chip {
+      font-size: .68rem; padding: 2px 6px; border-radius: 4px;
+      font-weight: 600; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; max-width: 100%;
+      cursor: pointer;
+    }
+    .cs-event-chip.student { background: #dbeafe; color: #1e40af; }
+    .cs-event-chip.parent  { background: #fce7f3; color: #9d174d; }
+    .cs-event-chip.phone   { background: #d1fae5; color: #065f46; }
+    .cs-event-chip.visit   { background: #fef3c7; color: #92400e; }
+
+    /* 목록 테이블 */
+    .cs-table-wrap { background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    .cs-table { width: 100%; border-collapse: collapse; }
+    .cs-table th {
+      background: #f8fafc; padding: 12px 16px; font-size: .82rem;
+      font-weight: 700; color: #64748b; text-align: left; border-bottom: 1.5px solid #e2e8f0;
+    }
+    .cs-table td {
+      padding: 12px 16px; font-size: .88rem; color: #374151;
+      border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+    }
+    .cs-table tr:last-child td { border-bottom: none; }
+    .cs-table tr:hover td { background: #f8fafc; }
+
+    .cs-status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: .78rem; font-weight: 700;
+    }
+    .cs-status-badge.scheduled { background: #e0f2fe; color: #0369a1; }
+    .cs-status-badge.completed { background: #d1fae5; color: #065f46; }
+    .cs-status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+
+    .cs-type-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 6px; font-size: .76rem; font-weight: 600;
+    }
+    .cs-type-badge.student { background: #dbeafe; color: #1e40af; }
+    .cs-type-badge.parent  { background: #fce7f3; color: #9d174d; }
+    .cs-type-badge.phone   { background: #d1fae5; color: #065f46; }
+    .cs-type-badge.visit   { background: #fef3c7; color: #92400e; }
+
+    .cs-cat-badge {
+      display: inline-flex; padding: 2px 8px; border-radius: 6px;
+      font-size: .76rem; font-weight: 600; background: #f1f5f9; color: #475569;
+    }
+
+    .btn-cs-sm {
+      padding: 5px 12px; border-radius: 7px; font-size: .78rem; font-weight: 600;
+      cursor: pointer; border: none; transition: all .2s;
+    }
+    .btn-cs-view   { background: #e0f2fe; color: var(--cs-dark); }
+    .btn-cs-edit   { background: #f0fdf4; color: #15803d; }
+    .btn-cs-del    { background: #fee2e2; color: #991b1b; }
+    .btn-cs-view:hover { background: #bae6fd; }
+    .btn-cs-edit:hover { background: #dcfce7; }
+    .btn-cs-del:hover  { background: #fecaca; }
+
+    /* 신청 대기 카드 */
+    .req-list { display: flex; flex-direction: column; gap: 12px; }
+    .req-card {
+      background: white; border-radius: 14px; padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 1.5px solid #e5e7eb;
+      transition: all .2s;
+    }
+    .req-card.unread { border-left: 4px solid var(--cs-warn); background: #fffbeb; }
+    .req-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .req-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .req-avatar.student { background: linear-gradient(135deg, #38bdf8, #0ea5e9); }
+    .req-avatar.parent  { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+    .req-info { flex: 1; }
+    .req-info strong { font-size: .95rem; font-weight: 700; color: #1e293b; }
+    .req-info p { font-size: .82rem; color: #64748b; margin-top: 2px; }
+    .req-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .req-content {
+      font-size: .88rem; color: #475569; line-height: 1.6;
+      background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;
+    }
+    .req-preferred { font-size: .82rem; color: #64748b; margin-bottom: 12px; }
+    .req-preferred span { font-weight: 600; color: #374151; }
+    .req-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-req-confirm {
+      padding: 7px 16px; border-radius: 8px; background: var(--cs-success); color: white;
+      border: none; font-size: .85rem; font-weight: 700; cursor: pointer; transition: background .2s;
+    }
+    .btn-req-confirm:hover { background: #059669; }
+    .btn-req-reject {
+      padding: 7px 16px; border-radius: 8px; background: #fee2e2; color: #991b1b;
+      border: none; font-size: .85rem; font-weight: 700; cursor: pointer; transition: background .2s;
+    }
+    .btn-req-reject:hover { background: #fecaca; }
+    .btn-req-reply {
+      padding: 7px 16px; border-radius: 8px; background: #e0f2fe; color: var(--cs-dark);
+      border: none; font-size: .85rem; font-weight: 700; cursor: pointer; transition: background .2s;
+    }
+
+    /* 모달 */
+    .cs-modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .cs-modal-overlay.open { display: flex; }
+    .cs-modal {
+      background: white; border-radius: 20px; padding: 28px 30px;
+      max-width: 620px; width: 100%; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .cs-modal h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; }
+    .cs-form-row { margin-bottom: 16px; }
+    .cs-form-row label {
+      display: block; font-size: .85rem; font-weight: 600; color: #374151; margin-bottom: 6px;
+    }
+    .cs-form-row input, .cs-form-row select, .cs-form-row textarea {
+      width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid #e5e7eb;
+      font-size: .88rem; color: #374151; font-family: inherit; box-sizing: border-box;
+      transition: border-color .2s;
+    }
+    .cs-form-row input:focus, .cs-form-row select:focus, .cs-form-row textarea:focus {
+      outline: none; border-color: var(--cs-main);
+    }
+    .cs-form-row textarea { resize: vertical; min-height: 80px; }
+    .cs-form-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .cs-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-modal-cancel {
+      padding: 10px 20px; border-radius: 9px; background: #f1f5f9; color: #64748b;
+      border: none; font-size: .9rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-modal-save {
+      padding: 10px 24px; border-radius: 9px; background: var(--cs-main); color: white;
+      border: none; font-size: .9rem; font-weight: 700; cursor: pointer; transition: background .2s;
+    }
+    .btn-modal-save:hover { background: var(--cs-dark); }
+
+    /* 상담 상세 모달 */
+    .cs-detail-section { margin-bottom: 18px; }
+    .cs-detail-section h4 {
+      font-size: .85rem; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: .03em; margin-bottom: 8px;
+      padding-bottom: 6px; border-bottom: 1px solid #f1f5f9;
+    }
+    .cs-detail-content {
+      font-size: .9rem; color: #374151; line-height: 1.7;
+      background: #f8fafc; border-radius: 8px; padding: 12px 14px;
+    }
+    .cs-detail-meta { display: flex; flex-wrap: wrap; gap: 12px; }
+    .cs-meta-item { display: flex; flex-direction: column; }
+    .cs-meta-lbl { font-size: .75rem; color: #94a3b8; font-weight: 600; margin-bottom: 2px; }
+    .cs-meta-val { font-size: .9rem; color: #1e293b; font-weight: 600; }
+
+    /* 확인/거절 모달 (reply) */
+    .reply-modal {
+      background: white; border-radius: 16px; padding: 24px;
+      max-width: 480px; width: 100%;
+    }
+    .reply-modal h3 { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+
+    /* 토스트 */
+    .cs-toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #1e293b; color: white; padding: 12px 24px;
+      border-radius: 30px; font-size: .88rem; font-weight: 600;
+      opacity: 0; transition: opacity .3s; z-index: 9999;
+      pointer-events: none;
+    }
+    .cs-toast.show { opacity: 1; }
+
+    /* 빈 상태 */
+    .cs-empty {
+      text-align: center; padding: 48px 20px; color: #94a3b8;
+    }
+    .cs-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+    .cs-empty p { font-size: .95rem; }
+
+    /* 페이지네이션 */
+    .cs-pagination {
+      display: flex; justify-content: center; gap: 6px; padding: 16px;
+    }
+    .cs-page-btn {
+      width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid #e5e7eb;
+      background: white; cursor: pointer; font-size: .85rem; color: #374151;
+      transition: all .2s; display: flex; align-items: center; justify-content: center;
+    }
+    .cs-page-btn.active { background: var(--cs-main); border-color: var(--cs-main); color: white; font-weight: 700; }
+    .cs-page-btn:hover:not(.active) { border-color: var(--cs-main); color: var(--cs-main); }
+
+    /* 반응형 */
+    @media (max-width: 900px) {
+      .cs-stat-row { grid-template-columns: repeat(2,1fr); }
+      .cs-table th:nth-child(5), .cs-table td:nth-child(5),
+      .cs-table th:nth-child(6), .cs-table td:nth-child(6) { display: none; }
+    }
+    @media (max-width: 600px) {
+      .cs-wrap { padding: 14px; }
+      .cs-stat-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
+      .cs-cal-cell { min-height: 50px; }
+      .cs-event-chip { display: none; }
+      .cs-table th:nth-child(3), .cs-table td:nth-child(3),
+      .cs-table th:nth-child(4), .cs-table td:nth-child(4) { display: none; }
+      .cs-form-2col { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">메인</span>
+        <a href="dashboard.html" class="nav-item" data-page="dashboard">
+          <i class="fas fa-th-large"></i><span>대시보드</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="students.html" class="nav-item"><i class="fas fa-user-graduate"></i><span>학생 관리</span><span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-clipboard-list"></i><span>출결 관리</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">컨설팅</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가 관리</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 조회</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-book-open"></i><span>학생부 열람</span></a>
+        <a href="exam.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학부모 / 공지</span>
+        <a href="parents.html" class="nav-item"><i class="fas fa-users"></i><span>학부모 관리</span></a>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지 / 알림</span></a>
+        <a href="consult.html" class="nav-item active"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">시스템</span>
+        <a href="archive.html" class="nav-item"><i class="fas fa-archive"></i><span>졸업생 / 아카이브</span></a>
+        <a href="admins.html" class="nav-item"><i class="fas fa-user-shield"></i><span>관리자 관리</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebarAdminAvatar">박</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarAdminName">관리자</span>
+          <span class="sidebar-user-role">관리자</span>
+        </div>
+      </div>
+      <a href="../login.html" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb"><span>상담 관리</span></div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-cs-primary" id="btnNewConsult">
+          <i class="fas fa-plus"></i><span>상담 등록</span>
+        </button>
+        <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
+          <i class="fas fa-bell"></i>
+        </button>
+        <div class="topbar-user" id="topbarUser">
+          <div class="topbar-avatar" id="topbarAvatar">박</div>
+          <span class="topbar-user-name" id="topbarName">관리자</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="cs-wrap">
+
+      <!-- 통계 카드 -->
+      <div class="cs-stat-row">
+        <div class="cs-stat-card">
+          <div class="cs-stat-icon sky"><i class="fas fa-calendar-check"></i></div>
+          <div>
+            <div class="cs-stat-val" id="statTotal">0</div>
+            <div class="cs-stat-lbl">전체 상담</div>
+          </div>
+        </div>
+        <div class="cs-stat-card">
+          <div class="cs-stat-icon warn"><i class="fas fa-clock"></i></div>
+          <div>
+            <div class="cs-stat-val" id="statScheduled">0</div>
+            <div class="cs-stat-lbl">예약된 상담</div>
+          </div>
+        </div>
+        <div class="cs-stat-card">
+          <div class="cs-stat-icon green"><i class="fas fa-check-circle"></i></div>
+          <div>
+            <div class="cs-stat-val" id="statCompleted">0</div>
+            <div class="cs-stat-lbl">완료된 상담</div>
+          </div>
+        </div>
+        <div class="cs-stat-card">
+          <div class="cs-stat-icon red"><i class="fas fa-bell"></i></div>
+          <div>
+            <div class="cs-stat-val" id="statPending">0</div>
+            <div class="cs-stat-lbl">신청 대기</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 탭 -->
+      <div class="cs-tabs">
+        <div class="cs-tab active" data-tab="calendar">📅 캘린더</div>
+        <div class="cs-tab" data-tab="list">📋 목록</div>
+        <div class="cs-tab" data-tab="requests">
+          🔔 신청 대기
+          <span class="cs-tab-badge" id="reqBadge" style="display:none;">0</span>
+        </div>
+        <div class="cs-tab" data-tab="history">📁 이력</div>
+        <div class="cs-tab" data-tab="notes">🔒 상담 노트</div>
+      </div>
+
+      <!-- ── 캘린더 탭 ── -->
+      <div id="tab-calendar" class="cs-tab-content">
+        <div class="cs-calendar-header">
+          <h3 id="calTitle">2026년 3월</h3>
+          <div class="cs-calendar-nav">
+            <button id="calPrev"><i class="fas fa-chevron-left"></i></button>
+            <button id="calToday" style="width:auto;padding:0 10px;">오늘</button>
+            <button id="calNext"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="cs-cal-grid" id="calHeader"></div>
+        <div class="cs-cal-grid" id="calBody" style="gap:6px;"></div>
+      </div>
+
+      <!-- ── 목록 탭 ── -->
+      <div id="tab-list" class="cs-tab-content" style="display:none;">
+        <div class="cs-filter-bar">
+          <select id="filterStatus">
+            <option value="">전체 상태</option>
+            <option value="scheduled">예약</option>
+            <option value="completed">완료</option>
+            <option value="cancelled">취소</option>
+          </select>
+          <select id="filterType">
+            <option value="">전체 유형</option>
+            <option value="student">학생</option>
+            <option value="parent">학부모</option>
+            <option value="phone">전화</option>
+            <option value="visit">방문</option>
+          </select>
+          <select id="filterCategory">
+            <option value="">전체 분류</option>
+            <option value="academic">학업</option>
+            <option value="career">진로</option>
+            <option value="behavior">생활태도</option>
+            <option value="mental">심리정서</option>
+            <option value="family">가정환경</option>
+            <option value="other">기타</option>
+          </select>
+          <input type="text" id="filterSearch" placeholder="학생 이름 검색…" />
+          <button class="btn-cs-primary" id="btnApplyFilter"><i class="fas fa-search"></i>검색</button>
+        </div>
+        <div class="cs-table-wrap">
+          <table class="cs-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>학생</th>
+                <th>유형</th>
+                <th>분류</th>
+                <th>제목</th>
+                <th>담당</th>
+                <th>상태</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="consultList">
+              <tr><td colspan="8" class="cs-empty"><i class="fas fa-comments"></i><p>상담 데이터가 없습니다.</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="cs-pagination" id="listPagination"></div>
+      </div>
+
+      <!-- ── 신청 대기 탭 ── -->
+      <div id="tab-requests" class="cs-tab-content" style="display:none;">
+        <div class="cs-filter-bar" style="margin-bottom:14px;">
+          <select id="reqFilterStatus">
+            <option value="">전체</option>
+            <option value="pending">대기중</option>
+            <option value="confirmed">확정</option>
+            <option value="rejected">거절</option>
+          </select>
+          <select id="reqFilterType">
+            <option value="">전체 유형</option>
+            <option value="student">학생</option>
+            <option value="parent">학부모</option>
+          </select>
+        </div>
+        <div class="req-list" id="reqList">
+          <div class="cs-empty"><i class="fas fa-inbox"></i><p>신청 내역이 없습니다.</p></div>
+        </div>
+      </div>
+
+      <!-- ── 이력 탭 ── -->
+      <div id="tab-history" class="cs-tab-content" style="display:none;">
+        <div class="cs-filter-bar">
+          <select id="histStudent">
+            <option value="">전체 학생</option>
+          </select>
+          <input type="date" id="histFrom" />
+          <span style="color:#94a3b8;font-size:.85rem;">~</span>
+          <input type="date" id="histTo" />
+          <button class="btn-cs-primary" id="btnHistSearch"><i class="fas fa-search"></i>조회</button>
+        </div>
+        <div class="cs-table-wrap">
+          <table class="cs-table">
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>학생</th>
+                <th>유형</th>
+                <th>제목</th>
+                <th>요약</th>
+                <th>다음 상담</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="historyList">
+              <tr><td colspan="7" class="cs-empty"><i class="fas fa-history"></i><p>이력 데이터가 없습니다.</p></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 상담 노트 탭 (관리자 전용 비공개) ── -->
+      <div id="tab-notes" class="cs-tab-content" style="display:none;">
+
+        <!-- 안내 배너 -->
+        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-lock" style="color:#d97706;font-size:1rem;"></i>
+          <span style="font-size:.85rem;color:#92400e;font-weight:600;">이 탭의 내용은 <strong>관리자만</strong> 열람할 수 있습니다. 학생·학부모에게 공개되지 않습니다.</span>
+        </div>
+
+        <!-- 필터: 월 선택 + 학생 선택 + 신규 작성 -->
+        <div class="cs-filter-bar" style="margin-bottom:18px;">
+          <button id="notesPrevMonth" style="width:32px;height:36px;border-radius:8px;border:1.5px solid #e5e7eb;background:white;cursor:pointer;"><i class="fas fa-chevron-left"></i></button>
+          <span id="notesMonthLabel" style="font-size:1rem;font-weight:700;color:#1e293b;min-width:100px;text-align:center;"></span>
+          <button id="notesNextMonth" style="width:32px;height:36px;border-radius:8px;border:1.5px solid #e5e7eb;background:white;cursor:pointer;"><i class="fas fa-chevron-right"></i></button>
+          <select id="notesStudentFilter" style="padding:8px 12px;border-radius:9px;border:1.5px solid #e5e7eb;font-size:.88rem;min-width:140px;">
+            <option value="">전체 학생</option>
+          </select>
+          <select id="notesCategoryFilter" style="padding:8px 12px;border-radius:9px;border:1.5px solid #e5e7eb;font-size:.88rem;">
+            <option value="">전체 분류</option>
+            <option value="학습">📚 학습</option>
+            <option value="진로">🎯 진로</option>
+            <option value="생활">🏃 생활</option>
+            <option value="심리">💬 심리</option>
+            <option value="학부모">👪 학부모</option>
+            <option value="기타">📌 기타</option>
+          </select>
+          <button class="btn-cs-primary" id="btnNewNote"><i class="fas fa-plus"></i> 새 노트 작성</button>
+        </div>
+
+        <!-- 월별 통계 -->
+        <div id="notesMonthStats" style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;"></div>
+
+        <!-- 노트 목록 -->
+        <div id="notesList" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="text-align:center;color:#94a3b8;padding:40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i>
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- /cs-wrap -->
+  </div><!-- /admin-main -->
+
+  <!-- ===== 상담 노트 작성/수정 모달 ===== -->
+  <div class="cs-modal-overlay" id="noteModal" style="display:none;">
+    <div class="cs-modal" style="max-width:540px;">
+      <h3 id="noteModalTitle"><i class="fas fa-lock" style="color:#d97706;margin-right:8px;"></i>상담 노트 작성</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="cs-form-row">
+          <label>학생 *</label>
+          <select id="nStudent" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;"></select>
+        </div>
+        <div class="cs-form-row">
+          <label>상담 날짜 *</label>
+          <input type="date" id="nDate" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;" />
+        </div>
+        <div class="cs-form-row">
+          <label>분류</label>
+          <select id="nCategory" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;">
+            <option value="학습">📚 학습</option>
+            <option value="진로">🎯 진로</option>
+            <option value="생활">🏃 생활</option>
+            <option value="심리">💬 심리</option>
+            <option value="학부모">👪 학부모</option>
+            <option value="기타">📌 기타</option>
+          </select>
+        </div>
+        <div class="cs-form-row">
+          <label>후속 조치</label>
+          <input type="text" id="nFollowUp" placeholder="예: 다음 주 재상담 예정" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;" />
+        </div>
+      </div>
+      <div class="cs-form-row" style="margin-bottom:18px;">
+        <label>상담 내용 * <span style="font-size:.78rem;color:#94a3b8;">(비공개 — 관리자만 열람)</span></label>
+        <textarea id="nContent" rows="6" placeholder="상담 내용을 자세히 기록하세요…&#10;&#10;예) 수학 성적 하락 원인 파악, 학습 방법 조언, 학부모 면담 결과 등" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:.9rem;font-family:inherit;resize:vertical;"></textarea>
+      </div>
+      <div class="cs-modal-actions">
+        <button class="btn-modal-cancel" id="btnNoteClose">취소</button>
+        <button class="btn-cs-primary" id="btnNoteSave"><i class="fas fa-save"></i> 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 상담 등록/수정 모달 ===== -->
+  <div class="cs-modal-overlay" id="consultModal">
+    <div class="cs-modal">
+      <h3 id="modalTitle"><i class="fas fa-plus-circle" style="color:var(--cs-main);margin-right:8px;"></i>상담 등록</h3>
+      <div class="cs-form-2col">
+        <div class="cs-form-row">
+          <label>학생 선택 *</label>
+          <select id="fStudent"></select>
+        </div>
+        <div class="cs-form-row">
+          <label>상담 유형 *</label>
+          <select id="fType">
+            <option value="student">학생 상담</option>
+            <option value="parent">학부모 상담</option>
+            <option value="phone">전화 상담</option>
+            <option value="visit">방문 상담</option>
+          </select>
+        </div>
+      </div>
+      <div class="cs-form-2col">
+        <div class="cs-form-row">
+          <label>상담 일시 *</label>
+          <input type="date" id="fDate" />
+        </div>
+        <div class="cs-form-row">
+          <label>시간</label>
+          <input type="time" id="fTime" value="14:00" />
+        </div>
+      </div>
+      <div class="cs-form-2col">
+        <div class="cs-form-row">
+          <label>소요 시간 (분)</label>
+          <select id="fDuration">
+            <option value="30">30분</option>
+            <option value="45">45분</option>
+            <option value="60" selected>60분</option>
+            <option value="90">90분</option>
+          </select>
+        </div>
+        <div class="cs-form-row">
+          <label>분류 *</label>
+          <select id="fCategory">
+            <option value="academic">학업</option>
+            <option value="career">진로</option>
+            <option value="behavior">생활태도</option>
+            <option value="mental">심리정서</option>
+            <option value="family">가정환경</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+      </div>
+      <div class="cs-form-row">
+        <label>상담 제목 *</label>
+        <input type="text" id="fTitle" placeholder="예: 2학기 수학 학습 방향 상담" />
+      </div>
+      <div class="cs-form-row">
+        <label>상담 내용 <small style="color:#94a3b8;">(비공개 – 선생님만 열람)</small></label>
+        <textarea id="fContent" rows="4" placeholder="상담 내용을 자세히 기록해 주세요…"></textarea>
+      </div>
+      <div class="cs-form-row">
+        <label>요약 <small style="color:#94a3b8;">(학생/학부모에게 공개)</small></label>
+        <textarea id="fSummary" rows="2" placeholder="학생에게 전달될 요약 내용…"></textarea>
+      </div>
+      <div class="cs-form-row">
+        <label>후속 조치 / 권고 사항</label>
+        <textarea id="fFollowUp" rows="2" placeholder="다음 상담 전까지 이행할 사항…"></textarea>
+      </div>
+      <div class="cs-form-2col">
+        <div class="cs-form-row">
+          <label>다음 상담 권고일</label>
+          <input type="date" id="fNextDate" />
+        </div>
+        <div class="cs-form-row">
+          <label>상태</label>
+          <select id="fStatus">
+            <option value="scheduled">예약</option>
+            <option value="completed">완료</option>
+            <option value="cancelled">취소</option>
+          </select>
+        </div>
+      </div>
+      <div class="cs-modal-actions">
+        <button class="btn-modal-cancel" id="btnModalCancel">취소</button>
+        <button class="btn-modal-save" id="btnModalSave"><i class="fas fa-save"></i> 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 상담 상세 모달 ===== -->
+  <div class="cs-modal-overlay" id="detailModal">
+    <div class="cs-modal">
+      <h3 id="detailModalTitle">상담 상세</h3>
+      <div class="cs-detail-section">
+        <h4>기본 정보</h4>
+        <div class="cs-detail-meta" id="detailMeta"></div>
+      </div>
+      <div class="cs-detail-section" id="detailContentSection">
+        <h4>상담 내용 <small style="font-size:.75rem;color:#94a3b8;">(비공개)</small></h4>
+        <div class="cs-detail-content" id="detailContent"></div>
+      </div>
+      <div class="cs-detail-section" id="detailSummarySection">
+        <h4>요약</h4>
+        <div class="cs-detail-content" id="detailSummary"></div>
+      </div>
+      <div class="cs-detail-section" id="detailFollowSection">
+        <h4>후속 조치</h4>
+        <div class="cs-detail-content" id="detailFollow"></div>
+      </div>
+      <div class="cs-modal-actions">
+        <button class="btn-modal-cancel" id="btnDetailClose">닫기</button>
+        <button class="btn-cs-primary" id="btnDetailEdit"><i class="fas fa-edit"></i> 수정</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 신청 확정/거절 모달 ===== -->
+  <div class="cs-modal-overlay" id="replyModal">
+    <div class="reply-modal">
+      <h3 id="replyModalTitle">신청 처리</h3>
+      <div class="cs-form-row">
+        <label>확정 날짜</label>
+        <input type="date" id="replyDate" />
+      </div>
+      <div class="cs-form-row">
+        <label>확정 시간</label>
+        <input type="time" id="replyTime" value="14:00" />
+      </div>
+      <div class="cs-form-row">
+        <label>안내 메시지 (신청자에게 전달)</label>
+        <textarea id="replyMsg" rows="3" placeholder="상담 일정 안내 또는 거절 사유…"></textarea>
+      </div>
+      <div class="cs-modal-actions">
+        <button class="btn-modal-cancel" id="btnReplyClose">취소</button>
+        <button class="btn-req-reject" id="btnReplyReject"><i class="fas fa-times"></i> 거절</button>
+        <button class="btn-req-confirm" id="btnReplyConfirm"><i class="fas fa-check"></i> 확정</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 -->
+  <div class="cs-toast" id="csToast"></div>
+
+  <script>
+    const TABLE_CONSULTATIONS = 'consultations';
+    const TABLE_REQUESTS = 'consult_requests';
+    const TABLE_NOTES = 'consult_notes';
+
+    let session = null;
+    let allConsults = [];
+    let allRequests = [];
+    let allNotes = [];
+    let editingId = null;
+    let editingNoteId = null;
+    let replyingReqId = null;
+    let currentPage = 1;
+    const PAGE_SIZE = 15;
+
+    // 캘린더 상태
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+
+    // 상담 노트 상태
+    let notesYear  = new Date().getFullYear();
+    let notesMonth = new Date().getMonth() + 1; // 1~12
+    let notesTabInited = false; // 중복 이벤트 방지
+
+    // ─── 초기화 ───
+    window.addEventListener('DOMContentLoaded', async () => {
+      /* 세션: admin-common.js + DVL_SESSION 에서 이미 검증된 window._dvlAdminSession 사용 */
+      session = window._dvlAdminSession || null;
+      if (!session) { location.replace('../login.html'); return; }
+      initSidebar();
+      initTabs();
+      initModals();
+      setDefaultDate();
+
+      await Promise.all([loadStudentsForSelect(), loadConsults(), loadRequests()]);
+      renderCalendar();
+    });
+
+    function initSidebar() {
+      const av = session.name ? session.name[0] : '관';
+      document.getElementById('sidebarAdminAvatar').textContent = av;
+      document.getElementById('sidebarAdminName').textContent = session.name || '관리자';
+      document.getElementById('topbarAvatar').textContent = av;
+      document.getElementById('topbarName').textContent = session.name || '관리자';
+      document.getElementById('menuToggle').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.toggle('open');
+      });
+      document.getElementById('sidebarClose').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.remove('open');
+      });
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault(); sessionStorage.clear(); localStorage.removeItem('dvl_admin_tab_session'); location.href = '../login.html';
+      });
+    }
+
+    function setDefaultDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('fDate').value = today;
+    }
+
+    // ─── 탭 ───
+    function initTabs() {
+      document.querySelectorAll('.cs-tab').forEach(t => {
+        t.addEventListener('click', () => {
+          document.querySelectorAll('.cs-tab').forEach(x => x.classList.remove('active'));
+          document.querySelectorAll('.cs-tab-content').forEach(x => x.style.display = 'none');
+          t.classList.add('active');
+          const tab = t.dataset.tab;
+          document.getElementById('tab-' + tab).style.display = '';
+          if (tab === 'list') renderList();
+          if (tab === 'requests') renderRequests();
+          if (tab === 'history') renderHistory();
+          if (tab === 'calendar') renderCalendar();
+          if (tab === 'notes') { initNotesTab(); loadNotes(); }
+        });
+      });
+    }
+
+    // ─── 학생 목록 로드 (select용) ───
+    async function loadStudentsForSelect() {
+      const sel = document.getElementById('fStudent');
+      const histSel = document.getElementById('histStudent');
+      sel.innerHTML = '<option value="">학생 선택…</option>';
+      histSel.innerHTML = '<option value="">전체 학생</option>';
+      try {
+        const r = await fetch('../tables/student_profiles?limit=100');
+        const d = await r.json();
+        const students = d.data || [];
+        students.forEach(s => {
+          const name = s.name || s.student_id;
+          sel.innerHTML += `<option value="${s.student_id}|${name}">${name} (${s.student_id})</option>`;
+          histSel.innerHTML += `<option value="${s.student_id}">${name}</option>`;
+        });
+        if (students.length === 0) {
+          // 기본 학생 목록 (DB 없을 때 fallback)
+          for (let i = 1; i <= 50; i++) {
+            const sid = `s${String(i).padStart(3,'0')}`;
+            sel.innerHTML += `<option value="${sid}|학생${i}">${sid}</option>`;
+            histSel.innerHTML += `<option value="${sid}">${sid}</option>`;
+          }
+        }
+      } catch(e) {
+        for (let i = 1; i <= 50; i++) {
+          const sid = `s${String(i).padStart(3,'0')}`;
+          sel.innerHTML += `<option value="${sid}|학생${i}">${sid}</option>`;
+        }
+      }
+    }
+
+    // ─── 상담 데이터 로드 ───
+    async function loadConsults() {
+      try {
+        const r = await fetch(`../tables/${TABLE_CONSULTATIONS}?limit=200&sort=scheduled_date`);
+        const d = await r.json();
+        allConsults = d.data || [];
+        updateStats();
+      } catch(e) { allConsults = []; }
+    }
+
+    async function loadRequests() {
+      try {
+        const r = await fetch(`../tables/${TABLE_REQUESTS}?limit=200`);
+        const d = await r.json();
+        allRequests = d.data || [];
+        const pending = allRequests.filter(x => x.status === 'pending').length;
+        const badge = document.getElementById('reqBadge');
+        if (pending > 0) { badge.style.display = ''; badge.textContent = pending; }
+        else { badge.style.display = 'none'; }
+        document.getElementById('statPending').textContent = pending;
+      } catch(e) { allRequests = []; }
+    }
+
+    function updateStats() {
+      document.getElementById('statTotal').textContent = allConsults.length;
+      document.getElementById('statScheduled').textContent = allConsults.filter(c => c.status === 'scheduled').length;
+      document.getElementById('statCompleted').textContent = allConsults.filter(c => c.status === 'completed').length;
+    }
+
+    // ─── 캘린더 렌더링 ───
+    function renderCalendar() {
+      const title = document.getElementById('calTitle');
+      title.textContent = `${calYear}년 ${calMonth+1}월`;
+
+      const header = document.getElementById('calHeader');
+      const days = ['일','월','화','수','목','금','토'];
+      header.innerHTML = days.map((d,i) =>
+        `<div class="cs-cal-dayname ${i===0?'sun':i===6?'sat':''}">${d}</div>`
+      ).join('');
+
+      const body = document.getElementById('calBody');
+      body.innerHTML = '';
+
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      // 이전 달 패딩
+      const prevDays = new Date(calYear, calMonth, 0).getDate();
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'cs-cal-cell';
+        const dow = firstDay - 1 - i;
+        cell.innerHTML = `<div class="cs-cal-date other-month ${dow===0?'sun':dow===6?'sat':''}">${prevDays - i}</div>`;
+        body.appendChild(cell);
+      }
+
+      // 이번 달
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dow = new Date(calYear, calMonth, d).getDay();
+        const events = allConsults.filter(c => c.scheduled_date === dateStr);
+
+        const cell = document.createElement('div');
+        cell.className = `cs-cal-cell ${dateStr === todayStr ? 'today' : ''} ${events.length > 0 ? 'has-event' : ''}`;
+        cell.addEventListener('click', () => openNewConsultOnDate(dateStr));
+
+        let chipsHtml = events.slice(0,3).map(ev =>
+          `<div class="cs-event-chip ${ev.type||'student'}" onclick="event.stopPropagation();openDetail('${ev.id}')">${ev.student_name||ev.student_id} ${ev.scheduled_time||''}</div>`
+        ).join('');
+        if (events.length > 3) chipsHtml += `<div class="cs-event-chip" style="background:#f1f5f9;color:#64748b;">+${events.length-3}건</div>`;
+
+        cell.innerHTML = `
+          <div class="cs-cal-date ${dow===0?'sun':dow===6?'sat':''}">
+            <span>${d}</span>
+            ${events.length>0?`<span style="font-size:.7rem;background:var(--cs-main);color:white;border-radius:9px;padding:1px 6px;">${events.length}</span>`:''}
+          </div>
+          <div class="cs-event-dot">${chipsHtml}</div>
+        `;
+        body.appendChild(cell);
+      }
+
+      // 다음 달 패딩
+      const lastDow = new Date(calYear, calMonth, daysInMonth).getDay();
+      for (let i = 1; i < 7 - lastDow; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cs-cal-cell';
+        const dow = (lastDow + i) % 7;
+        cell.innerHTML = `<div class="cs-cal-date other-month ${dow===0?'sun':dow===6?'sat':''}">${i}</div>`;
+        body.appendChild(cell);
+      }
+
+      document.getElementById('calPrev').onclick = () => { if(calMonth===0){calMonth=11;calYear--;}else{calMonth--;} renderCalendar(); };
+      document.getElementById('calNext').onclick = () => { if(calMonth===11){calMonth=0;calYear++;}else{calMonth++;} renderCalendar(); };
+      document.getElementById('calToday').onclick = () => { calYear=new Date().getFullYear(); calMonth=new Date().getMonth(); renderCalendar(); };
+    }
+
+    function openNewConsultOnDate(dateStr) {
+      editingId = null;
+      document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:var(--cs-main);margin-right:8px;"></i>상담 등록';
+      document.getElementById('fDate').value = dateStr;
+      document.getElementById('fTitle').value = '';
+      document.getElementById('fContent').value = '';
+      document.getElementById('fSummary').value = '';
+      document.getElementById('fFollowUp').value = '';
+      document.getElementById('fNextDate').value = '';
+      document.getElementById('fStatus').value = 'scheduled';
+      document.getElementById('consultModal').classList.add('open');
+    }
+
+    // ─── 목록 렌더링 ───
+    function renderList(page = 1) {
+      currentPage = page;
+      let data = [...allConsults];
+      const status = document.getElementById('filterStatus').value;
+      const type   = document.getElementById('filterType').value;
+      const cat    = document.getElementById('filterCategory').value;
+      const search = document.getElementById('filterSearch').value.trim().toLowerCase();
+      if (status) data = data.filter(c => c.status === status);
+      if (type)   data = data.filter(c => c.type === type);
+      if (cat)    data = data.filter(c => c.category === cat);
+      if (search) data = data.filter(c => (c.student_name||'').toLowerCase().includes(search) || (c.student_id||'').includes(search));
+
+      // 최신순 정렬
+      data.sort((a,b) => (b.scheduled_date||'').localeCompare(a.scheduled_date||''));
+
+      const total = data.length;
+      const start = (page-1)*PAGE_SIZE;
+      const pageData = data.slice(start, start+PAGE_SIZE);
+
+      const tbody = document.getElementById('consultList');
+      if (pageData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="cs-empty"><i class="fas fa-comments"></i><p>상담 데이터가 없습니다.</p></div></td></tr>`;
+      } else {
+        tbody.innerHTML = pageData.map(c => `
+          <tr>
+            <td>${c.scheduled_date||'-'} ${c.scheduled_time||''}</td>
+            <td><strong>${c.student_name||c.student_id}</strong></td>
+            <td><span class="cs-type-badge ${c.type||'student'}">${typeLabel(c.type)}</span></td>
+            <td><span class="cs-cat-badge">${catLabel(c.category)}</span></td>
+            <td>${c.title||'-'}</td>
+            <td>${c.admin_name||'-'}</td>
+            <td><span class="cs-status-badge ${c.status||'scheduled'}">${statusLabel(c.status)}</span></td>
+            <td>
+              <div style="display:flex;gap:5px;">
+                <button class="btn-cs-sm btn-cs-view" onclick="openDetail('${c.id}')">보기</button>
+                <button class="btn-cs-sm btn-cs-edit" onclick="openEdit('${c.id}')">수정</button>
+                <button class="btn-cs-sm btn-cs-del" onclick="deleteConsult('${c.id}')">삭제</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // 페이지네이션
+      const pgEl = document.getElementById('listPagination');
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      pgEl.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        pgEl.innerHTML += `<button class="cs-page-btn ${i===page?'active':''}" onclick="renderList(${i})">${i}</button>`;
+      }
+    }
+
+    // ─── 신청 대기 렌더링 ───
+    function renderRequests() {
+      let data = [...allRequests];
+      const status = document.getElementById('reqFilterStatus').value;
+      const type   = document.getElementById('reqFilterType').value;
+      if (status) data = data.filter(r => r.status === status);
+      if (type)   data = data.filter(r => r.requester_type === type);
+      data.sort((a,b) => (b.created_at||0) - (a.created_at||0));
+
+      const listEl = document.getElementById('reqList');
+      if (data.length === 0) {
+        listEl.innerHTML = '<div class="cs-empty"><i class="fas fa-inbox"></i><p>신청 내역이 없습니다.</p></div>';
+        return;
+      }
+      listEl.innerHTML = data.map(r => `
+        <div class="req-card ${r.status==='pending'&&!r.is_read?'unread':''}">
+          <div class="req-card-header">
+            <div class="req-avatar ${r.requester_type||'student'}">${(r.requester_name||'?')[0]}</div>
+            <div class="req-info">
+              <strong>${r.requester_name||r.requester_id}</strong>
+              <p>${r.requester_type==='parent'?'학부모':'학생'} · 학생: ${r.student_name||r.student_id||'-'}</p>
+            </div>
+            <span style="font-size:.78rem;color:#94a3b8;">${formatDateAgo(r.created_at)}</span>
+          </div>
+          <div class="req-badges">
+            <span class="cs-type-badge ${r.requester_type==='parent'?'parent':'student'}">${r.requester_type==='parent'?'학부모 신청':'학생 신청'}</span>
+            <span class="cs-cat-badge">${catLabel(r.category)}</span>
+            <span class="cs-status-badge ${reqStatusClass(r.status)}">${reqStatusLabel(r.status)}</span>
+          </div>
+          <div class="req-content">${r.request_content||'내용 없음'}</div>
+          <div class="req-preferred">
+            희망일시: <span>${r.preferred_date1||'-'}</span>
+            ${r.preferred_date2?`/ <span>${r.preferred_date2}</span>`:''}
+            · 희망시간대: <span>${timeLabel(r.preferred_time)}</span>
+          </div>
+          ${r.admin_reply?`<div class="req-content" style="border-left:3px solid var(--cs-main);background:#f0f9ff;"><strong>답변:</strong> ${r.admin_reply}</div>`:''}
+          ${r.status==='pending'?`
+          <div class="req-actions">
+            <button class="btn-req-confirm" onclick="openReply('${r.id}','confirm')"><i class="fas fa-check"></i> 확정</button>
+            <button class="btn-req-reject" onclick="openReply('${r.id}','reject')"><i class="fas fa-times"></i> 거절</button>
+            <button class="btn-req-reply" onclick="openReply('${r.id}','reply')"><i class="fas fa-reply"></i> 답변만</button>
+          </div>`:''}
+        </div>
+      `).join('');
+    }
+
+    // ─── 이력 렌더링 ───
+    function renderHistory() {
+      let data = allConsults.filter(c => c.status === 'completed');
+      const stu  = document.getElementById('histStudent').value;
+      const from = document.getElementById('histFrom').value;
+      const to   = document.getElementById('histTo').value;
+      if (stu)  data = data.filter(c => c.student_id === stu);
+      if (from) data = data.filter(c => (c.scheduled_date||'') >= from);
+      if (to)   data = data.filter(c => (c.scheduled_date||'') <= to);
+      data.sort((a,b) => (b.scheduled_date||'').localeCompare(a.scheduled_date||''));
+
+      const tbody = document.getElementById('historyList');
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="cs-empty"><i class="fas fa-history"></i><p>이력 데이터가 없습니다.</p></div></td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map(c => `
+        <tr>
+          <td>${c.scheduled_date||'-'}</td>
+          <td><strong>${c.student_name||c.student_id}</strong></td>
+          <td><span class="cs-type-badge ${c.type||'student'}">${typeLabel(c.type)}</span></td>
+          <td>${c.title||'-'}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.summary||'-'}</td>
+          <td>${c.next_consult_date||'-'}</td>
+          <td><button class="btn-cs-sm btn-cs-view" onclick="openDetail('${c.id}')">상세보기</button></td>
+        </tr>
+      `).join('');
+    }
+
+    // ─── 모달 ───
+    function initModals() {
+      document.getElementById('btnNewConsult').addEventListener('click', () => {
+        editingId = null;
+        document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:var(--cs-main);margin-right:8px;"></i>상담 등록';
+        resetForm();
+        document.getElementById('consultModal').classList.add('open');
+      });
+      document.getElementById('btnModalCancel').addEventListener('click', () => {
+        document.getElementById('consultModal').classList.remove('open');
+      });
+      document.getElementById('btnDetailClose').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.remove('open');
+      });
+      document.getElementById('btnReplyClose').addEventListener('click', () => {
+        document.getElementById('replyModal').classList.remove('open');
+      });
+      document.getElementById('btnModalSave').addEventListener('click', saveConsult);
+      document.getElementById('btnDetailEdit').addEventListener('click', () => {
+        document.getElementById('detailModal').classList.remove('open');
+        openEdit(editingId);
+      });
+      document.getElementById('btnApplyFilter').addEventListener('click', () => renderList(1));
+      document.getElementById('btnHistSearch').addEventListener('click', renderHistory);
+      document.getElementById('reqFilterStatus').addEventListener('change', renderRequests);
+      document.getElementById('reqFilterType').addEventListener('change', renderRequests);
+      document.getElementById('btnReplyConfirm').addEventListener('click', () => submitReply('confirmed'));
+      document.getElementById('btnReplyReject').addEventListener('click', () => submitReply('rejected'));
+    }
+
+    function resetForm() {
+      ['fStudent','fTitle','fContent','fSummary','fFollowUp','fNextDate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('fType').value = 'student';
+      document.getElementById('fCategory').value = 'academic';
+      document.getElementById('fDuration').value = '60';
+      document.getElementById('fStatus').value = 'scheduled';
+      document.getElementById('fTime').value = '14:00';
+      setDefaultDate();
+    }
+
+    function openDetail(id) {
+      const c = allConsults.find(x => x.id === id);
+      if (!c) return;
+      editingId = id;
+      document.getElementById('detailModalTitle').innerHTML =
+        `<span class="cs-type-badge ${c.type||'student'}" style="margin-right:8px;">${typeLabel(c.type)}</span>${c.title||'상담 상세'}`;
+      document.getElementById('detailMeta').innerHTML = `
+        <div class="cs-meta-item"><span class="cs-meta-lbl">학생</span><span class="cs-meta-val">${c.student_name||c.student_id}</span></div>
+        <div class="cs-meta-item"><span class="cs-meta-lbl">날짜</span><span class="cs-meta-val">${c.scheduled_date||'-'} ${c.scheduled_time||''}</span></div>
+        <div class="cs-meta-item"><span class="cs-meta-lbl">소요</span><span class="cs-meta-val">${c.duration_min||60}분</span></div>
+        <div class="cs-meta-item"><span class="cs-meta-lbl">분류</span><span class="cs-meta-val">${catLabel(c.category)}</span></div>
+        <div class="cs-meta-item"><span class="cs-meta-lbl">상태</span><span class="cs-meta-val"><span class="cs-status-badge ${c.status||'scheduled'}">${statusLabel(c.status)}</span></span></div>
+        <div class="cs-meta-item"><span class="cs-meta-lbl">담당</span><span class="cs-meta-val">${c.admin_name||'-'}</span></div>
+      `;
+      document.getElementById('detailContent').textContent = c.content || '기록 없음';
+      document.getElementById('detailSummary').textContent = c.summary || '-';
+      document.getElementById('detailFollow').textContent = c.follow_up || '-';
+      if (!c.summary) document.getElementById('detailSummarySection').style.display='none';
+      else document.getElementById('detailSummarySection').style.display='';
+      if (!c.follow_up) document.getElementById('detailFollowSection').style.display='none';
+      else document.getElementById('detailFollowSection').style.display='';
+      document.getElementById('detailModal').classList.add('open');
+    }
+
+    function openEdit(id) {
+      const c = allConsults.find(x => x.id === id);
+      if (!c) return;
+      editingId = id;
+      document.getElementById('modalTitle').innerHTML = '<i class="fas fa-edit" style="color:var(--cs-main);margin-right:8px;"></i>상담 수정';
+
+      // 학생 선택
+      const sel = document.getElementById('fStudent');
+      const opt = [...sel.options].find(o => o.value.startsWith(c.student_id));
+      if (opt) sel.value = opt.value;
+
+      document.getElementById('fType').value = c.type || 'student';
+      document.getElementById('fDate').value = c.scheduled_date || '';
+      document.getElementById('fTime').value = c.scheduled_time || '14:00';
+      document.getElementById('fDuration').value = c.duration_min || 60;
+      document.getElementById('fCategory').value = c.category || 'academic';
+      document.getElementById('fTitle').value = c.title || '';
+      document.getElementById('fContent').value = c.content || '';
+      document.getElementById('fSummary').value = c.summary || '';
+      document.getElementById('fFollowUp').value = c.follow_up || '';
+      document.getElementById('fNextDate').value = c.next_consult_date || '';
+      document.getElementById('fStatus').value = c.status || 'scheduled';
+      document.getElementById('consultModal').classList.add('open');
+    }
+
+    async function saveConsult() {
+      const studentVal = document.getElementById('fStudent').value;
+      const title = document.getElementById('fTitle').value.trim();
+      const date  = document.getElementById('fDate').value;
+      if (!studentVal || !title || !date) { showToast('학생, 제목, 날짜는 필수입니다.'); return; }
+
+      const [student_id, student_name] = studentVal.split('|');
+      const payload = {
+        student_id, student_name,
+        type: document.getElementById('fType').value,
+        scheduled_date: date,
+        scheduled_time: document.getElementById('fTime').value,
+        duration_min: parseInt(document.getElementById('fDuration').value),
+        category: document.getElementById('fCategory').value,
+        title,
+        content: document.getElementById('fContent').value,
+        summary: document.getElementById('fSummary').value,
+        follow_up: document.getElementById('fFollowUp').value,
+        next_consult_date: document.getElementById('fNextDate').value,
+        status: document.getElementById('fStatus').value,
+        admin_id: session.id || session.username,
+        admin_name: session.name || '관리자',
+        is_private: true
+      };
+
+      try {
+        let r;
+        if (editingId) {
+          r = await fetch(`../tables/${TABLE_CONSULTATIONS}/${editingId}`, {
+            method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          });
+        } else {
+          r = await fetch(`../tables/${TABLE_CONSULTATIONS}`, {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          });
+        }
+        if (!r.ok) throw new Error();
+        showToast(editingId ? '상담 기록이 수정되었습니다.' : '상담이 등록되었습니다. ✅');
+        document.getElementById('consultModal').classList.remove('open');
+        await loadConsults();
+        renderCalendar();
+        renderList();
+      } catch(e) { showToast('저장 중 오류가 발생했습니다.'); }
+    }
+
+    async function deleteConsult(id) {
+      if (!confirm('이 상담 기록을 삭제하시겠습니까?')) return;
+      try {
+        await fetch(`../tables/${TABLE_CONSULTATIONS}/${id}`, { method: 'DELETE' });
+        showToast('삭제되었습니다.');
+        await loadConsults();
+        renderCalendar();
+        renderList();
+      } catch(e) { showToast('삭제 중 오류가 발생했습니다.'); }
+    }
+
+    // ─── 신청 처리 ───
+    function openReply(reqId, action) {
+      replyingReqId = reqId;
+      const req = allRequests.find(r => r.id === reqId);
+      const titleMap = { confirm:'상담 확정', reject:'신청 거절', reply:'답변 전송' };
+      document.getElementById('replyModalTitle').textContent = titleMap[action] || '처리';
+      document.getElementById('replyDate').value = req?.preferred_date1 || new Date().toISOString().split('T')[0];
+      document.getElementById('replyMsg').value = '';
+      document.getElementById('replyModal').classList.add('open');
+    }
+
+    async function submitReply(newStatus) {
+      const req = allRequests.find(r => r.id === replyingReqId);
+      if (!req) return;
+      const date = document.getElementById('replyDate').value;
+      const time = document.getElementById('replyTime').value;
+      const msg  = document.getElementById('replyMsg').value;
+
+      try {
+        await fetch(`../tables/${TABLE_REQUESTS}/${replyingReqId}`, {
+          method: 'PATCH',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ status: newStatus, confirmed_date: date, confirmed_time: time, admin_reply: msg, is_read: true })
+        });
+
+        // 확정 시 상담 자동 등록
+        if (newStatus === 'confirmed') {
+          await fetch(`../tables/${TABLE_CONSULTATIONS}`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              student_id: req.student_id || req.requester_id,
+              student_name: req.student_name || req.requester_name,
+              type: req.requester_type === 'parent' ? 'parent' : 'student',
+              category: req.category,
+              scheduled_date: date,
+              scheduled_time: time,
+              duration_min: 60,
+              title: `[신청] ${catLabel(req.category)} 상담`,
+              content: req.request_content,
+              status: 'scheduled',
+              admin_id: session.id || session.username,
+              admin_name: session.name || '관리자',
+              is_private: true
+            })
+          });
+        }
+
+        document.getElementById('replyModal').classList.remove('open');
+        showToast(newStatus === 'confirmed' ? '확정되었습니다. 상담이 등록되었습니다. ✅' : '처리되었습니다.');
+        await Promise.all([loadConsults(), loadRequests()]);
+        renderRequests();
+        renderCalendar();
+      } catch(e) { showToast('처리 중 오류가 발생했습니다.'); }
+    }
+
+    // ─── 유틸 ───
+    function typeLabel(t) {
+      return {student:'학생',parent:'학부모',phone:'전화',visit:'방문'}[t]||t||'-';
+    }
+    function catLabel(c) {
+      return {academic:'학업',career:'진로',behavior:'생활태도',mental:'심리정서',family:'가정환경',other:'기타'}[c]||c||'-';
+    }
+    function statusLabel(s) {
+      return {scheduled:'예약',completed:'완료',cancelled:'취소'}[s]||s||'-';
+    }
+    function reqStatusLabel(s) {
+      return {pending:'대기중',confirmed:'확정',rejected:'거절',completed:'완료'}[s]||s||'-';
+    }
+    function reqStatusClass(s) {
+      return {pending:'scheduled',confirmed:'completed',rejected:'cancelled',completed:'completed'}[s]||'scheduled';
+    }
+    function timeLabel(t) {
+      return {morning:'오전',afternoon:'오후',evening:'저녁'}[t]||t||'-';
+    }
+    function formatDateAgo(ts) {
+      if (!ts) return '';
+      const diff = Date.now() - ts;
+      const m = Math.floor(diff/60000);
+      if (m < 1) return '방금 전';
+      if (m < 60) return `${m}분 전`;
+      const h = Math.floor(m/60);
+      if (h < 24) return `${h}시간 전`;
+      return new Date(ts).toLocaleDateString('ko-KR');
+    }
+    function showToast(msg) {
+      const t = document.getElementById('csToast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ══════════════════════════════════════════
+    //  상담 노트 (관리자 전용 비공개)
+    // ══════════════════════════════════════════
+
+    function initNotesTab() {
+      if (notesTabInited) return; // 중복 초기화 방지
+      notesTabInited = true;
+
+      // 월 네비게이션
+      document.getElementById('notesPrevMonth').onclick = () => {
+        notesMonth--; if (notesMonth < 1) { notesMonth = 12; notesYear--; }
+        loadNotes();
+      };
+      document.getElementById('notesNextMonth').onclick = () => {
+        notesMonth++; if (notesMonth > 12) { notesMonth = 1; notesYear++; }
+        loadNotes();
+      };
+      document.getElementById('notesStudentFilter').onchange = renderNotes;
+      document.getElementById('notesCategoryFilter').onchange = renderNotes;
+      document.getElementById('btnNewNote').onclick = openNoteModal;
+      document.getElementById('btnNoteClose').onclick = () => { document.getElementById('noteModal').style.display = 'none'; };
+      document.getElementById('btnNoteSave').onclick = saveNote;
+
+      // 학생 목록 채우기 (fStudent select 에서 복사)
+      const sel       = document.getElementById('nStudent');
+      const filterSel = document.getElementById('notesStudentFilter');
+      const studentSel = document.getElementById('fStudent');
+      sel.innerHTML       = '<option value="">학생 선택…</option>';
+      filterSel.innerHTML = '<option value="">전체 학생</option>';
+      Array.from(studentSel.options).forEach(opt => {
+        if (!opt.value) return;
+        // fStudent 의 value 는 "student_id|이름" 형식
+        const sid = opt.value.split('|')[0];
+        sel.innerHTML       += `<option value="${sid}">${opt.text}</option>`;
+        filterSel.innerHTML += `<option value="${sid}">${opt.text}</option>`;
+      });
+    }
+
+    async function loadNotes() {
+      document.getElementById('notesMonthLabel').textContent = `${notesYear}년 ${notesMonth}월`;
+      document.getElementById('notesList').innerHTML = `<div style="text-align:center;color:#94a3b8;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i></div>`;
+      try {
+        const res  = await fetch(`../tables/${TABLE_NOTES}?limit=200&sort=note_date`);
+        const data = await res.json();
+        allNotes = (data.data || []).filter(n =>
+          n.note_year === notesYear && n.note_month === notesMonth
+        );
+      } catch(e) { allNotes = []; }
+      renderNotes();
+    }
+
+    function renderNotes() {
+      const studentFilter  = document.getElementById('notesStudentFilter').value;
+      const categoryFilter = document.getElementById('notesCategoryFilter').value;
+
+      let notes = [...allNotes];
+      // notesStudentFilter.value 는 순수 student_id (예: s001)
+      if (studentFilter)  notes = notes.filter(n => n.student_id === studentFilter.split('|')[0]);
+      if (categoryFilter) notes = notes.filter(n => n.category === categoryFilter);
+      notes.sort((a, b) => (b.note_date || '').localeCompare(a.note_date || ''));
+
+      // 월별 통계
+      const statsEl = document.getElementById('notesMonthStats');
+      const total = allNotes.length;
+      const cats  = {};
+      allNotes.forEach(n => { cats[n.category] = (cats[n.category] || 0) + 1; });
+      const catIcons = { 학습:'📚', 진로:'🎯', 생활:'🏃', 심리:'💬', 학부모:'👪', 기타:'📌' };
+      statsEl.innerHTML = `
+        <div style="background:white;border-radius:12px;padding:12px 18px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;">
+          <i class="fas fa-file-alt" style="color:#0ea5e9;font-size:1.1rem;"></i>
+          <div><div style="font-size:1.4rem;font-weight:800;color:#1e293b;">${total}</div><div style="font-size:.78rem;color:#94a3b8;">이번 달 노트</div></div>
+        </div>
+        ${Object.entries(cats).map(([cat, cnt]) => `
+          <div style="background:white;border-radius:12px;padding:12px 18px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.3rem;">${catIcons[cat]||'📌'}</span>
+            <div><div style="font-size:1.4rem;font-weight:800;color:#1e293b;">${cnt}</div><div style="font-size:.78rem;color:#94a3b8;">${cat}</div></div>
+          </div>`).join('')}
+      `;
+
+      const listEl = document.getElementById('notesList');
+      if (notes.length === 0) {
+        listEl.innerHTML = `<div style="text-align:center;color:#94a3b8;padding:60px;background:white;border-radius:14px;">
+          <i class="fas fa-lock" style="font-size:2rem;margin-bottom:12px;display:block;opacity:.3;"></i>
+          <p style="font-size:.9rem;">이번 달 상담 노트가 없습니다.</p>
+          <p style="font-size:.82rem;margin-top:6px;">"새 노트 작성" 버튼으로 기록을 시작하세요.</p>
+        </div>`;
+        return;
+      }
+
+      const catColors = { 학습:'#dbeafe|#1e40af', 진로:'#fce7f3|#9d174d', 생활:'#d1fae5|#065f46', 심리:'#ede9fe|#5b21b6', 학부모:'#fef3c7|#92400e', 기타:'#f1f5f9|#475569' };
+
+      listEl.innerHTML = notes.map(n => {
+        const [bg, color] = (catColors[n.category] || '#f1f5f9|#475569').split('|');
+        const isMyNote = n.admin_id === session.id;
+        return `
+          <div style="background:white;border-radius:14px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-left:4px solid ${color};">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                <span style="background:${bg};color:${color};padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:700;">${catIcons[n.category]||'📌'} ${n.category}</span>
+                <strong style="font-size:.95rem;color:#1e293b;">${n.student_name || n.student_id}</strong>
+                <span style="font-size:.82rem;color:#64748b;">${n.note_date || ''}</span>
+                <span style="font-size:.78rem;color:#94a3b8;">작성: ${n.admin_name || '관리자'}</span>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0;">
+                <button class="btn-cs-sm btn-cs-edit" onclick="openNoteEdit('${n.id}')">수정</button>
+                <button class="btn-cs-sm btn-cs-del" onclick="deleteNote('${n.id}')">삭제</button>
+              </div>
+            </div>
+            <div style="font-size:.9rem;color:#374151;line-height:1.7;white-space:pre-wrap;background:#f8fafc;border-radius:8px;padding:12px 14px;margin-bottom:${n.follow_up ? '10px' : '0'};">${n.content || ''}</div>
+            ${n.follow_up ? `<div style="font-size:.82rem;color:#0369a1;margin-top:8px;"><i class="fas fa-arrow-right" style="margin-right:5px;"></i><strong>후속 조치:</strong> ${n.follow_up}</div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    function openNoteModal() {
+      editingNoteId = null;
+      document.getElementById('noteModalTitle').innerHTML = '<i class="fas fa-lock" style="color:#d97706;margin-right:8px;"></i>상담 노트 작성';
+      document.getElementById('nStudent').value  = '';
+      document.getElementById('nDate').value     = new Date().toISOString().split('T')[0];
+      document.getElementById('nCategory').value = '학습';
+      document.getElementById('nContent').value  = '';
+      document.getElementById('nFollowUp').value = '';
+      document.getElementById('noteModal').style.display = 'flex';
+    }
+
+    function openNoteEdit(id) {
+      const n = allNotes.find(x => x.id === id);
+      if (!n) return;
+      editingNoteId = id;
+      document.getElementById('noteModalTitle').innerHTML = '<i class="fas fa-edit" style="color:#0ea5e9;margin-right:8px;"></i>상담 노트 수정';
+      document.getElementById('nStudent').value  = n.student_id || '';
+      document.getElementById('nDate').value     = n.note_date  || '';
+      document.getElementById('nCategory').value = n.category   || '학습';
+      document.getElementById('nContent').value  = n.content    || '';
+      document.getElementById('nFollowUp').value = n.follow_up  || '';
+      document.getElementById('noteModal').style.display = 'flex';
+    }
+
+    async function saveNote() {
+      const studentSel  = document.getElementById('nStudent');
+      const studentId   = studentSel.value; // 순수 student_id (예: s001)
+      const studentName = studentSel.options[studentSel.selectedIndex]?.text?.replace(/\s*\(.*\)$/, '') || '';
+      const noteDate    = document.getElementById('nDate').value;
+      const category    = document.getElementById('nCategory').value;
+      const content     = document.getElementById('nContent').value.trim();
+      const followUp    = document.getElementById('nFollowUp').value.trim();
+
+      if (!studentId) { showToast('⚠️ 학생을 선택해주세요.'); return; }
+      if (!noteDate)  { showToast('⚠️ 날짜를 입력해주세요.'); return; }
+      if (!content)   { showToast('⚠️ 상담 내용을 입력해주세요.'); return; }
+
+      const d = new Date(noteDate);
+      const payload = {
+        student_id:   studentId,
+        student_name: studentName,
+        note_date:    noteDate,
+        note_year:    d.getFullYear(),
+        note_month:   d.getMonth() + 1,
+        category,
+        content,
+        follow_up:    followUp,
+        admin_id:     session.id,
+        admin_name:   session.name || '관리자',
+        is_private:   true,
+      };
+
+      try {
+        const url    = editingNoteId ? `tables/${TABLE_NOTES}/${editingNoteId}` : `tables/${TABLE_NOTES}`;
+        const method = editingNoteId ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) throw new Error();
+        document.getElementById('noteModal').style.display = 'none';
+        showToast(editingNoteId ? '✅ 노트가 수정되었습니다.' : '✅ 상담 노트가 저장되었습니다.');
+        await loadNotes();
+      } catch(e) { showToast('⚠️ 저장 중 오류가 발생했습니다.'); }
+    }
+
+    async function deleteNote(id) {
+      if (!confirm('이 상담 노트를 삭제하시겠습니까?')) return;
+      try {
+        await fetch(`../tables/${TABLE_NOTES}/${id}`, { method: 'DELETE' });
+        showToast('삭제되었습니다.');
+        await loadNotes();
+      } catch(e) { showToast('삭제 중 오류가 발생했습니다.'); }
+    }
+  </script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="consult.html" class="mobile-nav-item active"><i class="fas fa-comments"></i><span>상담</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+</body>
+</html>

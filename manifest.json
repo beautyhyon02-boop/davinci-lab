@@ -1,0 +1,64 @@
+{
+  "name": "다빈치랩 DaVinci LaB",
+  "short_name": "다빈치랩",
+  "description": "학원 통합 학습 관리 플랫폼 – 학생·선생님·학부모 전용 앱",
+  "start_url": "login.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#163A33",
+  "theme_color": "#163A33",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "학생 로그인",
+      "short_name": "학생",
+      "url": "login.html?role=student",
+      "description": "학생 계정으로 바로 로그인",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "관리자 로그인",
+      "short_name": "관리자",
+      "url": "login.html?role=admin",
+      "description": "관리자 계정으로 바로 로그인",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "학부모 로그인",
+      "short_name": "학부모",
+      "url": "login.html?role=parent",
+      "description": "학부모 계정으로 바로 로그인",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

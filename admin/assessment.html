@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수행평가 관리 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="stylesheet" href="../css/assessment.css" />
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+</head>
+<body class="admin-body">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">메인</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="students.html" class="nav-item"><i class="fas fa-user-graduate"></i><span>학생 관리</span><span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-clipboard-list"></i><span>출결 관리</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜 관리</span></a>
+        <a href="daily.html" class="nav-item"><i class="fas fa-pen-alt"></i><span>일일 학습 기록</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">컨설팅</span>
+        <a href="assessment.html" class="nav-item active"><i class="fas fa-clipboard-check"></i><span>수행평가 관리</span><span class="nav-badge nav-badge--alert" id="pendingBadge" style="display:none">0</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 조회</span></a>
+        <a href="report.html" class="nav-item" data-page="report"><i class="fas fa-file-alt"></i><span>심화탐구보고서</span></a>
+        <a href="exam.html" class="nav-item" data-page="exam"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학부모 / 공지</span>
+        <a href="parents.html" class="nav-item" data-page="parents"><i class="fas fa-users"></i><span>학부모 관리</span></a>
+        <a href="notice.html" class="nav-item" data-page="notice"><i class="fas fa-bullhorn"></i><span>공지 / 알림</span></a>
+        <a href="consult.html" class="nav-item" data-page="consult"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">시스템</span>
+        <a href="archive.html" class="nav-item" data-page="archive"><i class="fas fa-archive"></i><span>졸업생 / 아카이브</span></a>
+        <a href="admins.html" class="nav-item" data-page="admins"><i class="fas fa-user-shield"></i><span>관리자 관리</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar">박</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
+          <span class="sidebar-user-role" id="sidebarAdminRole">총괄 관리자</span>
+        </div>
+        <a href="../login.html" class="sidebar-logout"><i class="fas fa-sign-out-alt"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span><i class="fas fa-chevron-right"></i>
+          <span class="active">수행평가 관리</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="학생·과목 검색..." id="searchInput" />
+        </div>
+        <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
+          <i class="fas fa-bell"></i>
+        </button>
+        <button class="topbar-icon-btn"><a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a></button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <div class="page-title-row">
+        <div>
+          <h1 class="page-title">수행평가 관리</h1>
+          <p class="page-subtitle">수행평가를 등록하고 학생에게 피드백을 제공합니다</p>
+        </div>
+        <button class="btn-add" onclick="openNewModal()" style="display:flex;align-items:center;gap:6px">
+          <i class="fas fa-plus"></i> 새 수행평가
+        </button>
+      </div>
+
+      <!-- Status filter tabs -->
+      <div class="assess-status-tabs" id="assessTabs">
+        <button class="assess-tab active" data-status="all">전체 <span class="tab-badge" id="cntAll">0</span></button>
+        <button class="assess-tab" data-status="pending">피드백 대기 <span class="tab-badge tab-badge-red" id="cntPending">0</span></button>
+        <button class="assess-tab" data-status="feedback">피드백 완료 <span class="tab-badge tab-badge-orange" id="cntFeedback">0</span></button>
+        <button class="assess-tab" data-status="revising">학생 수정 중 <span class="tab-badge tab-badge-teal" id="cntRevising">0</span></button>
+        <button class="assess-tab" data-status="confirmed">최종 확정 <span class="tab-badge tab-badge-green" id="cntConfirmed">0</span></button>
+      </div>
+
+      <!-- Card list -->
+      <div class="assess-card-list" id="assessCardList"></div>
+
+    </div>
+  </div>
+
+  <!-- ===== 피드백 작성 모달 ===== -->
+  <div class="modal-overlay" id="feedbackModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-avatar" id="fbAvatar">김</div>
+          <div>
+            <h3 id="fbTitle">수행평가 피드백 작성</h3>
+            <p class="modal-meta" id="fbMeta"></p>
+          </div>
+        </div>
+        <button class="modal-close" id="fbClose"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div class="detail-tabs">
+        <button class="detail-tab active" data-tab="notice">공지 내용</button>
+        <button class="detail-tab" data-tab="feedback">피드백 작성</button>
+        <button class="detail-tab" data-tab="history">이력</button>
+      </div>
+
+      <div class="modal-body detail-body">
+
+        <!-- 공지 내용 탭 -->
+        <div class="tab-panel active" id="tab-notice">
+          <div class="notice-image-area" id="noticeImageArea">
+            <div class="notice-image-placeholder">
+              <i class="fas fa-image"></i>
+              <p>학생이 업로드한 수행평가 공지 이미지</p>
+              <p style="font-size:12px;color:var(--text-300);">(실제 구현 시 이미지 미리보기 표시)</p>
+            </div>
+          </div>
+          <div class="notice-detail-box" id="noticeDetailBox"></div>
+        </div>
+
+        <!-- 피드백 탭 -->
+        <div class="tab-panel" id="tab-feedback">
+          <div class="form-group">
+            <label>피드백 유형 <span class="required">*</span></label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="fbType" value="direction" checked /> 준비 방향</label>
+              <label class="radio-item"><input type="radio" name="fbType" value="task" /> 과제 안내</label>
+              <label class="radio-item"><input type="radio" name="fbType" value="caution" /> 주의사항</label>
+              <label class="radio-item"><input type="radio" name="fbType" value="comprehensive" /> 종합 피드백</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>피드백 내용 <span class="required">*</span></label>
+            <textarea id="fbText" rows="6" placeholder="수행평가 준비 방향, 필요한 자료, 작성 방법, 주의사항 등을 자세히 입력하세요...&#10;&#10;예) ○○ 교과목 수행평가는 과정형 평가로 수업 시간 내 완성해야 합니다. 사전 준비사항: ..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>첨부 자료 (선택)</label>
+            <div class="file-drop" id="fileDrop">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>참고 자료, 예시 파일 등을 드래그하거나 클릭하여 업로드</span>
+              <input type="file" id="fileInput" style="display:none" multiple />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>다음 상태로 변경</label>
+            <select id="nextStatus">
+              <option value="feedback">피드백 완료 (학생 알림 발송)</option>
+              <option value="revising">학생 수정 중 (재제출 요청)</option>
+              <option value="confirmed">최종 확정</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>긴급도</label>
+            <div class="radio-group">
+              <label class="radio-item"><input type="radio" name="urgency" value="normal" checked /> 일반</label>
+              <label class="radio-item"><input type="radio" name="urgency" value="urgent" /> 긴급 (학생에게 강조 알림)</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>최종 점수 <span style="color:#94a3b8;font-weight:400;">(최종 확정 시 입력)</span></label>
+            <input type="number" id="fbScore" min="0" max="100" placeholder="예: 95" style="width:140px;" />
+          </div>
+        </div>
+
+        <!-- 이력 탭 -->
+        <div class="tab-panel" id="tab-history">
+          <div class="history-timeline" id="historyTimeline"></div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer detail-footer">
+        <div class="detail-footer-left">
+          <span class="fb-status-label" id="fbCurrentStatus"></span>
+        </div>
+        <div class="detail-footer-right">
+          <button class="btn-cancel" id="fbCancel">닫기</button>
+          <button class="btn-submit" id="fbSubmit">
+            <i class="fas fa-paper-plane"></i> 피드백 전송
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 신규/수정 등록 모달 ===== -->
+  <div class="modal-overlay" id="newAssessModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="naModalTitle">새 수행평가 등록</h3>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <button id="naSaveHeader"
+            style="background:#dc2626;color:#fff;border:none;border-radius:8px;
+                   padding:7px 18px;font-size:14px;font-weight:700;cursor:pointer;
+                   display:flex;align-items:center;gap:6px;font-family:inherit;
+                   white-space:nowrap;">
+            <i class="fas fa-save"></i> 등록
+          </button>
+          <button class="modal-close" id="naClose" onclick="document.getElementById('newAssessModal').classList.remove('open')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>학생 선택 <span class="required">*</span></label>
+            <select id="naStudent"></select>
+          </div>
+          <div class="form-group">
+            <label>과목 <span class="required">*</span></label>
+            <input type="text" id="naSubject" placeholder="예: 국어, 수학, 영어" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>제목 <span class="required">*</span></label>
+          <input type="text" id="naTitle" placeholder="수행평가 제목을 입력하세요" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>유형</label>
+            <select id="naType">
+              <option>보고서형</option>
+              <option>발표형</option>
+              <option>에세이형</option>
+              <option>실험 보고서</option>
+              <option>탐구 보고서</option>
+              <option>포트폴리오</option>
+              <option>기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>마감일 <span class="required">*</span></label>
+            <input type="date" id="naDueDate" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>학년도</label>
+            <input type="number" id="naYear" min="2020" max="2035" />
+          </div>
+          <div class="form-group">
+            <label>학기</label>
+            <select id="naSemester">
+              <option>1학기</option>
+              <option>2학기</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>평가 범위 / 내용</label>
+          <textarea id="naScope" rows="2" placeholder="평가 범위, 분량, 형식 등을 입력하세요"></textarea>
+        </div>
+        <div class="form-group">
+          <label>비고 / 안내</label>
+          <textarea id="naNote" rows="2" placeholder="학생에게 전달할 추가 안내사항"></textarea>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px">
+          <label style="margin:0">긴급 표시</label>
+          <input type="checkbox" id="naUrgent" style="width:18px;height:18px;cursor:pointer;accent-color:#ef4444" />
+          <span style="font-size:.82rem;color:#94a3b8">체크 시 학생 화면에 긴급 표시됩니다</span>
+        </div>
+
+        <!-- ── 사진/파일 첨부 ── -->
+        <div class="form-group">
+          <label>공지 사진 첨부 <span style="font-size:.78rem;color:#94a3b8;font-weight:400;">(최대 3장)</span></label>
+          <div class="na-img-btn-row">
+            <!-- 갤러리 선택 -->
+            <label for="naImageInput" class="na-img-upload-btn na-btn-gallery">
+              <i class="fas fa-images"></i> 갤러리
+            </label>
+            <input type="file" id="naImageInput" accept="image/*" multiple style="display:none;" />
+            <!-- 카메라 바로 촬영 -->
+            <label for="naCameraInput" class="na-img-upload-btn na-btn-camera">
+              <i class="fas fa-camera"></i> 카메라 촬영
+            </label>
+            <input type="file" id="naCameraInput" accept="image/*" capture="environment" style="display:none;" />
+          </div>
+          <div id="naImagePreview" class="na-img-preview-wrap"></div>
+        </div>
+      </div>
+      <div class="modal-footer na-modal-footer">
+        <button class="btn-cancel" id="naCancel">취소</button>
+        <button class="btn-submit" id="naSave" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> 등록</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 인라인 CSS 추가 -->
+  <style>
+    .assess-card {
+      background: white; border-radius: 14px; padding: 20px 22px;
+      border: 1.5px solid #f3f4f6; box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      cursor: pointer; transition: all .2s; margin-bottom: 14px;
+    }
+    .assess-card:hover { border-color: #a5b4fc; box-shadow: 0 6px 20px rgba(79,70,229,.1); transform: translateY(-2px); }
+    .assess-card-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
+    .assess-card-left { display:flex; align-items:center; gap:12px; }
+    .assess-avatar { width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0; }
+    .assess-student-name { font-weight:700; font-size:.95rem; color:#1e1b4b; }
+    .assess-stage { font-size:.75rem; color:#94a3b8; font-weight:400; margin-left:4px; }
+    .assess-subject-row { display:flex; align-items:center; gap:6px; margin-top:3px; }
+    .subject-tag { font-size:.72rem; padding:2px 8px; border-radius:99px; background:#e0e7ff; color:#4338ca; font-weight:700; }
+    .assess-type { font-size:.72rem; color:#94a3b8; }
+    .urgent-tag { font-size:.72rem; padding:2px 8px; border-radius:99px; background:#fee2e2; color:#ef4444; font-weight:700; }
+    .assess-title-row { margin-bottom:8px; }
+    .assess-title { font-size:.95rem; font-weight:600; color:#374151; }
+    .assess-meta-row { display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:8px; }
+    .assess-feedback-preview { font-size:.8rem; color:#6b7280; padding:8px 10px; background:#f9fafb; border-radius:8px; border-left:3px solid #a5b4fc; margin-bottom:8px; }
+    .assess-card-actions { display:flex; gap:6px; padding-top:10px; border-top:1px solid #f3f4f6; }
+    .badge-red    { background:#fee2e2; color:#991b1b; }
+    .badge-orange { background:#fef3c7; color:#92400e; }
+    .badge-teal   { background:#ccfbf1; color:#0f766e; }
+    .badge-green  { background:#d1fae5; color:#065f46; }
+    .badge-blue   { background:#dbeafe; color:#1d4ed8; }
+    .badge-gray   { background:#f3f4f6; color:#374151; }
+    .btn-ep-action { padding:5px 12px; border-radius:6px; font-size:.78rem; font-weight:600; cursor:pointer; border:none; transition:background .15s; }
+    .btn-ep-view  { background:#e0e7ff; color:#4338ca; }
+    .btn-ep-view:hover  { background:#c7d2fe; }
+    .btn-ep-edit  { background:#fef3c7; color:#92400e; }
+    .btn-ep-edit:hover  { background:#fde68a; }
+    .btn-ep-del   { background:#fee2e2; color:#991b1b; }
+    .btn-ep-del:hover   { background:#fecaca; }
+    .notice-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .notice-detail-item { display:flex; flex-direction:column; gap:3px; }
+    .nd-label { font-size:.75rem; color:#94a3b8; font-weight:600; }
+    .nd-val { font-size:.88rem; color:#374151; }
+    .hist-item { display:flex; gap:12px; margin-bottom:14px; }
+    .hist-dot { width:10px; height:10px; border-radius:50%; background:#4f46e5; margin-top:4px; flex-shrink:0; }
+    .hist-content .hist-actor { font-weight:700; font-size:.82rem; color:#374151; }
+    .hist-content .hist-date { font-size:.75rem; color:#94a3b8; margin-left:8px; }
+    .hist-content .hist-text { font-size:.85rem; color:#6b7280; margin-top:3px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+    /* ── 사진 업로드 버튼 행 ── */
+    .na-img-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    /* ── 사진 업로드 버튼 ── */
+    .na-img-upload-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 10px; border-radius: 12px;
+      font-size: .88rem; font-weight: 700;
+      cursor: pointer; transition: background .2s;
+      min-height: 48px;
+    }
+    .na-btn-gallery {
+      background: #e0e7ff; color: #4338ca;
+      border: 2px dashed #a5b4fc;
+    }
+    .na-btn-gallery:hover { background: #c7d2fe; }
+    .na-btn-camera {
+      background: #d1fae5; color: #065f46;
+      border: 2px dashed #6ee7b7;
+    }
+    .na-btn-camera:hover { background: #a7f3d0; }
+    .na-img-upload-btn i { font-size: 1.1rem; }
+
+    /* ── 미리보기 영역 ── */
+    .na-img-preview-wrap {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+    }
+    .na-img-preview-item {
+      position: relative; width: 80px; height: 80px; border-radius: 10px;
+      overflow: hidden; border: 1.5px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .na-img-preview-item img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .na-img-preview-item .na-img-remove {
+      position: absolute; top: 3px; right: 3px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(0,0,0,.55); color: #fff;
+      font-size: .65rem; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; padding: 0;
+    }
+
+    /* ── modal-lg: body 스크롤, footer 항상 고정 (PC + 모바일 공통) ── */
+    #newAssessModal .modal-lg {
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;   /* 모달 전체 스크롤 비활성 */
+    }
+    #newAssessModal .modal-lg .modal-header {
+      flex-shrink: 0;
+    }
+    #newAssessModal .modal-lg .modal-body {
+      flex: 1 1 auto !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
+      min-height: 0;                 /* flex 자식 스크롤 필수 */
+    }
+    #newAssessModal .na-modal-footer {
+      flex-shrink: 0 !important;
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 10px !important;
+      background: #fff;
+      border-top: 1.5px solid #f1f5f9;
+      padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+      z-index: 2;
+    }
+    #newAssessModal .na-modal-footer .btn-cancel {
+      min-width: 80px;
+      min-height: 48px;
+    }
+    #newAssessModal .na-modal-footer .btn-submit {
+      flex: 1 !important;
+      min-height: 48px !important;
+      justify-content: center !important;
+      font-size: .95rem !important;
+    }
+
+    /* ── 모바일: 바텀시트 형태 ── */
+    @media (max-width: 768px) {
+      #newAssessModal {
+        align-items: flex-end !important;
+        padding: 0 !important;
+      }
+      #newAssessModal .modal-lg {
+        border-radius: 22px 22px 0 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: 92dvh !important;
+        height: 92dvh !important;     /* 높이 고정으로 footer 보장 */
+        margin: 0 !important;
+        transform: translateY(0) scale(1) !important;
+      }
+      /* 드래그 핸들 */
+      #newAssessModal .modal-lg::before {
+        content: '';
+        display: block;
+        width: 40px; height: 4px;
+        border-radius: 2px;
+        background: #d1d5db;
+        margin: 10px auto 0;
+        flex-shrink: 0;
+      }
+      #newAssessModal .modal-lg .modal-body {
+        padding: 14px 16px !important;
+      }
+      .form-row { grid-template-columns: 1fr !important; }
+    }
+  </style>
+
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script src="../js/assessment.js?v=20260430" defer></script>
+
+  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
+  <nav class="mobile-nav mobile-nav--admin">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="assessment.html" class="mobile-nav-item active"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+</body>
+</html>

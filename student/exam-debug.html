@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>시험 플래너 디버그</title>
+<style>
+  body { font-family: monospace; padding: 20px; background: #0f172a; color: #e2e8f0; }
+  .ok   { color: #4ade80; }
+  .err  { color: #f87171; }
+  .warn { color: #fbbf24; }
+  .info { color: #60a5fa; }
+  pre { background: #1e293b; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font-size: 13px; margin: 4px 0 12px; }
+  h3 { color: #94a3b8; margin: 20px 0 6px; font-size: 14px; }
+</style>
+</head>
+<body>
+<h2>🔍 시험 플래너 진단</h2>
+<div id="log"></div>
+<script>
+const out = document.getElementById('log');
+function log(msg, cls='info') {
+  const d = document.createElement('div');
+  d.className = cls;
+  d.textContent = (cls==='ok'?'✅ ':cls==='err'?'❌ ':cls==='warn'?'⚠️ ':' ℹ️ ') + msg;
+  out.appendChild(d);
+}
+function pre(obj) {
+  const p = document.createElement('pre');
+  p.textContent = JSON.stringify(obj, null, 2);
+  out.appendChild(p);
+}
+
+async function run() {
+  // 1. 세션 확인
+  log('=== 1. 세션 확인 ===');
+  const keys = ['dvl_student_session','dvl_user','dvl_session'];
+  let session = null;
+  for (const k of keys) {
+    const v = localStorage.getItem(k);
+    if (v && v !== 'null' && v !== '{}') {
+      try { session = JSON.parse(v); log(`localStorage[${k}] 발견`, 'ok'); } catch(e) {}
+      break;
+    }
+  }
+  if (!session) {
+    for (const k of ['dvl_user','dvl_session']) {
+      const v = sessionStorage.getItem(k);
+      if (v && v !== 'null') {
+        try { session = JSON.parse(v); log(`sessionStorage[${k}] 발견`, 'ok'); } catch(e) {}
+        break;
+      }
+    }
+  }
+  if (!session || !session.id) {
+    log('세션 없음 — 로그인 필요', 'err');
+    return;
+  }
+  log(`세션 OK: id=${session.id}, role=${session.role}, name=${session.name}`);
+  pre(session);
+
+  const SID = session.id;
+
+  // 2. exam_planners 조회
+  log('=== 2. exam_planners 조회 ===');
+  try {
+    const r = await fetch(`../tables/exam_planners?search=${encodeURIComponent(SID)}&limit=50`);
+    log(`응답 상태: ${r.status}`, r.ok ? 'ok' : 'err');
+    const d = await r.json();
+    log(`전체 레코드 수: ${(d.data||[]).length}`);
+    const mine = (d.data||[]).filter(p => p.student_id === SID);
+    log(`내 플래너 수: ${mine.length}`, mine.length > 0 ? 'ok' : 'warn');
+    if (mine.length > 0) {
+      pre(mine.map(p => ({
+        id: p.id,
+        student_id: p.student_id,
+        status: p.status,
+        exam_type: p.exam_type,
+        exam_start_date: p.exam_start_date,
+        plan_start_date: p.plan_start_date,
+        subjects: p.subjects,
+        created_at: p.created_at
+      })));
+
+      const active = mine.filter(p => p.status !== '완료');
+      log(`활성 플래너: ${active.length}개`, active.length > 0 ? 'ok' : 'warn');
+
+      if (active.length > 0) {
+        const planner = active.sort((a,b) => Number(b.created_at)-Number(a.created_at))[0];
+        log(`사용할 플래너: ${planner.id}`);
+
+        // 3. planner_tasks 조회
+        log('=== 3. planner_tasks 조회 ===');
+        const tr = await fetch(`../tables/planner_tasks?search=${encodeURIComponent(SID)}&limit=1000`);
+        log(`응답 상태: ${tr.status}`, tr.ok ? 'ok' : 'err');
+        const td = await tr.json();
+        const allTasks = (td.data||[]).filter(t => t.student_id === SID);
+        log(`내 전체 태스크: ${allTasks.length}개`);
+        const plannerTasks = allTasks.filter(t => t.planner_id === planner.id);
+        log(`이 플래너 태스크: ${plannerTasks.length}개`, plannerTasks.length > 0 ? 'ok' : 'warn');
+        if (plannerTasks.length > 0) {
+          const today = new Date().toISOString().split('T')[0];
+          const todayTasks = plannerTasks.filter(t => t.task_date === today);
+          log(`오늘(${today}) 태스크: ${todayTasks.length}개`, todayTasks.length > 0 ? 'ok' : 'warn');
+          pre(plannerTasks.slice(0,5));
+        }
+
+        // 4. subjects 타입 확인
+        log('=== 4. subjects 필드 타입 ===');
+        const subs = planner.subjects;
+        log(`subjects 타입: ${typeof subs}`);
+        log(`subjects 값: ${JSON.stringify(subs)}`);
+        if (typeof subs === 'string') {
+          log('⚠️ subjects가 문자열로 저장됨 (배열이어야 함)', 'warn');
+          try { const arr = JSON.parse(subs); log(`JSON.parse 결과: ${JSON.stringify(arr)}`, 'ok'); }
+          catch(e) { log(`JSON.parse 실패, 콤마 분리 시도: ${subs.split(',').map(s=>s.trim())}`, 'warn'); }
+        } else if (Array.isArray(subs)) {
+          log(`subjects 배열 OK: ${JSON.stringify(subs)}`, 'ok');
+        }
+      }
+    } else {
+      log('플래너 없음 — 새로 생성 필요', 'warn');
+    }
+  } catch(e) {
+    log(`오류: ${e.message}`, 'err');
+  }
+
+  log('=== 진단 완료 ===');
+}
+
+run().catch(e => log('치명적 오류: ' + e.message, 'err'));
+</script>
+</body>
+</html>

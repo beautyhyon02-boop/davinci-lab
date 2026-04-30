@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생 관리 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/students.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">메인</span>
+        <a href="dashboard.html" class="nav-item" data-page="dashboard">
+          <i class="fas fa-th-large"></i><span>대시보드</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="students.html" class="nav-item active" data-page="students">
+          <i class="fas fa-user-graduate"></i><span>학생 관리</span>
+        </a>
+        <a href="attendance.html" class="nav-item" data-page="attendance">
+          <i class="fas fa-clipboard-list"></i><span>출결 관리</span>
+        </a>
+        <a href="plan.html" class="nav-item" data-page="plan">
+          <i class="fas fa-tasks"></i><span>학습 플랜 관리</span>
+        </a>
+        <a href="daily.html" class="nav-item" data-page="daily">
+          <i class="fas fa-pen-alt"></i><span>일일 학습 기록</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">컨설팅</span>
+        <a href="assessment.html" class="nav-item" data-page="assessment">
+          <i class="fas fa-clipboard-check"></i><span>수행평가 관리</span>
+          <span class="nav-badge nav-badge--alert">3</span>
+        </a>
+        <a href="grades.html" class="nav-item" data-page="grades">
+          <i class="fas fa-chart-line"></i><span>성적 조회</span>
+        </a>
+        <a href="record.html" class="nav-item" data-page="record">
+          <i class="fas fa-book-open"></i><span>학생부 열람</span>
+        </a>
+        <a href="report.html" class="nav-item" data-page="report">
+          <i class="fas fa-file-alt"></i><span>심화탐구보고서</span>
+        </a>
+        <a href="exam.html" class="nav-item" data-page="exam">
+          <i class="fas fa-calendar-alt"></i><span>시험 플래너</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학부모 / 공지</span>
+        <a href="parents.html" class="nav-item" data-page="parents">
+          <i class="fas fa-users"></i><span>학부모 관리</span>
+        </a>
+        <a href="notice.html" class="nav-item" data-page="notice">
+          <i class="fas fa-bullhorn"></i><span>공지 / 알림</span>
+        </a>
+        <a href="consult.html" class="nav-item" data-page="consult">
+          <i class="fas fa-comments"></i><span>상담 관리</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">시스템</span>
+        <a href="archive.html" class="nav-item" data-page="archive">
+          <i class="fas fa-archive"></i><span>졸업생 / 아카이브</span>
+        </a>
+        <a href="admins.html" class="nav-item" data-page="admins">
+          <i class="fas fa-user-shield"></i><span>관리자 관리</span>
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar">박</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
+          <span class="sidebar-user-role" id="sidebarAdminRole">총괄 관리자</span>
+        </div>
+        <a href="../login.html" class="sidebar-logout" title="로그아웃">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="adminMain">
+
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span><i class="fas fa-chevron-right"></i>
+          <span class="active">학생 관리</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="이름·학교 검색..." id="globalSearch" />
+        </div>
+        <button class="topbar-icon-btn" id="notifBtn" title="알림">
+          <i class="fas fa-bell"></i><span class="notif-dot"></span>
+        </button>
+        <button class="topbar-icon-btn" title="홈페이지">
+          <a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a>
+        </button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- ★ 디버그 배너 (문제 해결 후 삭제) -->
+      <div id="sessionDebugBanner" style="display:none;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:12.5px;color:#92400e;">
+        <strong>⚠️ 세션 정보:</strong> <span id="sessionDebugText">확인 중...</span>
+        <button onclick="document.getElementById('sessionDebugBanner').style.display='none'" style="float:right;border:none;background:none;cursor:pointer;color:#92400e;font-size:14px;">✕</button>
+      </div>
+      <script>
+      (function() {
+        const raw = localStorage.getItem('dvl_admin_session') || sessionStorage.getItem('dvl_user');
+        const banner = document.getElementById('sessionDebugBanner');
+        const text = document.getElementById('sessionDebugText');
+        if (!raw) {
+          banner.style.display = '';
+          banner.style.background = '#fee2e2';
+          banner.style.borderColor = '#ef4444';
+          banner.style.color = '#b91c1c';
+          text.textContent = '❌ 세션 없음 — 로그인 후 다시 시도하세요. localStorage: ' + Object.keys(localStorage).join(', ');
+        } else {
+          try {
+            const s = JSON.parse(raw);
+            if (s && s.id && (s.role === 'admin' || s.role === 'master')) {
+              // 정상 — 배너 숨김 (5초 후 자동)
+              text.textContent = '✅ 세션 정상: ' + s.name + ' (' + s.role + ')';
+              banner.style.display = '';
+              setTimeout(() => { banner.style.display = 'none'; }, 5000);
+            } else {
+              banner.style.display = '';
+              text.textContent = '⚠️ 세션 역할 오류: ' + JSON.stringify(s);
+            }
+          } catch(e) {
+            banner.style.display = '';
+            text.textContent = '⚠️ 세션 파싱 오류: ' + e.message;
+          }
+        }
+      })();
+      </script>
+
+
+      <!-- Page Title -->
+      <div class="page-title-row">
+        <div>
+          <h1 class="page-title">학생 관리</h1>
+          <p class="page-subtitle">전체 활성 학생 현황을 확인하고 관리합니다</p>
+        </div>
+        <button class="btn-add" id="addStudentBtn">
+          <i class="fas fa-user-plus"></i> 학생 추가
+        </button>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-bar" id="summaryBar">
+        <div class="sum-card sum-all active-sum" data-filter="active">
+          <span class="sum-num" id="sumAll">0</span>
+          <span class="sum-label">전체 활성</span>
+        </div>
+        <div class="sum-card" data-filter="consulting">
+          <span class="sum-num" id="sum1">0</span>
+          <span class="sum-label">컨설팅</span>
+        </div>
+        <div class="sum-card" data-filter="general">
+          <span class="sum-num" id="sum2">0</span>
+          <span class="sum-label">일반</span>
+        </div>
+        <div class="sum-card sum-break" data-filter="break">
+          <span class="sum-num" id="sumBreak">0</span>
+          <span class="sum-label">휴원</span>
+        </div>
+        <div class="sum-card" data-filter="pending" style="border:2px solid #f59e0b;background:#fffbeb;">
+          <span class="sum-num" id="sumPending" style="color:#d97706;">0</span>
+          <span class="sum-label" style="color:#92400e;">승인 대기</span>
+        </div>
+      </div>
+
+      <!-- Filters Row -->
+      <div class="filter-row">
+        <div class="filter-left">
+          <select class="filter-select" id="filterGrade">
+            <option value="">학년 전체</option>
+            <option value="1">고1</option>
+            <option value="2">고2</option>
+            <option value="3">고3</option>
+          </select>
+          <select class="filter-select" id="filterConsult">
+            <option value="">컨설팅 여부</option>
+            <option value="yes">컨설팅 포함</option>
+            <option value="no">일반</option>
+          </select>
+          <select class="filter-select" id="filterAttend">
+            <option value="">출결 상태</option>
+            <option value="attend">등원</option>
+            <option value="absent">미등원</option>
+            <option value="late">지각</option>
+          </select>
+        </div>
+        <div class="filter-right">
+          <span class="result-count" id="resultCount">0명 표시 중</span>
+          <button class="btn-reset" id="filterReset"><i class="fas fa-undo"></i> 초기화</button>
+        </div>
+      </div>
+
+      <!-- Student Table -->
+      <div class="dash-panel full-panel">
+        <div class="panel-body" style="padding:0;">
+          <div class="table-wrap">
+            <table class="admin-table" id="studentTable">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="checkAll" /></th>
+                  <th>이름</th>
+                  <th>학교 / 학년</th>
+                  <th>구분</th>
+                  <th>오늘 출결</th>
+                  <th>학습 플랜</th>
+                  <th>수행평가</th>
+                  <th>담당 관리자</th>
+                  <th>상태</th>
+                  <th>액션</th>
+                </tr>
+              </thead>
+              <tbody id="studentTbody"></tbody>
+            </table>
+          </div>
+          <!-- Empty state -->
+          <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="fas fa-user-graduate"></i>
+            <p>조건에 맞는 학생이 없습니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 관리자 계정 관리 (마스터 전용) ═══ -->
+      <div id="adminAccountSection" style="display:none;margin-top:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <h2 style="font-size:17px;font-weight:700;color:#163A33;display:flex;align-items:center;gap:8px;">
+              <i class="fas fa-user-shield" style="color:#34d399;"></i> 관리자 계정 관리
+            </h2>
+            <p style="font-size:12.5px;color:#6b7280;margin-top:3px;">마스터 전용 메뉴입니다. 가입 신청 승인 및 계정 관리를 할 수 있습니다.</p>
+          </div>
+          <span id="adminPendingBadge" style="display:none;background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">
+            <i class="fas fa-clock" style="margin-right:5px;"></i>승인 대기 <span id="pendingAdminCount">0</span>명
+          </span>
+        </div>
+
+        <!-- 탭 -->
+        <div style="display:flex;gap:6px;margin-bottom:14px;border-bottom:2px solid #e5e7eb;padding-bottom:0;">
+          <button class="adm-tab-btn active" onclick="switchAdmTab('pending',this)"
+            style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">
+            <i class="fas fa-clock" style="margin-right:5px;color:#f59e0b;"></i>승인 대기
+          </button>
+          <button class="adm-tab-btn" onclick="switchAdmTab('active',this)"
+            style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">
+            <i class="fas fa-check-circle" style="margin-right:5px;color:#34d399;"></i>활성 관리자
+          </button>
+          <button class="adm-tab-btn" onclick="switchAdmTab('inactive',this)"
+            style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">
+            <i class="fas fa-ban" style="margin-right:5px;color:#ef4444;"></i>비활성
+          </button>
+        </div>
+
+        <!-- 대기 목록 -->
+        <div id="admTabPending">
+          <div id="adminPendingList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <!-- 활성 목록 -->
+        <div id="admTabActive" style="display:none;">
+          <div id="adminActiveList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+        <!-- 비활성 목록 -->
+        <div id="admTabInactive" style="display:none;">
+          <div id="adminInactiveList" style="display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+      </div>
+
+      <!-- 아카이브 섹션 토글 버튼 -->
+      <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
+        <button onclick="toggleArchive()" id="archiveToggleBtn" style="display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;">
+          <i class="fas fa-archive"></i> 졸업/비활성 학생 보기
+        </button>
+        <span id="archiveCountLabel" style="font-size:12.5px;color:#94a3b8;"></span>
+      </div>
+      <div id="archiveSection" style="display:none;margin-top:14px;">
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 20px;">
+          <h4 style="font-size:14px;font-weight:700;color:#475569;margin-bottom:12px;"><i class="fas fa-graduation-cap" style="margin-right:7px;color:#a0aec0;"></i>졸업/비활성 학생 목록</h4>
+          <div id="archiveList"></div>
+        </div>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div class="bulk-bar" id="bulkBar">
+        <span id="bulkCount">0명 선택됨</span>
+        <div class="bulk-actions">
+          <button class="bulk-btn" onclick="bulkAction('step')"><i class="fas fa-exchange-alt"></i> 단계 변경</button>
+          <button class="bulk-btn" onclick="bulkAction('notice')"><i class="fas fa-bullhorn"></i> 공지 발송</button>
+          <button class="bulk-btn bulk-danger" onclick="bulkAction('break')"><i class="fas fa-pause-circle"></i> 휴원 처리</button>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-main -->
+
+  <!-- ===== 학생 상세 모달 ===== -->
+  <div class="modal-overlay" id="studentDetailModal">
+    <div class="modal modal-lg" id="studentDetailContent">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-avatar" id="detailAvatar">김</div>
+          <div>
+            <h3 id="detailName">김지수</h3>
+            <p id="detailMeta" class="modal-meta"></p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:12px;">
+          <button onclick="if(window._currentStudentId)adminLoginAsStudent(window._currentStudentId)"
+            style="background:#163A33;color:#fff;border:none;border-radius:8px;padding:7px 15px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap;"
+            onmouseover="this.style.background='#245A4E'" onmouseout="this.style.background='#163A33'"
+            title="이 학생의 대시보드를 새 탭으로 열기">
+            <i class="fas fa-user-circle"></i> 학생 화면 열기
+          </button>
+        </div>
+        <button class="modal-close" id="detailClose"><i class="fas fa-times"></i></button>
+      </div>
+
+      <!-- Detail Tabs -->
+      <div class="detail-tabs" id="detailTabs">
+        <button class="detail-tab active" data-tab="info">기본 정보</button>
+        <button class="detail-tab" data-tab="attend">출결 이력</button>
+        <button class="detail-tab" data-tab="plan">학습 플랜</button>
+        <button class="detail-tab" data-tab="assess">수행평가</button>
+        <button class="detail-tab" data-tab="memo">관리 메모</button>
+      </div>
+
+      <div class="modal-body detail-body">
+
+        <!-- Tab: 기본 정보 -->
+        <div class="tab-panel active" id="tab-info">
+          <div class="info-grid">
+            <div class="info-section">
+              <h4 class="info-section-title">학생 정보</h4>
+              <div class="info-rows" id="infoRows"></div>
+            </div>
+            <div class="info-section">
+              <h4 class="info-section-title">관리 설정</h4>
+              <div class="setting-rows" id="settingRows"></div>
+            </div>
+          </div>
+          <div class="info-section" style="margin-top:20px;">
+            <h4 class="info-section-title">수강 이력</h4>
+            <div class="history-pills" id="historyPills"></div>
+          </div>
+        </div>
+
+        <!-- Tab: 출결 이력 -->
+        <div class="tab-panel" id="tab-attend">
+          <div class="attend-stats" id="attendStats"></div>
+          <div class="attend-table-wrap">
+            <table class="admin-table" id="attendTable">
+              <thead>
+                <tr><th>날짜</th><th>등원</th><th>퇴원</th><th>상태</th><th>메모</th></tr>
+              </thead>
+              <tbody id="attendTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab: 학습 플랜 -->
+        <div class="tab-panel" id="tab-plan">
+          <div class="plan-header-row">
+            <p class="plan-week-label" id="planWeekLabel">이번 주 학습 플랜</p>
+            <button class="btn-sm-green" id="editPlanBtn"><i class="fas fa-edit"></i> 플랜 수정</button>
+          </div>
+          <div class="plan-list" id="planList"></div>
+        </div>
+
+        <!-- Tab: 수행평가 -->
+        <div class="tab-panel" id="tab-assess">
+          <div class="assess-list" id="assessList"></div>
+        </div>
+
+        <!-- Tab: 관리 메모 -->
+        <div class="tab-panel" id="tab-memo">
+          <div class="memo-area">
+            <textarea id="memoText" rows="6" placeholder="학생에 대한 관리 메모를 입력하세요...&#10;(학부모에게 공유되지 않는 내부 메모입니다)"></textarea>
+            <button class="btn-sm-green" id="saveMemoBtn"><i class="fas fa-save"></i> 저장</button>
+          </div>
+          <div class="memo-history" id="memoHistory"></div>
+        </div>
+
+      </div><!-- /detail-body -->
+
+      <div class="modal-footer detail-footer">
+        <div class="detail-footer-left">
+          <button class="btn-step-change" id="stepChangeBtn"><i class="fas fa-exchange-alt"></i> 단계 변경</button>
+          <button class="btn-break" id="breakBtn"><i class="fas fa-pause-circle"></i> 휴원 처리</button>
+          <button class="btn-archive" id="archiveBtn" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-graduation-cap"></i> 졸업/비활성화</button>
+          <button id="deleteStudentBtn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-trash-alt"></i> 학생 삭제
+          </button>
+        </div>
+        <div class="detail-footer-right">
+          <button class="btn-cancel" id="detailCancel">닫기</button>
+          <button id="viewDashboardBtn"
+            style="background:#0f766e;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s;"
+            onmouseover="this.style.background='#0d9488'" onmouseout="this.style.background='#0f766e'">
+            <i class="fas fa-external-link-alt"></i> 대시보드 새 탭으로 열기
+          </button>
+          <a class="btn-submit" href="attendance.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:7px;">
+            <i class="fas fa-clipboard-list"></i> 출결 바로가기
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 학생 추가 모달 ===== -->
+  <div class="modal-overlay" id="addStudentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>신규 학생 등록</h3>
+        <button class="modal-close" id="addStudentClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="add-form-grid">
+          <div class="form-group">
+            <label>이름 <span class="required">*</span></label>
+            <input type="text" id="newName" placeholder="학생 이름" />
+          </div>
+          <div class="form-group">
+            <label>학교 <span class="required">*</span></label>
+            <input type="text" id="newSchool" placeholder="○○고등학교" />
+          </div>
+          <div class="form-group">
+            <label>학년 <span class="required">*</span></label>
+            <select id="newGrade">
+              <option value="">선택</option>
+              <optgroup label="고등학교">
+                <option value="고1">고1</option>
+                <option value="고2">고2</option>
+                <option value="고3">고3</option>
+              </optgroup>
+              <optgroup label="중학교">
+                <option value="중1">중1</option>
+                <option value="중2">중2</option>
+                <option value="중3">중3</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>컨설팅 여부 <span class="required">*</span></label>
+            <select id="newStep">
+              <option value="gen">일반 수강</option>
+              <option value="con">컨설팅 포함</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>아이디 <span class="required">*</span></label>
+            <input type="text" id="newStudentId" placeholder="로그인 아이디 (영문+숫자)"
+              oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')" />
+          </div>
+          <div class="form-group">
+            <label>임시 비밀번호 <span class="required">*</span></label>
+            <input type="text" id="newStudentPw" placeholder="임시 비밀번호 (8자 이상)" value="davinci1!" />
+          </div>
+          <div class="form-group">
+            <label>학부모 연락처</label>
+            <input type="text" id="newParentPhone" placeholder="010-0000-0000" />
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>등록 메모</label>
+            <textarea id="newMemo" rows="2" placeholder="특이사항, 상담 내용 등"></textarea>
+          </div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-top:4px;font-size:12px;color:#166534;">
+          <i class="fas fa-info-circle"></i> 등록 후 학생에게 아이디와 임시 비밀번호를 전달하세요. 학생은 로그인 후 비밀번호를 변경할 수 있습니다.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="addStudentCancel">취소</button>
+        <button class="btn-submit" id="addStudentSubmit">
+          <i class="fas fa-user-plus"></i> 등록하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 단계 변경 모달 -->
+  <div class="modal-overlay" id="stepModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>단계 변경</h3>
+        <button class="modal-close" id="stepModalClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="step-modal-student" id="stepModalStudent"></p>
+        <div class="step-options" id="stepOptions">
+          <label class="step-option-item">
+            <input type="radio" name="newStep" value="gen" />
+            <span class="step-opt-content">
+              <strong>일반 수강</strong><span>컨설팅 미포함</span>
+            </span>
+          </label>
+          <label class="step-option-item">
+            <input type="radio" name="newStep" value="con" />
+            <span class="step-opt-content">
+              <strong>컨설팅 포함</strong><span>학생부 컨설팅</span>
+            </span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="stepModalCancel">취소</button>
+        <button class="btn-submit" id="stepModalSubmit"><i class="fas fa-check"></i> 변경 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 가입 승인 모달 ===== -->
+  <div class="modal-overlay" id="approveModal">
+    <div class="modal-box" style="max-width:480px;width:92%;padding:32px 28px;border-radius:18px;background:#fff;position:relative;">
+      <button onclick="closeApproveModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;">
+        <i class="fas fa-times"></i>
+      </button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-user-check" style="color:#fff;font-size:18px;"></i>
+        </div>
+        <div>
+          <div style="font-size:17px;font-weight:700;color:#1a1a1a;" id="apv-name">학생명</div>
+          <div style="font-size:12px;color:#888;" id="apv-id">계정 ID</div>
+        </div>
+      </div>
+
+      <div style="background:#f8fafb;border-radius:12px;padding:18px;margin-bottom:18px;display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">학교명 <span style="color:#999;">(선택)</span></label>
+          <input id="apv-school" type="text" placeholder="예: ○○고등학교"
+            style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:14px;box-sizing:border-box;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='#22c55e'" onblur="this.style.borderColor='#e2e8f0'" />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">학년 <span style="color:#999;">(선택)</span></label>
+          <select id="apv-grade"
+            style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:14px;box-sizing:border-box;outline:none;background:#fff;">
+            <option value="">선택 안함</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:#111;display:block;margin-bottom:8px;">컨설팅 여부 <span style="color:#ef4444;">*</span></label>
+          <select id="apv-stage"
+            style="width:100%;border:1.5px solid #22c55e;border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;box-sizing:border-box;outline:none;background:#fff;color:#16a34a;">
+            <option value="재원">일반 수강</option>
+            <option value="재원+컨설팅">컨설팅 포함</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background:#fef3c7;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12.5px;color:#92400e;line-height:1.5;">
+        <i class="fas fa-info-circle"></i>
+        승인 후 학생은 즉시 로그인이 가능합니다. 컨설팅 여부는 나중에 변경할 수 있습니다.
+      </div>
+
+      <div style="display:flex;gap:10px;">
+        <button id="apv-cancel-btn"
+          style="flex:1;padding:12px;border:1.5px solid #e2e8f0;background:#fff;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">
+          취소
+        </button>
+        <button id="apv-confirm-btn"
+          style="flex:2;padding:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">
+          <i class="fas fa-check-circle"></i> 승인 완료
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script src="../js/students.js?v=20260430"></script>
+  <script>
+  /* ════════════════════════════════════════
+     관리자 계정 관리 (마스터 전용)
+  ════════════════════════════════════════ */
+  const TABLE_ADMIN_ACC = 'admin_accounts';
+  let ALL_ADMIN_ACCOUNTS = [];
+
+  /* ── 세션에서 현재 로그인 관리자 role 확인 (DVL_SESSION 통일) ── */
+  function getCurrentAdminRole() {
+    return window._dvlAdminSession?.role || '';
+  }
+  function getCurrentAdminId() {
+    return window._dvlAdminSession?.id || '';
+  }
+
+  /* ── 마스터만 섹션 표시 + 데이터 로드 ── */
+  async function initAdminAccountSection() {
+    const role = getCurrentAdminRole();
+    if (role !== 'master') return;
+    document.getElementById('adminAccountSection').style.display = '';
+    await loadAdminAccounts();
+  }
+
+  async function loadAdminAccounts() {
+    try {
+      const res = await fetch(`../tables/${TABLE_ADMIN_ACC}?limit=100`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      ALL_ADMIN_ACCOUNTS = data.data || [];
+    } catch(e) {
+      ALL_ADMIN_ACCOUNTS = [];
+    }
+    renderAdminAccountLists();
+  }
+
+  /* ── 탭 전환 ── */
+  function switchAdmTab(tab, btn) {
+    document.querySelectorAll('.adm-tab-btn').forEach(b => {
+      b.style.color = '#6b7280';
+      b.style.borderBottomColor = 'transparent';
+    });
+    btn.style.color = '#163A33';
+    btn.style.borderBottomColor = '#163A33';
+    ['admTabPending','admTabActive','admTabInactive'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    document.getElementById(`admTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = '';
+  }
+
+  /* ── 목록 렌더링 ── */
+  function renderAdminAccountLists() {
+    const pending  = ALL_ADMIN_ACCOUNTS.filter(a => a.status === 'pending');
+    const active   = ALL_ADMIN_ACCOUNTS.filter(a => a.status === 'active');
+    const inactive = ALL_ADMIN_ACCOUNTS.filter(a => a.status === 'inactive');
+
+    // 대기 배지
+    const badge = document.getElementById('adminPendingBadge');
+    const cntEl = document.getElementById('pendingAdminCount');
+    if (pending.length > 0) {
+      badge.style.display = '';
+      cntEl.textContent = pending.length;
+    } else {
+      badge.style.display = 'none';
+    }
+
+    renderAdmList('adminPendingList',  pending,  'pending');
+    renderAdmList('adminActiveList',   active,   'active');
+    renderAdmList('adminInactiveList', inactive, 'inactive');
+  }
+
+  function renderAdmList(containerId, list, type) {
+    const el = document.getElementById(containerId);
+    if (!list.length) {
+      el.innerHTML = `<div style="text-align:center;padding:28px;color:#9ca3af;font-size:13.5px;">
+        <i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+        ${type === 'pending' ? '승인 대기 중인 신청이 없습니다.' :
+          type === 'active'  ? '활성 관리자가 없습니다.' : '비활성 계정이 없습니다.'}
+      </div>`;
+      return;
+    }
+    el.innerHTML = list.map(a => {
+      const isMaster = a.role === 'master';
+      const lastLogin = a.last_login ? new Date(a.last_login).toLocaleString('ko-KR') : '없음';
+      const approvedAt = a.approved_at ? new Date(a.approved_at).toLocaleDateString('ko-KR') : '–';
+
+      const actionBtns = isMaster ? `
+        <span style="font-size:11.5px;color:#163A33;font-weight:700;padding:5px 12px;background:#e8f5f0;border-radius:20px;">
+          <i class="fas fa-crown" style="margin-right:4px;color:#f59e0b;"></i>마스터
+        </span>` :
+        type === 'pending' ? `
+        <button onclick="approveAdmin('${a.id}')"
+          style="padding:6px 14px;border:none;border-radius:8px;background:#059669;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;margin-right:6px;">
+          <i class="fas fa-check" style="margin-right:4px;"></i>승인
+        </button>
+        <button onclick="rejectAdmin('${a.id}')"
+          style="padding:6px 14px;border:1.5px solid #ef4444;border-radius:8px;background:#fff;color:#ef4444;font-size:12.5px;font-weight:700;cursor:pointer;">
+          <i class="fas fa-times" style="margin-right:4px;"></i>거절
+        </button>` :
+        type === 'active' ? `
+        <button onclick="deactivateAdmin('${a.id}')"
+          style="padding:6px 14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;font-size:12.5px;font-weight:600;cursor:pointer;">
+          <i class="fas fa-ban" style="margin-right:4px;"></i>비활성화
+        </button>` :
+        `<button onclick="reactivateAdmin('${a.id}')"
+          style="padding:6px 14px;border:none;border-radius:8px;background:#163A33;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">
+          <i class="fas fa-redo" style="margin-right:4px;"></i>재활성화
+        </button>`;
+
+      return `
+      <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:42px;height:42px;border-radius:50%;background:${isMaster ? '#163A33' : '#e8f5f0'};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:${isMaster ? '#34d399' : '#163A33'};flex-shrink:0;">
+            ${(a.name||'?')[0]}
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#111827;">${a.name || '–'}
+              <span style="font-size:11.5px;color:#6b7280;font-weight:400;margin-left:6px;">@${a.admin_id}</span>
+            </div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+              ${a.title || '직책 없음'}
+              ${a.phone ? ` · ${a.phone}` : ''}
+            </div>
+            <div style="font-size:11.5px;color:#9ca3af;margin-top:3px;">
+              ${type === 'pending'
+                ? `<i class="fas fa-clock" style="color:#f59e0b;margin-right:3px;"></i>신청일: ${a.created_at ? new Date(a.created_at).toLocaleDateString('ko-KR') : '–'}`
+                : type === 'active'
+                ? `<i class="fas fa-check" style="color:#34d399;margin-right:3px;"></i>승인일: ${approvedAt} · 최근 로그인: ${lastLogin}`
+                : `<i class="fas fa-ban" style="color:#ef4444;margin-right:3px;"></i>비활성 계정`}
+              ${a.memo ? ` · <em>${a.memo}</em>` : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          ${actionBtns}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ── 승인 ── */
+  async function approveAdmin(recordId) {
+    if (!confirm('이 관리자 신청을 승인하시겠습니까?')) return;
+    const masterId = getCurrentAdminId();
+    try {
+      const res = await fetch(`../tables/${TABLE_ADMIN_ACC}/${recordId}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          status: 'active',
+          approved_by: masterId,
+          approved_at: new Date().toISOString()
+        })
+      });
+      if (!res.ok) throw new Error();
+      await loadAdminAccounts();
+      showAdmToast('✅ 관리자 계정이 승인되었습니다.');
+    } catch(e) {
+      alert('승인 처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  /* ── 거절 (삭제) ── */
+  async function rejectAdmin(recordId) {
+    if (!confirm('이 가입 신청을 거절하고 삭제하시겠습니까?')) return;
+    try {
+      const res = await fetch(`../tables/${TABLE_ADMIN_ACC}/${recordId}`, { method: 'DELETE' });
+      if (res.ok || res.status === 204) {
+        await loadAdminAccounts();
+        showAdmToast('가입 신청이 거절되었습니다.');
+      } else throw new Error();
+    } catch(e) {
+      alert('처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  /* ── 비활성화 ── */
+  async function deactivateAdmin(recordId) {
+    if (!confirm('이 관리자 계정을 비활성화하시겠습니까?\n해당 관리자는 로그인할 수 없게 됩니다.')) return;
+    try {
+      const res = await fetch(`../tables/${TABLE_ADMIN_ACC}/${recordId}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ status: 'inactive' })
+      });
+      if (!res.ok) throw new Error();
+      await loadAdminAccounts();
+      showAdmToast('계정이 비활성화되었습니다.');
+    } catch(e) {
+      alert('처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  /* ── 재활성화 ── */
+  async function reactivateAdmin(recordId) {
+    if (!confirm('이 계정을 다시 활성화하시겠습니까?')) return;
+    try {
+      const res = await fetch(`../tables/${TABLE_ADMIN_ACC}/${recordId}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ status: 'active' })
+      });
+      if (!res.ok) throw new Error();
+      await loadAdminAccounts();
+      showAdmToast('✅ 계정이 재활성화되었습니다.');
+    } catch(e) {
+      alert('처리 중 오류가 발생했습니다.');
+    }
+  }
+
+  /* ── 토스트 ── */
+  function showAdmToast(msg) {
+    let t = document.getElementById('admToast');
+    if (!t) {
+      t = document.createElement('div'); t.id = 'admToast';
+      t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#163A33;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = '1';
+    setTimeout(() => { t.style.opacity = '0'; }, 2800);
+  }
+
+  /* ── 페이지 로드 시 실행 ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!window._dvlSessionFailed) initAdminAccountSection();
+  });
+  // students.js 로드 후에도 실행될 수 있도록 fallback
+  if (document.readyState !== 'loading' && !window._dvlSessionFailed) {
+    initAdminAccountSection();
+  }
+  </script>
+
+  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
+  <nav class="mobile-nav mobile-nav--admin">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item active"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="attendance.html" class="mobile-nav-item"><i class="fas fa-calendar-check"></i><span>출결</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+</body>
+</html>

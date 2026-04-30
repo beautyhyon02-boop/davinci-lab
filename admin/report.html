@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생 종합 리포트 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── 학생 선택 패널 ── */
+    .rp-search-bar {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:14px; padding:14px 18px; margin-bottom:20px;
+    }
+    .rp-search-input {
+      flex:1; min-width:180px; padding:9px 14px; border:1px solid var(--border);
+      border-radius:10px; font-size:13.5px; font-family:inherit;
+      background:var(--bg-section); color:var(--text-700);
+    }
+    .rp-search-input:focus { outline:none; border-color:#34d399; }
+    .rp-student-list {
+      display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;
+    }
+    .rp-stu-chip {
+      display:flex; align-items:center; gap:7px; padding:7px 14px;
+      border-radius:30px; border:1.5px solid var(--border);
+      background:var(--bg-card); cursor:pointer; font-size:13px;
+      color:var(--text-700); transition:all .18s;
+    }
+    .rp-stu-chip:hover { border-color:#34d399; color:#059669; }
+    .rp-stu-chip.active {
+      background:var(--green-800); border-color:var(--green-800);
+      color:#fff; font-weight:700;
+    }
+    .rp-stu-avatar {
+      width:22px; height:22px; border-radius:50%;
+      background:var(--green-600); color:#fff;
+      font-size:11px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .rp-stu-chip.active .rp-stu-avatar { background:rgba(255,255,255,.3); }
+
+    /* ── 리포트 헤더 카드 ── */
+    .rp-hero {
+      background:linear-gradient(135deg,var(--green-800),var(--green-950));
+      border-radius:var(--radius-xl); padding:28px 32px; color:#fff;
+      margin-bottom:22px; display:flex; align-items:center;
+      justify-content:space-between; gap:20px; flex-wrap:wrap;
+    }
+    .rp-hero-left { display:flex; align-items:center; gap:18px; }
+    .rp-hero-avatar {
+      width:64px; height:64px; border-radius:50%;
+      background:linear-gradient(135deg,#34d399,#059669);
+      font-size:24px; font-weight:800; color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; box-shadow:0 0 0 3px rgba(255,255,255,.2);
+    }
+    .rp-hero-name { font-size:22px; font-weight:800; margin-bottom:4px; }
+    .rp-hero-meta { font-size:13px; color:rgba(255,255,255,.65); }
+    .rp-hero-badge {
+      background:var(--mint-400); color:var(--green-950);
+      font-size:12px; font-weight:700; border-radius:20px;
+      padding:3px 12px; display:inline-block; margin-top:6px;
+    }
+    .rp-hero-stats { display:flex; gap:14px; flex-wrap:wrap; }
+    .rp-stat-box {
+      background:rgba(255,255,255,.1); border-radius:12px;
+      padding:12px 20px; text-align:center; min-width:80px;
+    }
+    .rp-stat-val { font-size:24px; font-weight:800; line-height:1; display:block; }
+    .rp-stat-lbl { font-size:11.5px; color:rgba(255,255,255,.6); margin-top:4px; display:block; }
+
+    /* ── 프린트 버튼 ── */
+    .rp-print-btn {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:9px 20px; border-radius:10px; border:none;
+      background:#fff; color:var(--green-800); font-weight:700;
+      font-size:13.5px; cursor:pointer; transition:all .2s;
+      box-shadow:0 2px 8px rgba(0,0,0,.12);
+    }
+    .rp-print-btn:hover { background:#f0fdf4; }
+
+    /* ── 섹션 그리드 ── */
+    .rp-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:20px; }
+    @media(max-width:768px){ .rp-grid{ grid-template-columns:1fr; } }
+    .rp-grid-full { grid-column:1/-1; }
+
+    /* ── 섹션 카드 ── */
+    .rp-card {
+      background:var(--bg-card); border-radius:16px; padding:20px 22px;
+      border:1px solid var(--border);
+    }
+    .rp-card-title {
+      font-size:14.5px; font-weight:700; color:var(--text-900);
+      display:flex; align-items:center; gap:8px; margin-bottom:14px;
+    }
+    .rp-card-title i { color:#34d399; font-size:14px; }
+
+    /* ── KPI 행 ── */
+    .rp-kpi-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .rp-kpi {
+      flex:1; min-width:100px; background:var(--bg-section);
+      border-radius:12px; padding:12px 14px; text-align:center;
+    }
+    .rp-kpi-val { font-size:1.4rem; font-weight:800; color:var(--text-900); display:block; }
+    .rp-kpi-lbl { font-size:.72rem; color:var(--text-300); margin-top:2px; display:block; }
+
+    /* ── 진행 바 ── */
+    .rp-bar-wrap { margin-bottom:10px; }
+    .rp-bar-header { display:flex; justify-content:space-between; margin-bottom:4px; }
+    .rp-bar-label { font-size:13px; font-weight:600; color:var(--text-700); }
+    .rp-bar-pct   { font-size:13px; font-weight:700; }
+    .rp-bar { height:9px; border-radius:99px; background:var(--border); overflow:hidden; }
+    .rp-fill { height:100%; border-radius:99px; transition:width .6s ease; }
+
+    /* ── 성적 테이블 ── */
+    .rp-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    .rp-table th {
+      background:#f0fdf4; color:#047857; font-size:11px; font-weight:700;
+      padding:7px 10px; text-align:left; border-bottom:1.5px solid #bbf7d0;
+    }
+    .rp-table td {
+      padding:8px 10px; border-bottom:1px solid var(--border-light); color:var(--text-700);
+    }
+    .rp-table tr:last-child td { border-bottom:none; }
+    .rp-table tr:hover td { background:var(--bg-section); }
+
+    /* ── 출결 도트 ── */
+    .att-dot {
+      display:inline-block; width:10px; height:10px;
+      border-radius:50%; margin-right:3px;
+    }
+
+    /* ── 수행평가 배지 ── */
+    .assess-badge {
+      display:inline-block; padding:2px 9px; border-radius:20px;
+      font-size:11.5px; font-weight:600;
+    }
+    .assess-badge.pending    { background:#fef3c7; color:#b45309; }
+    .assess-badge.submitted  { background:#dbeafe; color:#1d4ed8; }
+    .assess-badge.feedback   { background:#d1fae5; color:#047857; }
+    .assess-badge.confirmed  { background:#e0e7ff; color:#4338ca; }
+
+    /* ── 차트 래퍼 ── */
+    .rp-chart-wrap { position:relative; height:200px; }
+
+    /* ── 빈 상태 ── */
+    .rp-empty { text-align:center; padding:30px; color:var(--text-300); font-size:13px; }
+    .rp-empty i { font-size:1.8rem; display:block; margin-bottom:8px; }
+
+    /* ── 선택 안내 ── */
+    .rp-select-guide {
+      text-align:center; padding:80px 20px; color:var(--text-300);
+    }
+    .rp-select-guide i { font-size:3rem; display:block; margin-bottom:14px; color:#d1d5db; }
+    .rp-select-guide h2 { font-size:18px; color:var(--text-700); margin-bottom:8px; }
+
+    /* ── 타임라인 ── */
+    .rp-timeline { list-style:none; padding:0; margin:0; }
+    .rp-tl-item {
+      display:flex; gap:12px; padding:8px 0;
+      border-bottom:1px solid var(--border-light); font-size:13px;
+    }
+    .rp-tl-item:last-child { border-bottom:none; }
+    .rp-tl-dot {
+      width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-top:5px;
+    }
+    .rp-tl-date { color:var(--text-300); font-size:12px; min-width:60px; flex-shrink:0; }
+    .rp-tl-text { color:var(--text-700); flex:1; }
+
+    /* ── 프린트 스타일 ── */
+    @media print {
+      .sidebar, .topbar, .rp-search-bar, .rp-print-btn, #noReportMsg { display:none !important; }
+      .admin-main { margin-left:0 !important; }
+      .rp-grid { page-break-inside:avoid; }
+      .rp-card  { page-break-inside:avoid; border:1px solid #e5e7eb !important; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="sidebar-profile">
+      <div class="sidebar-avatar" id="sidebarAdminAvatar">관</div>
+      <div class="sidebar-user-info">
+        <strong id="sidebarAdminName">관리자</strong>
+        <span>관리자</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+        <a href="students.html"  class="nav-item"><i class="fas fa-users"></i><span>학생 목록</span></a>
+        <a href="attendance.html"class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 관리</span></a>
+        <a href="assessment.html"class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html"    class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="exam.html"      class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+        <a href="report.html"    class="nav-item active"><i class="fas fa-file-alt"></i><span>종합 리포트</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">운영</span>
+        <a href="notice.html"  class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+        <a href="parents.html" class="nav-item"><i class="fas fa-user-friends"></i><span>학부모 계정</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../index.html" class="nav-item"><i class="fas fa-home"></i><span>홈페이지</span></a>
+      <a href="../login.html" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span style="color:var(--text-300);">관리자</span>
+          <span style="margin:0 6px;color:var(--text-300);">/</span>
+          <span>학생 종합 리포트</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="topbarAdminAvatar">관</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topbarAdminName">관리자</span>
+            <span class="topbar-user-role">관리자</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div style="padding:24px; max-width:1100px; margin:0 auto;">
+
+        <!-- 페이지 헤더 -->
+        <div style="margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h1 style="font-size:22px;font-weight:800;color:var(--text-900);margin-bottom:4px;">
+              <i class="fas fa-file-alt" style="color:#34d399;margin-right:10px;"></i>학생 종합 리포트
+            </h1>
+            <p style="font-size:13.5px;color:var(--text-500);">출결 · 성적 · 수행평가 · 학습 플랜을 한 눈에 확인하세요.</p>
+          </div>
+          <button class="rp-print-btn" onclick="window.print()">
+            <i class="fas fa-print"></i> 리포트 인쇄
+          </button>
+        </div>
+
+        <!-- 학생 검색 & 선택 -->
+        <div class="rp-search-bar">
+          <i class="fas fa-search" style="color:#34d399;font-size:15px;"></i>
+          <input class="rp-search-input" id="stuSearch" placeholder="학생 이름 또는 학교 검색…" oninput="filterStudents()" />
+          <span id="stuCount" style="font-size:12.5px;color:var(--text-300);"></span>
+        </div>
+        <div class="rp-student-list" id="stuChipList">
+          <span style="font-size:13px;color:var(--text-300);"><i class="fas fa-circle-notch fa-spin"></i> 학생 목록 로드 중…</span>
+        </div>
+
+        <!-- 선택 전 안내 -->
+        <div id="noReportMsg" class="rp-select-guide">
+          <i class="fas fa-user-circle"></i>
+          <h2>학생을 선택하면 리포트가 표시됩니다</h2>
+          <p style="font-size:13.5px;">위 목록에서 학생을 클릭하세요.</p>
+        </div>
+
+        <!-- 리포트 본문 -->
+        <div id="reportBody" style="display:none;">
+
+          <!-- 히어로 카드 -->
+          <div class="rp-hero" id="rpHero"></div>
+
+          <!-- 섹션 그리드 -->
+          <div class="rp-grid">
+
+            <!-- 출결 현황 -->
+            <div class="rp-card">
+              <div class="rp-card-title"><i class="fas fa-calendar-check"></i> 이번 달 출결 현황</div>
+              <div class="rp-kpi-row" id="rpAttKpi"></div>
+              <div class="rp-bar-wrap">
+                <div class="rp-bar-header">
+                  <span class="rp-bar-label">출석률</span>
+                  <span class="rp-bar-pct" id="rpAttPct" style="color:#059669;">–</span>
+                </div>
+                <div class="rp-bar"><div class="rp-fill" id="rpAttBar" style="width:0%;background:#34d399;"></div></div>
+              </div>
+              <div id="rpAttComment" style="font-size:12.5px;color:var(--text-500);margin-top:8px;"></div>
+            </div>
+
+            <!-- 수행평가 현황 -->
+            <div class="rp-card">
+              <div class="rp-card-title"><i class="fas fa-clipboard-check"></i> 수행평가 현황</div>
+              <div class="rp-kpi-row" id="rpAssKpi"></div>
+              <div id="rpAssList" style="max-height:200px;overflow-y:auto;"></div>
+            </div>
+
+            <!-- 성적 현황 -->
+            <div class="rp-card">
+              <div class="rp-card-title"><i class="fas fa-chart-line"></i> 최근 내신 성적</div>
+              <div id="rpGradesContent"></div>
+            </div>
+
+            <!-- 학습 플랜 달성률 -->
+            <div class="rp-card">
+              <div class="rp-card-title"><i class="fas fa-tasks"></i> 학습 플랜 달성률</div>
+              <div id="rpPlanContent"></div>
+            </div>
+
+            <!-- 모의고사 추이 차트 -->
+            <div class="rp-card rp-grid-full">
+              <div class="rp-card-title"><i class="fas fa-chart-bar"></i> 모의고사 점수 추이</div>
+              <div class="rp-chart-wrap">
+                <canvas id="rpMockChart"></canvas>
+              </div>
+            </div>
+
+            <!-- 최근 활동 타임라인 -->
+            <div class="rp-card rp-grid-full">
+              <div class="rp-card-title"><i class="fas fa-history"></i> 최근 활동 타임라인</div>
+              <ul class="rp-timeline" id="rpTimeline"></ul>
+            </div>
+
+          </div>
+        </div><!-- /reportBody -->
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (async function () {
+
+    /* ── 테이블 상수 ── */
+    const T_STU   = 'student_profiles';
+    const T_ATT   = 'attendance';
+    const T_ASSESS= 'assessments';
+    const T_SCH   = 'grades_school';
+    const T_MOCK  = 'grades_mock';
+    const T_PLAN  = 'planner_tasks';
+
+    const now      = new Date();
+    const todayStr = now.toISOString().slice(0,10);
+    const thisMonth= `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    let ALL_STU = [];
+    let filteredStu = [];
+    let currentStuId = null;
+    let mockChartObj = null;
+
+    /* ── 관리자 세션: dvl-session.js + admin-common.js 가 이미 검증 ── */
+    const _adminSess = window._dvlAdminSession;
+    if (_adminSess) {
+      const n = _adminSess.name || '관리자';
+      ['sidebarAdminAvatar','topbarAdminAvatar'].forEach(id=>{
+        const el=document.getElementById(id); if(el) el.textContent=n[0]||'관';
+      });
+      const n1=document.getElementById('sidebarAdminName');
+      const n2=document.getElementById('topbarAdminName');
+      if(n1) n1.textContent=n;
+      if(n2) n2.textContent=n;
+    }
+
+    /* ── 학생 목록 로드 ── */
+    async function loadStudents() {
+      try {
+        const r = await fetch(`../tables/${T_STU}?limit=200`);
+        ALL_STU = ((await r.json()).data||[]).filter(s=>s.status!=='inactive');
+      } catch(e) { ALL_STU=[]; }
+      filteredStu = [...ALL_STU];
+      document.getElementById('stuCount').textContent = `총 ${ALL_STU.length}명`;
+      renderChips();
+    }
+
+    function filterStudents() {
+      const q = document.getElementById('stuSearch').value.trim().toLowerCase();
+      filteredStu = q
+        ? ALL_STU.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.school||'').includes(q))
+        : [...ALL_STU];
+      renderChips();
+    }
+
+    function renderChips() {
+      const list = document.getElementById('stuChipList');
+      if (!filteredStu.length) {
+        list.innerHTML = `<span style="font-size:13px;color:var(--text-300);">검색 결과가 없습니다.</span>`;
+        return;
+      }
+      list.innerHTML = filteredStu.map(s=>`
+        <button class="rp-stu-chip ${s.student_id===currentStuId?'active':''}"
+          onclick="selectStudent('${s.student_id}')">
+          <div class="rp-stu-avatar">${(s.name||'?')[0]}</div>
+          <span>${s.name||'–'}</span>
+          <span style="font-size:11px;opacity:.7">${s.grade||''}학년</span>
+        </button>`).join('');
+    }
+
+    /* ── 학생 선택 ── */
+    window.selectStudent = async function(sid) {
+      currentStuId = sid;
+      renderChips();
+      document.getElementById('noReportMsg').style.display = 'none';
+      document.getElementById('reportBody').style.display = '';
+      // 로딩 표시
+      document.getElementById('rpHero').innerHTML = `<div style="color:rgba(255,255,255,.6);"><i class="fas fa-circle-notch fa-spin"></i> 리포트 생성 중…</div>`;
+
+      const stu = ALL_STU.find(s=>s.student_id===sid);
+      if (!stu) return;
+
+      // 병렬 로드
+      const [attR, assR, schR, mockR, planR] = await Promise.allSettled([
+        fetch(`../tables/${T_ATT}?limit=300&search=${sid}`),
+        fetch(`../tables/${T_ASSESS}?limit=100&search=${sid}`),
+        fetch(`../tables/${T_SCH}?limit=200&search=${sid}`),
+        fetch(`../tables/${T_MOCK}?limit=50&search=${sid}`),
+        fetch(`../tables/${T_PLAN}?limit=300&search=${sid}`),
+      ]);
+
+      const getData = async (r) => {
+        if (r.status==='fulfilled' && r.value.ok) {
+          const d = await r.value.json(); return d.data||[];
+        }
+        return [];
+      };
+
+      const [attList, assList, schList, mockList, planList] = await Promise.all([
+        getData(attR), getData(assR), getData(schR), getData(mockR), getData(planR),
+      ]);
+
+      // 필터
+      const myAtt  = attList.filter(a=>a.student_id===sid||a.studentId===sid);
+      const myAss  = assList.filter(a=>a.student_id===sid||a.studentId===sid);
+      const mySch  = schList.filter(g=>g.student_id===sid);
+      const myMock = mockList.filter(m=>m.student_id===sid).sort((a,b)=>(a.examDate||'').localeCompare(b.examDate||''));
+      const myPlan = planList.filter(t=>t.student_id===sid);
+
+      renderHero(stu, myAtt, myAss, myPlan);
+      renderAttendance(myAtt);
+      renderAssessments(myAss);
+      renderGrades(mySch, stu);
+      renderPlan(myPlan);
+      renderMockChart(myMock);
+      renderTimeline(myAtt, myAss, myPlan);
+    };
+
+    /* ── 히어로 ── */
+    function renderHero(stu, att, ass, plan) {
+      const monthAtt = att.filter(a=>(a.date||'').startsWith(thisMonth));
+      const present  = monthAtt.filter(a=>a.status==='present').length;
+      const total    = monthAtt.length;
+      const attPct   = total>0?Math.round(present/total*100):100;
+
+      const weekAgo  = new Date(now); weekAgo.setDate(now.getDate()-7);
+      const wStr     = weekAgo.toISOString().slice(0,10);
+      const weekPlan = plan.filter(t=>(t.task_date||'')>=wStr&&(t.task_date||'')<=todayStr);
+      const planPct  = weekPlan.length>0?Math.round(weekPlan.filter(t=>t.is_done).length/weekPlan.length*100):0;
+      const pending  = ass.filter(a=>['pending','submitted'].includes(a.status)).length;
+
+      document.getElementById('rpHero').innerHTML = `
+        <div class="rp-hero-left">
+          <div class="rp-hero-avatar">${(stu.name||'?')[0]}</div>
+          <div>
+            <div class="rp-hero-name">${stu.name}</div>
+            <div class="rp-hero-meta">${stu.school||'–'} · ${stu.grade||'–'}학년</div>
+            <span class="rp-hero-badge">${stu.stage||'–'}</span>
+          </div>
+        </div>
+        <div class="rp-hero-stats">
+          <div class="rp-stat-box">
+            <span class="rp-stat-val">${attPct}%</span>
+            <span class="rp-stat-lbl">이번달 출석률</span>
+          </div>
+          <div class="rp-stat-box">
+            <span class="rp-stat-val">${planPct}%</span>
+            <span class="rp-stat-lbl">주간 플랜 달성</span>
+          </div>
+          <div class="rp-stat-box">
+            <span class="rp-stat-val">${pending}</span>
+            <span class="rp-stat-lbl">수행평가 대기</span>
+          </div>
+          <div class="rp-stat-box">
+            <span class="rp-stat-val">${ass.filter(a=>a.status==='confirmed').length}</span>
+            <span class="rp-stat-lbl">수행평가 확정</span>
+          </div>
+        </div>`;
+    }
+
+    /* ── 출결 ── */
+    function renderAttendance(att) {
+      const monthAtt = att.filter(a=>(a.date||'').startsWith(thisMonth));
+      const present = monthAtt.filter(a=>a.status==='present').length;
+      const absent  = monthAtt.filter(a=>a.status==='absent').length;
+      const late    = monthAtt.filter(a=>a.status==='late').length;
+      const leave   = monthAtt.filter(a=>a.status==='leave').length;
+      const total   = present+absent+late+leave;
+      const pct     = total>0?Math.round(present/total*100):100;
+
+      document.getElementById('rpAttKpi').innerHTML = [
+        {v:present,l:'출석',c:'#10b981'},{v:absent,l:'결석',c:'#ef4444'},
+        {v:late,l:'지각',c:'#f59e0b'},{v:leave,l:'조퇴',c:'#8b5cf6'},
+      ].map(x=>`<div class="rp-kpi">
+        <span class="rp-kpi-val" style="color:${x.c}">${x.v}</span>
+        <span class="rp-kpi-lbl">${x.l}</span>
+      </div>`).join('');
+
+      document.getElementById('rpAttPct').textContent = pct+'%';
+      document.getElementById('rpAttBar').style.width = pct+'%';
+      document.getElementById('rpAttComment').textContent =
+        total===0 ? '이번 달 출결 기록 없음'
+        : absent>0 ? `결석 ${absent}회 있음. 상담 권장.`
+        : late>0   ? `지각 ${late}회 있음.`
+        : '이번 달 개근! 🎉';
+    }
+
+    /* ── 수행평가 ── */
+    function renderAssessments(ass) {
+      const kpiData = [
+        {v:ass.filter(a=>a.status==='pending').length,     l:'대기',  c:'#b45309'},
+        {v:ass.filter(a=>a.status==='submitted').length,   l:'제출',  c:'#1d4ed8'},
+        {v:ass.filter(a=>a.status==='feedback').length,    l:'피드백',c:'#047857'},
+        {v:ass.filter(a=>a.status==='confirmed').length,   l:'확정',  c:'#4338ca'},
+      ];
+      document.getElementById('rpAssKpi').innerHTML = kpiData.map(x=>`
+        <div class="rp-kpi">
+          <span class="rp-kpi-val" style="color:${x.c}">${x.v}</span>
+          <span class="rp-kpi-lbl">${x.l}</span>
+        </div>`).join('');
+
+      const sorted = [...ass].sort((a,b)=>(a.deadline||'').localeCompare(b.deadline||''));
+      const recent = sorted.slice(0,5);
+      document.getElementById('rpAssList').innerHTML = !recent.length
+        ? `<div class="rp-empty"><i class="fas fa-clipboard"></i>수행평가 없음</div>`
+        : recent.map(a=>{
+          const days = a.deadline ? Math.ceil((new Date(a.deadline)-now)/86400000) : null;
+          const dTag = days!==null
+            ? `<span style="font-size:11px;color:${days<=3?'#ef4444':'#6b7280'}">${days>0?`D-${days}`:`D+${Math.abs(days)}`}</span>`
+            : '';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border-light);">
+            <span class="assess-badge ${a.status}">${{pending:'대기',submitted:'제출',feedback:'피드백',confirmed:'확정'}[a.status]||a.status}</span>
+            <span style="font-size:13px;flex:1;color:var(--text-700)">${a.title||a.subject||'–'}</span>
+            ${dTag}
+          </div>`;
+        }).join('');
+    }
+
+    /* ── 성적 ── */
+    function renderGrades(sch, stu) {
+      if (!sch.length) {
+        document.getElementById('rpGradesContent').innerHTML = `<div class="rp-empty"><i class="fas fa-chart-line"></i>입력된 성적 없음</div>`;
+        return;
+      }
+      // 최신 학기 우선
+      const sorted = [...sch].sort((a,b)=>{
+        const ka = `${a.year||0}-${a.semester||0}`;
+        const kb = `${b.year||0}-${b.semester||0}`;
+        return kb.localeCompare(ka);
+      });
+      const latest = sorted.slice(0,6);
+      document.getElementById('rpGradesContent').innerHTML = `
+        <table class="rp-table">
+          <thead><tr>
+            <th>과목</th><th>원점수</th><th>평균</th><th>등급</th>
+          </tr></thead>
+          <tbody>
+          ${latest.map(g=>{
+            const gt = g.gradeType||'grade9';
+            let rank = g.rank??'–';
+            if(gt==='grade5')  rank=g.rank5||'–';
+            if(gt==='gradeMid')rank=g.rankMid||'–';
+            return `<tr>
+              <td><strong>${g.subjectGroup||'–'}</strong><span style="color:var(--text-300);font-size:11px;margin-left:4px">${g.year||''}–${g.semester||''}학기</span></td>
+              <td style="font-weight:700">${g.score??'–'}</td>
+              <td style="color:var(--text-500)">${g.avg??'–'}</td>
+              <td><span class="rank-badge" style="background:#f0fdf4;color:#047857;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700">${rank}</span></td>
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    /* ── 플랜 ── */
+    function renderPlan(plan) {
+      if (!plan.length) {
+        document.getElementById('rpPlanContent').innerHTML = `<div class="rp-empty"><i class="fas fa-tasks"></i>플랜 데이터 없음</div>`;
+        return;
+      }
+      // 과목별 달성률
+      const subMap = {};
+      plan.forEach(t=>{
+        const s=t.subject||'기타';
+        if(!subMap[s]) subMap[s]={done:0,total:0};
+        subMap[s].total++;
+        if(t.is_done) subMap[s].done++;
+      });
+      const total = plan.length;
+      const done  = plan.filter(t=>t.is_done).length;
+      const pct   = total>0?Math.round(done/total*100):0;
+
+      const COLORS = {'수학':'#3b82f6','영어':'#10b981','국어':'#f59e0b','과학':'#8b5cf6','사회':'#ec4899'};
+      document.getElementById('rpPlanContent').innerHTML = `
+        <div class="rp-bar-wrap" style="margin-bottom:14px">
+          <div class="rp-bar-header">
+            <span class="rp-bar-label">전체 달성률</span>
+            <span class="rp-bar-pct" style="color:#059669">${pct}%</span>
+          </div>
+          <div class="rp-bar"><div class="rp-fill" style="width:${pct}%;background:linear-gradient(90deg,#34d399,#059669)"></div></div>
+          <div style="font-size:12px;color:var(--text-300);margin-top:4px">${done} / ${total} 완료</div>
+        </div>
+        ${Object.entries(subMap).slice(0,5).map(([s,d])=>{
+          const sp=d.total>0?Math.round(d.done/d.total*100):0;
+          const c=COLORS[s]||'#6b7280';
+          return `<div class="rp-bar-wrap">
+            <div class="rp-bar-header">
+              <span class="rp-bar-label" style="color:${c}">${s}</span>
+              <span style="font-size:12.5px;font-weight:700;color:${c}">${sp}%</span>
+            </div>
+            <div class="rp-bar"><div class="rp-fill" style="width:${sp}%;background:${c}"></div></div>
+          </div>`;
+        }).join('')}`;
+    }
+
+    /* ── 모의고사 차트 ── */
+    function renderMockChart(mocks) {
+      const ctx = document.getElementById('rpMockChart').getContext('2d');
+      if (mockChartObj) { mockChartObj.destroy(); mockChartObj=null; }
+
+      if (!mocks.length) {
+        ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+        ctx.fillStyle='#9ca3af'; ctx.font='14px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('모의고사 데이터가 없습니다.',ctx.canvas.width/2,ctx.canvas.height/2);
+        return;
+      }
+      const labels = mocks.map(m=>`${(m.examDate||'').slice(0,7)} ${(m.examType||'').replace(' 전국연합','')}`);
+      mockChartObj = new Chart(ctx,{
+        type:'line',
+        data:{
+          labels,
+          datasets:[
+            {label:'국어', data:mocks.map(m=>m.kor||null), borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.07)', borderWidth:2.5,pointRadius:4,tension:.35,fill:true,spanGaps:true},
+            {label:'수학', data:mocks.map(m=>m.math||null),borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.07)',  borderWidth:2.5,pointRadius:4,tension:.35,fill:true,spanGaps:true},
+            {label:'영어', data:mocks.map(m=>m.eng||null), borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.07)',  borderWidth:2.5,pointRadius:4,tension:.35,fill:true,spanGaps:true},
+            ...(mocks.some(m=>m.sci1)?[{label:'탐구①',data:mocks.map(m=>m.sci1||null),borderColor:'#fb923c',borderWidth:2,pointRadius:4,tension:.35,fill:false,spanGaps:true}]:[]),
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          scales:{
+            y:{min:0,max:100,ticks:{color:'#6b7280'},grid:{color:'rgba(0,0,0,.04)'},
+               title:{display:true,text:'원점수',color:'#6b7280',font:{size:10}}},
+            x:{ticks:{color:'#6b7280',font:{size:10},maxRotation:30},grid:{display:false}}
+          },
+          plugins:{
+            legend:{position:'bottom',labels:{font:{size:11},color:'#374151',boxWidth:10}},
+            tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y??'–'}점`}}
+          }
+        }
+      });
+    }
+
+    /* ── 타임라인 ── */
+    function renderTimeline(att, ass, plan) {
+      const events = [];
+
+      // 최근 출결
+      att.slice(0,5).forEach(a=>{
+        if(a.status!=='present') events.push({
+          date:a.date||'', text:`출결: ${a.status==='absent'?'결석':a.status==='late'?'지각':'조퇴'}`,
+          color:a.status==='absent'?'#ef4444':a.status==='late'?'#f59e0b':'#8b5cf6'
+        });
+      });
+
+      // 최근 수행평가
+      ass.filter(a=>a.updated_at).slice(0,5).forEach(a=>{
+        const ts = new Date(Number(a.updated_at)||0).toISOString().slice(0,10);
+        events.push({ date:ts, text:`수행평가 [${a.title||a.subject||''}] → ${a.status}`, color:'#3b82f6' });
+      });
+
+      // 최근 플랜 완료
+      plan.filter(t=>t.is_done&&t.task_date).slice(0,5).forEach(t=>{
+        events.push({ date:t.task_date, text:`플랜 완료: ${t.subject||''} – ${t.task_content||''}`, color:'#34d399' });
+      });
+
+      events.sort((a,b)=>b.date.localeCompare(a.date));
+      const recent = events.slice(0,10);
+
+      document.getElementById('rpTimeline').innerHTML = !recent.length
+        ? `<li class="rp-tl-item"><span style="color:var(--text-300);font-size:13px;">최근 활동 없음</span></li>`
+        : recent.map(e=>`
+          <li class="rp-tl-item">
+            <div class="rp-tl-dot" style="background:${e.color}"></div>
+            <span class="rp-tl-date">${e.date.slice(5)}</span>
+            <span class="rp-tl-text">${e.text}</span>
+          </li>`).join('');
+    }
+
+    /* ── 사이드바·로그아웃 ── */
+    document.getElementById('sidebarToggle').addEventListener('click',()=>
+      document.getElementById('sidebar').classList.toggle('open'));
+    document.getElementById('sidebarClose').addEventListener('click',()=>
+      document.getElementById('sidebar').classList.remove('open'));
+    document.getElementById('logoutBtn').addEventListener('click',e=>{
+      e.preventDefault(); sessionStorage.clear(); localStorage.removeItem('dvl_admin_tab_session'); window.location.href='../login.html';
+    });
+
+    /* ── 초기 로드 ── */
+    await loadStudents();
+
+  })();
+  </script>
+
+  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
+  <nav class="mobile-nav mobile-nav--admin">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="report.html" class="mobile-nav-item active"><i class="fas fa-file-alt"></i><span>리포트</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+</body>
+</html>

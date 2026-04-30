@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>출결 관리 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/attendance.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+</head>
+<body class="admin-body">
+
+  <!-- SIDEBAR (공통) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">메인</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="students.html" class="nav-item"><i class="fas fa-user-graduate"></i><span>학생 관리</span><span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span></a>
+        <a href="attendance.html" class="nav-item active"><i class="fas fa-clipboard-list"></i><span>출결 관리</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜 관리</span></a>
+        <a href="daily.html" class="nav-item"><i class="fas fa-pen-alt"></i><span>일일 학습 기록</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">컨설팅</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가 관리</span><span class="nav-badge nav-badge--alert">3</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 조회</span></a>
+        <a href="report.html" class="nav-item" data-page="report"><i class="fas fa-file-alt"></i><span>심화탐구보고서</span></a>
+        <a href="exam.html" class="nav-item" data-page="exam"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학부모 / 공지</span>
+        <a href="parents.html" class="nav-item" data-page="parents"><i class="fas fa-users"></i><span>학부모 관리</span></a>
+        <a href="notice.html" class="nav-item" data-page="notice"><i class="fas fa-bullhorn"></i><span>공지 / 알림</span></a>
+        <a href="consult.html" class="nav-item" data-page="consult"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">시스템</span>
+        <a href="archive.html" class="nav-item" data-page="archive"><i class="fas fa-archive"></i><span>졸업생 / 아카이브</span></a>
+        <a href="admins.html" class="nav-item" data-page="admins"><i class="fas fa-user-shield"></i><span>관리자 관리</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebarAdminAvatar">박</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
+          <span class="sidebar-user-role" id="sidebarAdminRole">총괄 관리자</span>
+        </div>
+        <a href="../login.html" class="sidebar-logout"><i class="fas fa-sign-out-alt"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span><i class="fas fa-chevron-right"></i>
+          <span class="active">출결 관리</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="학생 이름 검색..." id="searchInput" />
+        </div>
+        <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
+          <i class="fas fa-bell"></i>
+        </button>
+        <button class="topbar-icon-btn"><a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a></button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- Title + Date nav -->
+      <div class="page-title-row">
+        <div>
+          <h1 class="page-title">출결 관리</h1>
+          <p class="page-subtitle" id="todayLabel">오늘 날짜 불러오는 중...</p>
+        </div>
+        <div class="date-nav">
+          <button class="date-nav-btn" id="prevDay"><i class="fas fa-chevron-left"></i></button>
+          <span class="date-nav-label" id="dateNavLabel"></span>
+          <button class="date-nav-btn" id="nextDay"><i class="fas fa-chevron-right"></i></button>
+          <button class="btn-add" id="todayBtn">오늘</button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="attend-kpi-row">
+        <div class="att-kpi att-kpi-green">
+          <i class="fas fa-user-check"></i>
+          <div>
+            <div class="att-kpi-val" id="kpiIn">18</div>
+            <div class="att-kpi-label">등원</div>
+          </div>
+        </div>
+        <div class="att-kpi att-kpi-gray">
+          <i class="fas fa-user-times"></i>
+          <div>
+            <div class="att-kpi-val" id="kpiAbsent">4</div>
+            <div class="att-kpi-label">미등원</div>
+          </div>
+        </div>
+        <div class="att-kpi att-kpi-orange">
+          <i class="fas fa-clock"></i>
+          <div>
+            <div class="att-kpi-val" id="kpiLate">2</div>
+            <div class="att-kpi-label">지각</div>
+          </div>
+        </div>
+        <div class="att-kpi att-kpi-total">
+          <i class="fas fa-users"></i>
+          <div>
+            <div class="att-kpi-val" id="kpiTotal">-</div>
+            <div class="att-kpi-label">전체 학생</div>
+          </div>
+        </div>
+        <div class="att-kpi att-kpi-rate">
+          <i class="fas fa-chart-line"></i>
+          <div>
+            <div class="att-kpi-val" id="kpiRate">83%</div>
+            <div class="att-kpi-label">오늘 출석률</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Grid: Today list + Calendar -->
+      <div class="attend-main-grid">
+
+        <!-- Left: Today attendance list -->
+        <div class="dash-panel" style="flex:1.4;">
+          <div class="panel-header">
+            <h3><i class="fas fa-list-ul"></i> 오늘 출결 현황</h3>
+            <div class="panel-header-actions">
+              <button class="tbl-btn tbl-btn-outline" id="btnBulkAttend" style="margin-right:8px;"><i class="fas fa-check-double"></i> 미등록 일괄 등원</button>
+              <button class="tab-btn active att-tab" data-filter="all">전체</button>
+              <button class="tab-btn att-tab" data-filter="attend">등원</button>
+              <button class="tab-btn att-tab" data-filter="absent">미등원</button>
+              <button class="tab-btn att-tab" data-filter="late">지각</button>
+            </div>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>이름</th>
+                    <th>단계</th>
+                    <th>등원 시간</th>
+                    <th>퇴원 시간</th>
+                    <th>상태</th>
+                    <th>메모</th>
+                    <th>수정</th>
+                  </tr>
+                </thead>
+                <tbody id="attendTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Weekly summary -->
+        <div class="dash-panel" style="flex:1;">
+          <div class="panel-header">
+            <h3><i class="fas fa-calendar-week"></i> 이번 주 요약</h3>
+          </div>
+          <div class="panel-body" id="weeklySummary" style="padding:12px 16px;"></div>
+        </div>
+
+      </div><!-- /attend-main-grid -->
+
+      <!-- Monthly calendar panel -->
+      <div class="dash-panel full-panel" style="margin-top:20px;">
+        <div class="panel-header">
+          <h3><i class="fas fa-calendar-alt"></i> 월간 출결 캘린더</h3>
+          <div class="panel-header-actions">
+            <button class="date-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+            <span class="date-nav-label" id="calMonthLabel"></span>
+            <button class="date-nav-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="cal-student-selector">
+            <label class="cal-sel-label">학생 선택</label>
+            <select id="calStudentSelect" class="filter-select"></select>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div class="cal-legend">
+            <span class="cal-leg-item cal-leg-attend">등원</span>
+            <span class="cal-leg-item cal-leg-late">지각</span>
+            <span class="cal-leg-item cal-leg-absent">결석</span>
+            <span class="cal-leg-item cal-leg-none">미등록</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </div>
+
+  <!-- 출결 수정 모달 -->
+  <div class="modal-overlay" id="editAttendModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>출결 수정</h3>
+        <button class="modal-close" id="editAttendClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <p class="step-modal-student" id="editAttendStudent"></p>
+        <div class="form-group">
+          <label>등원 시간</label>
+          <input type="time" id="editInTime" />
+        </div>
+        <div class="form-group">
+          <label>퇴원 시간</label>
+          <input type="time" id="editOutTime" />
+        </div>
+        <div class="form-group">
+          <label>출결 상태</label>
+          <select id="editStatus">
+            <option value="attend">등원</option>
+            <option value="late">지각</option>
+            <option value="absent">결석</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>메모</label>
+          <input type="text" id="editMemo" placeholder="특이사항 입력" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="editAttendCancel">취소</button>
+        <button class="btn-submit" id="editAttendSubmit"><i class="fas fa-save"></i> 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script src="../js/attendance.js?v=20260430"></script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="attendance.html" class="mobile-nav-item active"><i class="fas fa-calendar-check"></i><span>출결</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+</body>
+</html>

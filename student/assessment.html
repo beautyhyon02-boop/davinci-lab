@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수행평가 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <link rel="stylesheet" href="../css/mobile.css" />
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <style>
+    /* ══════════════════════════════════════
+       수행평가 전용 스타일
+    ══════════════════════════════════════ */
+
+    /* 탭 */
+    .assess-page-tabs { display:flex; gap:4px; background:var(--bg-section); border-radius:var(--radius-md); padding:4px; margin-bottom:24px; }
+    .assess-tab-btn { flex:1; padding:9px 10px; border-radius:9px; border:none; background:none; font-size:13px; font-weight:500; color:var(--text-500); cursor:pointer; transition:all .2s; text-align:center; position:relative; }
+    .assess-tab-btn.active { background:var(--bg-card); color:var(--violet-700); font-weight:700; box-shadow:var(--shadow-sm); }
+    .tab-cnt { font-size:11px; background:var(--violet-100); color:var(--violet-700); border-radius:20px; padding:1px 7px; margin-left:4px; font-weight:700; }
+    .tab-cnt.red { background:#fee2e2; color:#b91c1c; }
+
+    /* 상태 배지 */
+    .s-badge { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:20px; }
+    .s-draft     { background:#f1f5f9; color:#475569; }
+    .s-submitted { background:#dbeafe; color:#1d4ed8; }
+    .s-feedback  { background:#fef3c7; color:#b45309; }
+    .s-revising  { background:#ede9fe; color:#6d28d9; }
+    .s-confirmed { background:#d1fae5; color:#065f46; }
+
+    /* 수행평가 카드 */
+    .assess-list { display:flex; flex-direction:column; gap:14px; }
+    .assess-card {
+      background:white; border-radius:16px; border:1.5px solid #e5e7eb;
+      overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.05);
+      transition:all .2s;
+    }
+    .assess-card:hover { border-color:#a5b4fc; box-shadow:0 6px 20px rgba(79,70,229,.1); }
+    .assess-card.unread { border-color:#f59e0b; }
+    .assess-card-header {
+      padding:18px 20px 14px;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+    .assess-card-title-wrap { flex:1; }
+    .assess-card-subject { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+    .subj-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+    .assess-card-title { font-size:.98rem; font-weight:700; color:#1e1b4b; margin-bottom:4px; }
+    .assess-card-meta { display:flex; gap:12px; flex-wrap:wrap; }
+    .assess-meta-item { display:flex; align-items:center; gap:5px; font-size:12px; color:#94a3b8; }
+
+    /* 대화형 타임라인 */
+    .assess-timeline { padding:0 20px 16px; border-top:1px solid #f3f4f6; }
+    .timeline-label { font-size:11.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; padding:12px 0 8px; }
+    .tl-item { display:flex; gap:10px; margin-bottom:10px; }
+    .tl-dot-wrap { display:flex; flex-direction:column; align-items:center; gap:2px; padding-top:2px; }
+    .tl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .tl-dot.student { background:#4f46e5; }
+    .tl-dot.admin   { background:#059669; }
+    .tl-line { flex:1; width:2px; background:#e5e7eb; }
+    .tl-body { flex:1; padding-bottom:4px; }
+    .tl-who  { font-size:12px; font-weight:700; color:#374151; }
+    .tl-who.admin { color:#059669; }
+    .tl-date { font-size:11px; color:#94a3b8; margin-left:6px; }
+    .tl-text { font-size:13px; color:#4b5563; line-height:1.6; margin-top:3px; }
+    .tl-images { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+    .tl-img { width:72px; height:72px; border-radius:8px; object-fit:cover; cursor:pointer; border:1.5px solid #e5e7eb; transition:all .2s; }
+    .tl-img:hover { transform:scale(1.05); border-color:#a5b4fc; }
+    .tl-score { display:inline-block; margin-top:6px; padding:4px 14px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:white; border-radius:20px; font-size:13px; font-weight:700; }
+
+    /* 액션 버튼 영역 */
+    .assess-card-actions { padding:12px 20px 16px; border-top:1px solid #f3f4f6; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .btn-action { padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:none; display:flex; align-items:center; gap:6px; transition:all .2s; }
+    .btn-submit-new { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:white; box-shadow:0 3px 10px rgba(79,70,229,.3); }
+    .btn-submit-new:hover { transform:translateY(-1px); box-shadow:0 5px 16px rgba(79,70,229,.4); }
+    .btn-resubmit { background:#ede9fe; color:#6d28d9; }
+    .btn-resubmit:hover { background:#ddd6fe; }
+    .btn-detail  { background:#f1f5f9; color:#475569; }
+    .btn-detail:hover { background:#e2e8f0; }
+    .unread-dot { width:8px; height:8px; background:#f59e0b; border-radius:50%; }
+
+    /* 신규 등록 영역 */
+    .new-assess-section {
+      background:white; border-radius:16px; border:2px dashed #a5b4fc;
+      padding:28px; text-align:center; margin-bottom:24px;
+      cursor:pointer; transition:all .2s;
+    }
+    .new-assess-section:hover { border-color:#4f46e5; background:#fafaff; }
+    .new-assess-section i { font-size:2rem; color:#a5b4fc; margin-bottom:10px; }
+    .new-assess-section h3 { font-size:1rem; font-weight:700; color:#4f46e5; margin-bottom:4px; }
+    .new-assess-section p { font-size:.85rem; color:#94a3b8; }
+
+    /* 등록 모달 */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,10,36,.6); z-index:2000; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .assess-modal { background:white; border-radius:20px; width:560px; max-width:95vw; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .modal-head { padding:24px 24px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f3f4f6; }
+    .modal-head h2 { font-size:1.1rem; font-weight:800; color:#1e1b4b; }
+    .modal-close-btn { width:32px; height:32px; border-radius:50%; border:none; background:#f1f5f9; color:#64748b; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+    .modal-close-btn:hover { background:#e0e7ff; color:#4f46e5; }
+    .modal-body { padding:20px 24px; }
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-size:12.5px; font-weight:700; color:#475569; margin-bottom:6px; }
+    .form-group label .req { color:#ef4444; margin-left:2px; }
+    .form-input { width:100%; padding:10px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-size:13.5px; font-family:inherit; transition:border-color .2s; box-sizing:border-box; }
+    .form-input:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.1); }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-textarea { min-height:80px; resize:vertical; }
+
+    /* 이미지 업로드 */
+    .img-upload-zone {
+      border:2px dashed #e5e7eb; border-radius:12px; padding:20px;
+      text-align:center; cursor:pointer; transition:all .2s; background:#fafafa;
+    }
+    .img-upload-zone:hover, .img-upload-zone.dragover { border-color:#6366f1; background:#eef2ff; }
+    .img-upload-zone i { font-size:2rem; color:#a5b4fc; margin-bottom:8px; display:block; }
+    .img-upload-zone p { font-size:13px; color:#64748b; }
+    .img-upload-zone span { font-size:11.5px; color:#94a3b8; display:block; margin-top:4px; }
+    /* 갤러리·카메라 버튼 행 */
+    .img-btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .img-pick-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px 10px; border-radius: 12px;
+      font-size: .88rem; font-weight: 700;
+      cursor: pointer; border: 2px dashed;
+      transition: background .2s; min-height: 48px;
+      font-family: inherit;
+    }
+    .img-pick-btn.gallery {
+      background: #eef2ff; color: #4338ca; border-color: #a5b4fc;
+    }
+    .img-pick-btn.gallery:hover { background: #e0e7ff; }
+    .img-pick-btn.camera {
+      background: #d1fae5; color: #065f46; border-color: #6ee7b7;
+    }
+    .img-pick-btn.camera:hover { background: #a7f3d0; }
+    /* 모바일에서 드래그 존 숨김 (버튼 두 개로 대체) */
+    @media (max-width: 768px) {
+      .img-upload-zone { display: none !important; }
+    }
+    .preview-grid { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .preview-item { position:relative; }
+    .preview-item img { width:80px; height:80px; border-radius:8px; object-fit:cover; border:1.5px solid #e5e7eb; }
+    .preview-del { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:#ef4444; color:white; border:none; cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center; }
+
+    .modal-foot { padding:16px 24px; border-top:1px solid #f3f4f6; display:flex; gap:10px; justify-content:flex-end; }
+    .btn-cancel { padding:10px 22px; border:1.5px solid #e5e7eb; border-radius:10px; background:none; font-size:13.5px; cursor:pointer; color:#64748b; transition:all .2s; }
+    .btn-cancel:hover { border-color:#a5b4fc; color:#4f46e5; }
+    .btn-primary { padding:10px 28px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:white; border:none; border-radius:10px; font-size:13.5px; font-weight:700; cursor:pointer; transition:all .2s; box-shadow:0 4px 14px rgba(79,70,229,.3); }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(79,70,229,.4); }
+    .btn-primary:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* 이미지 확대 뷰어 */
+    .img-viewer { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:3000; align-items:center; justify-content:center; }
+    .img-viewer.open { display:flex; }
+    .img-viewer img { max-width:90vw; max-height:90vh; border-radius:12px; object-fit:contain; }
+    .img-viewer-close { position:fixed; top:20px; right:24px; background:rgba(255,255,255,.2); color:white; border:none; border-radius:50%; width:40px; height:40px; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    /* 빈 상태 */
+    .assess-empty { text-align:center; padding:60px 20px; color:#94a3b8; }
+    .assess-empty i { font-size:3rem; opacity:.3; margin-bottom:16px; display:block; }
+    .assess-empty h3 { font-size:1rem; font-weight:600; color:#475569; margin-bottom:6px; }
+    .assess-empty p  { font-size:.88rem; line-height:1.7; }
+
+    /* 재제출 모달 */
+    .resubmit-section { background:#fafafa; border-radius:12px; padding:16px; margin-bottom:16px; border:1.5px solid #e5e7eb; }
+    .resubmit-section .prev-fb { font-size:13px; color:#374151; line-height:1.6; white-space:pre-wrap; }
+
+    /* 토스트 */
+    #toastWrap { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:9999; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none; }
+
+    @media(max-width:640px) {
+      .form-row { grid-template-columns:1fr; }
+      .assess-card-header { flex-direction:column; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatar">학</div>
+        <span class="stu-stage-badge" id="sidebarStage">–</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">–</strong>
+        <span id="sidebarStudentSchool">–</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 현황</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+        <a href="exam.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item active"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+        <a href="report.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>역량 리포트</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item"><i class="fas fa-robot"></i><span>AI 튜터링 로그</span></a>
+        <a href="golden-time.html" class="nav-item"><i class="fas fa-star"></i><span>골든타임 미션</span></a>
+        <a href="incubating.html" class="nav-item"><i class="fas fa-lightbulb"></i><span>질문 아카이브</span></a>
+        <a href="clinic.html" class="nav-item"><i class="fas fa-file-medical"></i><span>학생부 클리닉</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <a href="dashboard.html">홈</a>
+          <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+          <span>수행평가</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar student-avatar-color" id="topbarAvatar">학</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topbarName">–</span>
+            <span class="topbar-user-role student-role-label" id="topbarRole">학생</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+
+      <!-- 히어로 배너 -->
+      <div class="dv-hero dv-hero--blue">
+        <div class="dv-hero-icon dv-icon--blue"><i class="fas fa-layer-group"></i></div>
+        <div class="dv-hero-body">
+          <h2>수행평가</h2>
+          <p>학교에서 받은 수행평가 공지를 사진으로 올리면 선생님이 확인 후 피드백을 드립니다. 피드백을 받고 수정·보완하면서 수행평가를 완성해요.</p>
+          <span class="dv-badge"><i class="fas fa-camera"></i> 공지 사진 업로드</span>
+          <span class="dv-badge"><i class="fas fa-comments"></i> 선생님 1:1 피드백</span>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-grid" style="margin-bottom:24px;">
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:rgba(251,113,133,.1);color:#be123c;"><i class="fas fa-circle-exclamation"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">피드백 대기</span>
+            <div class="kpi-value" id="kpiPending">0<span class="kpi-unit">건</span></div>
+            <span class="kpi-sub">선생님 확인 중</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon" style="background:#fef3c7;color:#b45309;"><i class="fas fa-comment-dots"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">피드백 받음</span>
+            <div class="kpi-value" id="kpiFeedback">0<span class="kpi-unit">건</span></div>
+            <span class="kpi-sub kpi-sub--alert" id="kpiFeedbackSub">확인 필요</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--green"><i class="fas fa-check-double"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">최종 완료</span>
+            <div class="kpi-value" id="kpiDone">0<span class="kpi-unit">건</span></div>
+            <span class="kpi-sub">이번 학기</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-icon--purple" style="background:rgba(167,139,250,.12);color:var(--violet-600);"><i class="fas fa-chart-simple"></i></div>
+          <div class="kpi-body">
+            <span class="kpi-label">평균 점수</span>
+            <div class="kpi-value" id="kpiAvg">–<span class="kpi-unit">점</span></div>
+            <span class="kpi-sub" id="kpiAvgSub">점수 없음</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 새 수행평가 등록 버튼 -->
+      <div class="new-assess-section" onclick="openNewModal()">
+        <i class="fas fa-plus-circle"></i>
+        <h3>새 수행평가 공지 등록하기</h3>
+        <p>학교에서 받은 수행평가 공지 사진을 올려주세요.<br>선생님이 확인 후 준비 방법을 알려드립니다.</p>
+      </div>
+
+      <!-- 탭 -->
+      <div class="assess-page-tabs">
+        <button class="assess-tab-btn active" data-tab="all" onclick="switchTab('all')">전체 <span class="tab-cnt" id="cntAll">0</span></button>
+        <button class="assess-tab-btn" data-tab="submitted" onclick="switchTab('submitted')">제출 완료 <span class="tab-cnt" id="cntSubmitted">0</span></button>
+        <button class="assess-tab-btn" data-tab="feedback" onclick="switchTab('feedback')">피드백 <span class="tab-cnt red" id="cntFeedback">0</span></button>
+        <button class="assess-tab-btn" data-tab="revising" onclick="switchTab('revising')">수정 중 <span class="tab-cnt" id="cntRevising">0</span></button>
+        <button class="assess-tab-btn" data-tab="confirmed" onclick="switchTab('confirmed')">완료 <span class="tab-cnt" id="cntConfirmed">0</span></button>
+      </div>
+
+      <!-- 카드 리스트 -->
+      <div class="assess-list" id="assessList"></div>
+
+    </main>
+  </div>
+
+  <!-- ══════════════ 신규 등록 모달 ══════════════ -->
+  <div class="modal-overlay" id="newModal">
+    <div class="assess-modal">
+      <div class="modal-head">
+        <h2><i class="fas fa-plus-circle" style="color:#4f46e5;margin-right:8px;"></i>수행평가 공지 등록</h2>
+        <button class="modal-close-btn" onclick="closeModal('newModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>과목 <span class="req">*</span></label>
+            <input type="text" class="form-input" id="newSubject" placeholder="예: 국어, 수학, 영어" />
+          </div>
+          <div class="form-group">
+            <label>유형</label>
+            <select class="form-input" id="newType">
+              <option>보고서형</option><option>발표형</option><option>에세이형</option>
+              <option>실험보고서</option><option>탐구보고서</option><option>포트폴리오</option><option>기타</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>제목 <span class="req">*</span></label>
+          <input type="text" class="form-input" id="newTitle" placeholder="수행평가 이름 또는 주제를 입력하세요" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>마감일 <span class="req">*</span></label>
+            <input type="date" class="form-input" id="newDueDate" />
+          </div>
+          <div class="form-group">
+            <label>학기</label>
+            <select class="form-input" id="newSemester">
+              <option>1학기</option><option>2학기</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>공지 내용 메모 <span style="color:#94a3b8;font-weight:400;">(선택)</span></label>
+          <textarea class="form-input form-textarea" id="newMemo" placeholder="공지 내용을 간단히 메모하거나 궁금한 점을 적어주세요"></textarea>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-camera" style="color:#4f46e5;margin-right:5px;"></i>공지 사진 업로드 <span style="color:#94a3b8;font-weight:400;">(선택 · 최대 3장)</span></label>
+          <!-- 갤러리 / 카메라 버튼 -->
+          <div class="img-btn-row">
+            <label for="imgFileInput" class="img-pick-btn gallery">
+              <i class="fas fa-images"></i> 갤러리
+            </label>
+            <label for="imgCameraInput" class="img-pick-btn camera">
+              <i class="fas fa-camera"></i> 카메라 촬영
+            </label>
+          </div>
+          <input type="file" id="imgFileInput"    style="display:none" accept="image/*" multiple />
+          <input type="file" id="imgCameraInput"  style="display:none" accept="image/*" capture="environment" />
+          <!-- 드래그 존 (PC용) -->
+          <div class="img-upload-zone" id="uploadZone" style="margin-top:0;">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>PC: 드래그해서 올려주세요</p>
+            <span>JPG, PNG · 최대 3장 · 자동 압축 처리됨</span>
+          </div>
+          <div class="preview-grid" id="previewGrid"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal('newModal')">취소</button>
+        <button class="btn-primary" id="newSubmitBtn" onclick="submitNewAssess()">
+          <i class="fas fa-paper-plane"></i> 등록하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ 재제출 모달 ══════════════ -->
+  <div class="modal-overlay" id="resubmitModal">
+    <div class="assess-modal">
+      <div class="modal-head">
+        <h2><i class="fas fa-redo" style="color:#6d28d9;margin-right:8px;"></i>수정 후 재제출</h2>
+        <button class="modal-close-btn" onclick="closeModal('resubmitModal')"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="resubmit-section">
+          <div style="font-size:12px;font-weight:700;color:#6d28d9;margin-bottom:6px;"><i class="fas fa-comment-alt"></i> 선생님 피드백</div>
+          <div class="prev-fb" id="resubmitPrevFb">–</div>
+        </div>
+        <div class="form-group">
+          <label>수정 내용 메모 <span class="req">*</span></label>
+          <textarea class="form-input form-textarea" id="resubmitMemo" placeholder="수정한 내용이나 추가로 질문할 내용을 적어주세요"></textarea>
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-camera" style="color:#6d28d9;margin-right:5px;"></i>수정된 공지/결과물 사진 <span style="color:#94a3b8;font-weight:400;">(선택 · 최대 5장)</span></label>
+          <!-- 갤러리 / 카메라 버튼 -->
+          <div class="img-btn-row">
+            <label for="resubmitFileInput" class="img-pick-btn gallery">
+              <i class="fas fa-images"></i> 갤러리
+            </label>
+            <label for="resubmitCameraInput" class="img-pick-btn camera">
+              <i class="fas fa-camera"></i> 카메라 촬영
+            </label>
+          </div>
+          <input type="file" id="resubmitFileInput"    style="display:none" accept="image/*" multiple />
+          <input type="file" id="resubmitCameraInput"  style="display:none" accept="image/*" capture="environment" />
+          <!-- 드래그 존 (PC용) -->
+          <div class="img-upload-zone" id="resubmitZone" style="margin-top:0;">
+            <i class="fas fa-cloud-upload-alt" style="color:#a5b4fc;"></i>
+            <p>PC: 드래그해서 올려주세요</p>
+            <span>JPG, PNG · 최대 5장</span>
+          </div>
+          <div class="preview-grid" id="resubmitPreviewGrid"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-cancel" onclick="closeModal('resubmitModal')">취소</button>
+        <button class="btn-primary" id="resubmitBtn" onclick="submitResubmit()">
+          <i class="fas fa-paper-plane"></i> 재제출하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ 이미지 뷰어 ══════════════ -->
+  <div class="img-viewer" id="imgViewer" onclick="closeViewer()">
+    <button class="img-viewer-close" onclick="closeViewer()"><i class="fas fa-times"></i></button>
+    <img id="viewerImg" src="" alt="공지 이미지" onclick="event.stopPropagation()" />
+  </div>
+
+  <!-- 모바일 하단 네비 -->
+  <nav class="mobile-nav mobile-nav--student" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item">
+        <i class="fas fa-home"></i><span>홈</span>
+      </a>
+      <a href="assessment.html" class="mobile-nav-item active">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+      <a href="grades.html" class="mobile-nav-item">
+        <i class="fas fa-chart-line"></i><span>성적</span>
+      </a>
+      <a href="notice.html" class="mobile-nav-item">
+        <i class="fas fa-bullhorn"></i><span>공지</span>
+      </a>
+      <button class="mobile-nav-item morenav-toggle" id="moreNavBtn" onclick="openMoreNav()">
+        <i class="fas fa-ellipsis"></i><span>더보기</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 더보기 드로어 -->
+  <div class="morenav-overlay" id="moreNavOverlay" onclick="closeMoreNav()"></div>
+  <div class="morenav-drawer morenav--student" id="moreNavDrawer">
+    <div class="morenav-handle"></div>
+    <div class="morenav-profile" id="moreNavProfile">
+      <div class="morenav-avatar" id="moreNavAvatar">학</div>
+      <div>
+        <div class="morenav-name" id="moreNavName">–</div>
+        <div class="morenav-sub" id="moreNavSub">–</div>
+      </div>
+    </div>
+    <div class="morenav-header">전체 메뉴</div>
+    <div class="morenav-grid">
+      <a href="attendance.html" class="morenav-item">
+        <i class="fas fa-calendar-check"></i><span>출결</span>
+      </a>
+      <a href="plan.html" class="morenav-item">
+        <i class="fas fa-tasks"></i><span>학습플랜</span>
+      </a>
+      <a href="exam.html" class="morenav-item">
+        <i class="fas fa-calendar-alt"></i><span>시험플래너</span>
+      </a>
+      <a href="consult.html" class="morenav-item">
+        <i class="fas fa-comments"></i><span>상담</span>
+      </a>
+      <a href="record.html" class="morenav-item">
+        <i class="fas fa-id-card"></i><span>학생부</span>
+      </a>
+      <a href="report.html" class="morenav-item">
+        <i class="fas fa-chart-bar"></i><span>역량리포트</span>
+      </a>
+      <a href="assessment.html" class="morenav-item active">
+        <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+      </a>
+    </div>
+  </div>
+
+  <div id="toastWrap"></div>
+
+  <script>
+  function openMoreNav() {
+    document.getElementById('moreNavDrawer').classList.add('open');
+    document.getElementById('moreNavOverlay').classList.add('show');
+    document.getElementById('moreNavBtn').classList.add('open');
+    try {
+      const s = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+      const name = s.name || s.userName || '';
+      const school = s.school || s.userSchool || '';
+      if (name) {
+        document.getElementById('moreNavAvatar').textContent = name.charAt(0);
+        document.getElementById('moreNavName').textContent = name;
+        document.getElementById('moreNavSub').textContent = school;
+      }
+    } catch(e) {}
+  }
+  function closeMoreNav() {
+    document.getElementById('moreNavDrawer').classList.remove('open');
+    document.getElementById('moreNavOverlay').classList.remove('show');
+    document.getElementById('moreNavBtn').classList.remove('open');
+  }
+  </script>
+
+  <script>
+  /* ═══════════════════════════════════════════
+     수행평가 – 학생 뷰  (DB 연동 v2)
+     흐름: 학생 공지 업로드(submitted) → 관리자 피드백(feedback/revising/confirmed)
+           → 학생 재제출(revising) → 반복 → 최종확정(confirmed)
+  ═══════════════════════════════════════════ */
+
+  const TABLE = 'assessments';
+  let session    = null;
+  let studentId  = '';
+  let myRecords  = [];
+  let currentTab = 'all';
+  let resubmitTarget = null;
+
+  // 이미지 파일 임시 저장
+  let newImgFiles      = [];
+  let resubmitImgFiles = [];
+
+  /* ── 상태 정의 ── */
+  const STATUS = {
+    draft:     { label:'작성 중',    cls:'s-draft',     icon:'fas fa-pen' },
+    submitted: { label:'제출 완료',  cls:'s-submitted', icon:'fas fa-paper-plane' },
+    feedback:  { label:'피드백 도착', cls:'s-feedback',  icon:'fas fa-comment-dots' },
+    revising:  { label:'수정 요청',  cls:'s-revising',  icon:'fas fa-redo' },
+    confirmed: { label:'최종 완료',  cls:'s-confirmed', icon:'fas fa-check-double' },
+  };
+
+  const SUBJ_COLOR = {
+    '수학':{ bg:'rgba(59,130,246,.1)', color:'#2563eb', icon:'∑' },
+    '영어':{ bg:'rgba(16,185,129,.1)', color:'#059669', icon:'A' },
+    '국어':{ bg:'rgba(245,158,11,.1)', color:'#d97706', icon:'국' },
+    '과학':{ bg:'rgba(236,72,153,.1)', color:'#be185d', icon:'⚗' },
+    '사회':{ bg:'rgba(20,184,166,.1)', color:'#0f766e', icon:'地' },
+    '한국사':{ bg:'rgba(239,68,68,.1)', color:'#b91c1c', icon:'史' },
+    '탐구':{ bg:'rgba(139,92,246,.1)', color:'#7c3aed', icon:'⊕' },
+  };
+
+  /* ─────────────── 초기화 ─────────────── */
+  window.addEventListener('DOMContentLoaded', async () => {
+    try {
+      session = JSON.parse(
+        sessionStorage.getItem('dvl_user') ||
+        sessionStorage.getItem('dvl_session') ||
+        'null'
+      );
+    } catch(e) { session = null; }
+
+    if (!session || session.role !== 'student') {
+      location.href = '../login.html';
+      return;
+    }
+
+    // student_id 우선, 없으면 id 사용
+    studentId = session.student_id || session.id || session.username || '';
+
+    console.log('[init] session:', JSON.stringify(session));
+    console.log('[init] studentId:', studentId);
+
+    if (!studentId) {
+      showToast('로그인 정보를 읽을 수 없습니다. 다시 로그인해주세요.', 'error');
+      setTimeout(() => { location.href = '../login.html'; }, 2000);
+      return;
+    }
+
+    initSidebar();
+    initFileUploads();
+    await loadRecords();
+  });
+
+  function initSidebar() {
+    const av = (session.name || '학')[0];
+    const st = session.stage || '1단계';
+    const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+    set('sidebarAvatar', av);       set('topbarAvatar', av);
+    set('sidebarStudentName', session.name || '학생');
+    set('topbarName',         session.name || '학생');
+    set('topbarRole',         `학생 · ${st}`);
+    set('sidebarStage',       st);
+    set('sidebarStudentSchool', `${session.school||''} ${session.grade||''}`.trim() || '–');
+
+    // ── 사이드바 토글 (표준) ──
+    (function() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      if (!sb || !dim) return;
+      const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+      const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+      document.getElementById('menuToggle')?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); });
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim.addEventListener('click', close);
+    })();
+    document.getElementById('logoutBtn')?.addEventListener('click', e => { e.preventDefault(); ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)}); sessionStorage.clear(); location.href='../login.html'; });
+  }
+
+  /* ─────────────── 파일 업로드 ─────────────── */
+  function initFileUploads() {
+    // ── 신규 등록 ──
+    // 갤러리 input
+    const input = document.getElementById('imgFileInput');
+    input?.addEventListener('change', () => { handleFiles(input.files, 'new'); input.value = ''; });
+    // 카메라 input (capture="environment")
+    const camInput = document.getElementById('imgCameraInput');
+    camInput?.addEventListener('change', () => { handleFiles(camInput.files, 'new'); camInput.value = ''; });
+    // PC 드래그 존 (클릭 시 갤러리)
+    const zone = document.getElementById('uploadZone');
+    zone?.addEventListener('click', () => input?.click());
+    zone?.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone?.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone?.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); handleFiles(e.dataTransfer.files, 'new'); });
+
+    // ── 재제출 ──
+    // 갤러리 input
+    const ri = document.getElementById('resubmitFileInput');
+    ri?.addEventListener('change', () => { handleFiles(ri.files, 'resubmit'); ri.value = ''; });
+    // 카메라 input (capture="environment")
+    const rci = document.getElementById('resubmitCameraInput');
+    rci?.addEventListener('change', () => { handleFiles(rci.files, 'resubmit'); rci.value = ''; });
+    // PC 드래그 존 (클릭 시 갤러리)
+    const rz = document.getElementById('resubmitZone');
+    rz?.addEventListener('click', () => ri?.click());
+    rz?.addEventListener('dragover', e => { e.preventDefault(); rz.classList.add('dragover'); });
+    rz?.addEventListener('dragleave', () => rz.classList.remove('dragover'));
+    rz?.addEventListener('drop', e => { e.preventDefault(); rz.classList.remove('dragover'); handleFiles(e.dataTransfer.files, 'resubmit'); });
+  }
+
+  function handleFiles(files, mode) {
+    const arr = mode === 'new' ? newImgFiles : resubmitImgFiles;
+    const grid = document.getElementById(mode === 'new' ? 'previewGrid' : 'resubmitPreviewGrid');
+    Array.from(files).slice(0, 5 - arr.length).forEach(f => {
+      if (!f.type.startsWith('image/')) return;
+      arr.push(f);
+      const reader = new FileReader();
+      reader.onload = e => {
+        const idx = arr.length - 1;
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        div.dataset.idx = idx;
+        div.innerHTML = `<img src="${e.target.result}" alt="미리보기" onclick="openViewer('${e.target.result}')">
+          <button class="preview-del" onclick="removePreview(${idx},'${mode}')"><i class="fas fa-times"></i></button>`;
+        grid.appendChild(div);
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  window.removePreview = (idx, mode) => {
+    if (mode === 'new') newImgFiles.splice(idx, 1);
+    else resubmitImgFiles.splice(idx, 1);
+    const grid = document.getElementById(mode === 'new' ? 'previewGrid' : 'resubmitPreviewGrid');
+    grid.innerHTML = '';
+    const arr = mode === 'new' ? newImgFiles : resubmitImgFiles;
+    arr.forEach((f, i) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const div = document.createElement('div');
+        div.className = 'preview-item';
+        div.innerHTML = `<img src="${e.target.result}" alt="미리보기" onclick="openViewer('${e.target.result}')">
+          <button class="preview-del" onclick="removePreview(${i},'${mode}')"><i class="fas fa-times"></i></button>`;
+        grid.appendChild(div);
+      };
+      reader.readAsDataURL(f);
+    });
+  };
+
+  /* 이미지 리사이즈 후 Base64 변환 - 최대 600px / 품질 0.60 으로 강하게 압축 */
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = e => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 600;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else       { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.60));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ─────────────── DB 로드 ─────────────── */
+  async function loadRecords() {
+    try {
+      const res = await fetch(`../tables/${TABLE}?limit=200`);
+      const d   = await res.json();
+      const all = d.data || [];
+      console.log('[loadRecords] 전체 레코드 수:', all.length, '| studentId:', studentId);
+      myRecords = all
+        .filter(a => {
+          const match = a.student_id === studentId;
+          if (!match && all.length > 0 && all.length <= 5) {
+            // 적은 수일 때 디버그
+            console.log('  레코드 student_id:', a.student_id, '| 매칭:', match);
+          }
+          return match;
+        })
+        .sort((a, b) => (b.updated_at || b.created_at || 0) - (a.updated_at || a.created_at || 0));
+      console.log('[loadRecords] 내 레코드 수:', myRecords.length);
+    } catch(e) {
+      console.error('[loadRecords 오류]', e);
+      myRecords = [];
+    }
+    updateKPI();
+    updateCounts();
+    renderList();
+  }
+
+  /* ─────────────── KPI ─────────────── */
+  function updateKPI() {
+    const pending   = myRecords.filter(a => a.status === 'submitted').length;
+    const feedback  = myRecords.filter(a => ['feedback','revising'].includes(a.status)).length;
+    const done      = myRecords.filter(a => a.status === 'confirmed').length;
+    const unread    = myRecords.filter(a => a.unread_student).length;
+    const scored    = myRecords.filter(a => a.score != null && a.score !== '');
+    const avg       = scored.length ? Math.round(scored.reduce((s,a) => s + Number(a.score), 0) / scored.length) : null;
+
+    const setH = (id, h) => { const el = document.getElementById(id); if(el) el.innerHTML = h; };
+    const setT = (id, t) => { const el = document.getElementById(id); if(el) el.textContent = t; };
+    setH('kpiPending',  `${pending}<span class="kpi-unit">건</span>`);
+    setH('kpiFeedback', `${feedback}<span class="kpi-unit">건</span>`);
+    setH('kpiDone',     `${done}<span class="kpi-unit">건</span>`);
+    setH('kpiAvg', avg !== null ? `${avg}<span class="kpi-unit">점</span>` : `–<span class="kpi-unit">점</span>`);
+    setT('kpiAvgSub', avg !== null ? `${scored.length}건 평균` : '점수 없음');
+    setT('kpiFeedbackSub', unread > 0 ? `${unread}건 미확인!` : '확인 완료');
+  }
+
+  /* ─────────────── 탭 카운트 ─────────────── */
+  function updateCounts() {
+    const set = (id, n) => { const el = document.getElementById(id); if(el) el.textContent = n; };
+    set('cntAll',       myRecords.length);
+    set('cntSubmitted', myRecords.filter(a => a.status === 'submitted').length);
+    set('cntFeedback',  myRecords.filter(a => ['feedback','revising'].includes(a.status)).length);
+    set('cntRevising',  myRecords.filter(a => a.status === 'revising').length);
+    set('cntConfirmed', myRecords.filter(a => a.status === 'confirmed').length);
+  }
+
+  /* ─────────────── 탭 전환 ─────────────── */
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.assess-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    renderList();
+  }
+
+  /* ─────────────── 리스트 렌더 ─────────────── */
+  function renderList() {
+    let list = myRecords;
+    if (currentTab === 'submitted') list = myRecords.filter(a => a.status === 'submitted');
+    else if (currentTab === 'feedback') list = myRecords.filter(a => ['feedback','revising'].includes(a.status));
+    else if (currentTab === 'revising') list = myRecords.filter(a => a.status === 'revising');
+    else if (currentTab === 'confirmed') list = myRecords.filter(a => a.status === 'confirmed');
+
+    const container = document.getElementById('assessList');
+
+    if (!list.length) {
+      container.innerHTML = `
+        <div class="assess-empty">
+          <i class="fas fa-clipboard-list"></i>
+          <h3>수행평가 항목이 없습니다</h3>
+          <p>위의 <strong>+ 새 수행평가 공지 등록하기</strong>를 눌러<br>학교에서 받은 공지를 등록해보세요!</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = list.map(a => buildCard(a)).join('');
+
+    // 미읽음 → 읽음 처리
+    list.filter(a => a.unread_student).forEach(a => markRead(a.id));
+  }
+
+  /* ─────────────── 카드 빌드 ─────────────── */
+  function buildCard(a) {
+    const st  = STATUS[a.status] || { label: a.status, cls:'s-draft', icon:'fas fa-circle' };
+    const sc  = SUBJ_COLOR[a.subject] || { bg:'rgba(0,0,0,.06)', color:'#64748b', icon:'?' };
+    const dl  = daysLeft(a.due_date);
+    const dlTxt = dl === null ? '' : dl < 0 ? `D+${Math.abs(dl)} 지남` : dl === 0 ? '🔴 D-DAY' : dl <= 3 ? `🔴 D-${dl}` : `D-${dl}`;
+    const unread = a.unread_student ? '<span class="unread-dot" title="새 피드백"></span>' : '';
+
+    // 이력 파싱
+    let history = [];
+    try { history = JSON.parse(a.feedback_history || '[]'); } catch(e) {}
+
+    // 타임라인 HTML
+    const tlHtml = history.length ? `
+      <div class="assess-timeline">
+        <div class="timeline-label"><i class="fas fa-history"></i> 대화 이력</div>
+        ${history.slice(-4).map((h, i, arr) => `
+          <div class="tl-item">
+            <div class="tl-dot-wrap">
+              <div class="tl-dot ${h.who}"></div>
+              ${i < arr.length - 1 ? '<div class="tl-line" style="flex:1"></div>' : ''}
+            </div>
+            <div class="tl-body">
+              <span class="tl-who ${h.who === 'admin' ? 'admin' : ''}">${h.who === 'admin' ? '👩‍🏫 선생님' : '👤 나'}</span>
+              <span class="tl-date">${h.date || ''}</span>
+              <div class="tl-text">${h.text || ''}</div>
+              ${h.images && h.images.length ? `<div class="tl-images">${h.images.map(img => `<img class="tl-img" src="${img}" onclick="openViewer('${img}')" alt="첨부이미지">`).join('')}</div>` : ''}
+              ${h.score ? `<div class="tl-score">최종 점수: ${h.score}점</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>` : '';
+
+    // 액션 버튼
+    let actions = '';
+    if (a.status === 'draft' || a.status === 'submitted') {
+      actions = `<button class="btn-action btn-detail" onclick="openDetailView('${a.id}')"><i class="fas fa-eye"></i> 상세 보기</button>`;
+    } else if (a.status === 'feedback') {
+      actions = `
+        <button class="btn-action btn-resubmit" onclick="openResubmit('${a.id}')"><i class="fas fa-redo"></i> 수정 후 재제출</button>
+        <button class="btn-action btn-detail" onclick="openDetailView('${a.id}')"><i class="fas fa-eye"></i> 전체 보기</button>`;
+    } else if (a.status === 'revising') {
+      actions = `
+        <button class="btn-action btn-detail" onclick="openDetailView('${a.id}')"><i class="fas fa-eye"></i> 전체 보기</button>
+        <span style="font-size:12.5px;color:#6d28d9;"><i class="fas fa-spinner fa-spin"></i> 선생님 재확인 중...</span>`;
+    } else if (a.status === 'confirmed') {
+      actions = `<button class="btn-action btn-detail" onclick="openDetailView('${a.id}')"><i class="fas fa-eye"></i> 결과 보기</button>`;
+      if (a.score) actions += `<span class="tl-score">최종 점수: ${a.score}점</span>`;
+    }
+
+    return `
+    <div class="assess-card ${a.unread_student ? 'unread' : ''}" id="card-${a.id}">
+      <div class="assess-card-header">
+        <div class="assess-card-title-wrap">
+          <div class="assess-card-subject">
+            <div class="subj-icon" style="background:${sc.bg};color:${sc.color};">${sc.icon}</div>
+            <span style="font-weight:700;color:${sc.color};font-size:.9rem;">${a.subject || '–'}</span>
+            <span class="s-badge ${st.cls}"><i class="${st.icon}"></i> ${st.label}</span>
+            ${unread}
+          </div>
+          <div class="assess-card-title">${a.title || '(제목 없음)'}</div>
+          <div class="assess-card-meta">
+            ${a.due_date ? `<span class="assess-meta-item"><i class="fas fa-calendar-alt"></i> 마감: ${a.due_date} <strong style="color:${dl !== null && dl <= 3 ? '#ef4444' : '#94a3b8'}">${dlTxt}</strong></span>` : ''}
+            ${a.assess_type ? `<span class="assess-meta-item"><i class="fas fa-tag"></i> ${a.assess_type}</span>` : ''}
+            ${a.year ? `<span class="assess-meta-item"><i class="fas fa-calendar"></i> ${a.year} ${a.semester||''}</span>` : ''}
+            <span class="assess-meta-item"><i class="fas fa-redo"></i> ${a.submit_count || 1}회 제출</span>
+          </div>
+        </div>
+      </div>
+      ${tlHtml}
+      <div class="assess-card-actions">${actions}</div>
+    </div>`;
+  }
+
+  /* ─────────────── 미읽음 → 읽음 ─────────────── */
+  async function markRead(id) {
+    try {
+      await fetch(`../tables/${TABLE}/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ unread_student: false })
+      });
+      const r = myRecords.find(x => x.id === id);
+      if (r) r.unread_student = false;
+    } catch(e) {}
+  }
+
+  /* ─────────────── 신규 등록 모달 ─────────────── */
+  function openNewModal() {
+    newImgFiles = [];
+    document.getElementById('previewGrid').innerHTML = '';
+    document.getElementById('newSubject').value  = '';
+    document.getElementById('newTitle').value    = '';
+    document.getElementById('newMemo').value     = '';
+    document.getElementById('newDueDate').value  = '';
+    document.getElementById('newModal').classList.add('open');
+  }
+
+  async function submitNewAssess() {
+    const subject  = document.getElementById('newSubject').value.trim();
+    const title    = document.getElementById('newTitle').value.trim();
+    const dueDate  = document.getElementById('newDueDate').value;
+    const memo     = document.getElementById('newMemo').value.trim();
+    const type     = document.getElementById('newType').value;
+    const semester = document.getElementById('newSemester').value;
+
+    if (!subject) { showToast('과목을 입력해주세요.', 'error'); return; }
+    if (!title)   { showToast('제목을 입력해주세요.', 'error'); return; }
+    if (!dueDate) { showToast('마감일을 선택해주세요.', 'error'); return; }
+    if (!studentId) { showToast('로그인 정보 오류. 다시 로그인해주세요.', 'error'); return; }
+    // 이미지는 선택 사항 (있으면 첨부, 없어도 제출 가능)
+
+    const btn = document.getElementById('newSubmitBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 등록 중...';
+
+    try {
+      // 이미지 1장씩 리사이즈 압축
+      const images = [];
+      for (const f of newImgFiles.slice(0, 3)) {  // 최대 3장으로 제한
+        try {
+          const b64 = await fileToBase64(f);
+          images.push(b64);
+        } catch(imgErr) {
+          console.warn('이미지 변환 실패, 건너뜀:', imgErr);
+        }
+      }
+
+      // 이미지가 없어도 진행 (선택 사항)
+      // ★ notice_images에만 이미지 저장 (feedback_history에는 이미지 미포함)
+      const histText = memo
+        ? (images.length ? `${memo}\n[공지 사진 ${images.length}장 첨부]` : memo)
+        : (images.length ? `수행평가 공지를 등록했습니다. [공지 사진 ${images.length}장 첨부]` : '수행평가 공지를 등록했습니다.');
+
+      const history = [{
+        who:  'student',
+        date: nowKR(),
+        text: histText,
+        // images 배열은 feedback_history에 넣지 않음 (너무 큼) → notice_images 필드 참조
+      }];
+
+      const payload = {
+        student_id:       studentId,
+        student_name:     session.name || '',
+        stage:            session.stage || '',
+        subject,
+        title,
+        assess_type:      type,
+        due_date:         dueDate,
+        semester,
+        year:             new Date().getFullYear().toString(),
+        student_memo:     memo,
+        notice_images:    JSON.stringify(images),   // 이미지는 여기에만
+        feedback_history: JSON.stringify(history),  // 텍스트만
+        status:           'submitted',
+        submit_count:     1,
+        unread_student:   false,
+        unread_admin:     true,
+      };
+
+      console.log('[제출] studentId:', studentId, '| subject:', subject, '| payload size:', JSON.stringify(payload).length);
+
+      const res = await fetch(`../tables/${TABLE}`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+
+      const resText = await res.text();
+      console.log('[제출] 응답 status:', res.status, '| body:', resText.substring(0, 200));
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${resText}`);
+      }
+
+      showToast('✅ 수행평가 공지가 등록되었습니다! 선생님께 알림이 전송되었습니다.', 'success');
+      closeModal('newModal');
+      newImgFiles = [];
+      document.getElementById('previewGrid').innerHTML = '';
+      await loadRecords();
+    } catch(e) {
+      console.error('[submitNewAssess 오류]', e);
+      showToast(`⚠️ 등록 실패: ${e.message || '다시 시도해주세요.'}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> 등록하기';
+    }
+  }
+
+  /* ─────────────── 재제출 모달 ─────────────── */
+  function openResubmit(id) {
+    resubmitTarget = myRecords.find(a => a.id === id);
+    if (!resubmitTarget) return;
+    resubmitImgFiles = [];
+    document.getElementById('resubmitPreviewGrid').innerHTML = '';
+    document.getElementById('resubmitMemo').value  = '';
+    document.getElementById('resubmitPrevFb').textContent = resubmitTarget.feedback || '–';
+    document.getElementById('resubmitModal').classList.add('open');
+  }
+
+  async function submitResubmit() {
+    if (!resubmitTarget) return;
+    const memo = document.getElementById('resubmitMemo').value.trim();
+    if (!memo) { showToast('수정 내용을 입력해주세요.', 'error'); return; }
+
+    const btn = document.getElementById('resubmitBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 제출 중...';
+
+    try {
+      // 재제출 이미지는 별도 필드(notice_images)를 업데이트
+      let resubImages = [];
+      if (resubmitImgFiles.length > 0) {
+        for (const f of resubmitImgFiles.slice(0, 3)) {
+          try {
+            resubImages.push(await fileToBase64(f));
+          } catch(e) { console.warn('재제출 이미지 변환 실패:', e); }
+        }
+      }
+
+      let history = [];
+      try { history = JSON.parse(resubmitTarget.feedback_history || '[]'); } catch(e) {}
+
+      const histText = resubImages.length
+        ? `${memo}\n[수정 사진 ${resubImages.length}장 첨부]`
+        : memo;
+
+      history.push({
+        who:  'student',
+        date: nowKR(),
+        text: histText,
+        // 이미지는 feedback_history에 넣지 않음
+      });
+
+      const cnt = (resubmitTarget.submit_count || 1) + 1;
+
+      const patchData = {
+        status:           'revising',
+        student_memo:     memo,
+        feedback_history: JSON.stringify(history),
+        submit_count:     cnt,
+        unread_student:   false,
+        unread_admin:     true,
+      };
+
+      // 재제출 이미지 있으면 notice_images 업데이트
+      if (resubImages.length) {
+        patchData.notice_images = JSON.stringify(resubImages);
+      }
+
+      console.log('[재제출] id:', resubmitTarget.id, '| patch size:', JSON.stringify(patchData).length);
+
+      const res = await fetch(`../tables/${TABLE}/${resubmitTarget.id}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(patchData),
+      });
+
+      const resText = await res.text();
+      console.log('[재제출] 응답 status:', res.status, '| body:', resText.substring(0, 200));
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${resText}`);
+
+      showToast('✅ 재제출되었습니다! 선생님이 확인 후 피드백을 드립니다.', 'success');
+      closeModal('resubmitModal');
+      resubmitImgFiles = [];
+      document.getElementById('resubmitPreviewGrid').innerHTML = '';
+      resubmitTarget = null;
+      await loadRecords();
+    } catch(e) {
+      console.error('[submitResubmit 오류]', e);
+      showToast(`⚠️ 제출 실패: ${e.message || '다시 시도해주세요.'}`, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> 재제출하기';
+    }
+  }
+
+  /* ─────────────── 상세 보기 (인라인 확장) ─────────────── */
+  window.openDetailView = (id) => {
+    const a = myRecords.find(x => x.id === id);
+    if (!a) return;
+
+    let history = [];
+    try { history = JSON.parse(a.feedback_history || '[]'); } catch(e) {}
+
+    // 간단한 팝업 대신 카드 내 확장
+    const fullHtml = history.map(h => `
+      <div style="margin-bottom:16px;padding:14px;background:${h.who==='admin'?'#f0fdf4':'#eef2ff'};border-radius:12px;border-left:3px solid ${h.who==='admin'?'#059669':'#4f46e5'}">
+        <div style="font-size:12px;font-weight:700;color:${h.who==='admin'?'#059669':'#4f46e5'};margin-bottom:6px;">
+          ${h.who==='admin' ? '👩‍🏫 선생님' : '👤 나'} <span style="font-size:11px;color:#94a3b8;font-weight:400;margin-left:6px;">${h.date||''}</span>
+        </div>
+        <div style="font-size:13.5px;color:#374151;line-height:1.7;white-space:pre-wrap;">${h.text||''}</div>
+        ${h.images && h.images.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${h.images.map(img=>`<img src="${img}" style="width:90px;height:90px;border-radius:8px;object-fit:cover;cursor:pointer;border:1.5px solid #e5e7eb;" onclick="openViewer('${img}')">`).join('')}</div>` : ''}
+        ${h.score ? `<div style="margin-top:8px;display:inline-block;padding:4px 14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border-radius:20px;font-size:13px;font-weight:700;">최종 점수: ${h.score}점</div>` : ''}
+      </div>`).join('') || '<p style="color:#94a3b8;text-align:center;padding:20px;">아직 대화 이력이 없습니다.</p>';
+
+    // 모달 동적 생성
+    let vm = document.getElementById('detailViewModal');
+    if (!vm) {
+      vm = document.createElement('div');
+      vm.id = 'detailViewModal';
+      vm.className = 'modal-overlay';
+      vm.innerHTML = `
+        <div class="assess-modal" style="max-width:580px;">
+          <div class="modal-head">
+            <h2 id="dvTitle">상세 보기</h2>
+            <button class="modal-close-btn" onclick="closeModal('detailViewModal')"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body" id="dvBody"></div>
+          <div class="modal-foot"><button class="btn-cancel" onclick="closeModal('detailViewModal')">닫기</button></div>
+        </div>`;
+      document.body.appendChild(vm);
+      vm.addEventListener('click', e => { if(e.target===vm) closeModal('detailViewModal'); });
+    }
+    const st = STATUS[a.status] || { label: a.status };
+    document.getElementById('dvTitle').textContent = `${a.subject} · ${a.title}`;
+    document.getElementById('dvBody').innerHTML = fullHtml;
+    vm.classList.add('open');
+  };
+
+  /* ─────────────── 이미지 뷰어 ─────────────── */
+  window.openViewer = (src) => {
+    document.getElementById('viewerImg').src = src;
+    document.getElementById('imgViewer').classList.add('open');
+  };
+  window.closeViewer = () => document.getElementById('imgViewer').classList.remove('open');
+
+  /* ─────────────── 모달 닫기 ─────────────── */
+  window.closeModal = (id) => {
+    document.getElementById(id)?.classList.remove('open');
+  };
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+  });
+
+  /* ─────────────── 날짜 유틸 ─────────────── */
+  function daysLeft(d) {
+    if (!d) return null;
+    const now = new Date(); now.setHours(0,0,0,0);
+    const due = new Date(d); due.setHours(0,0,0,0);
+    return Math.ceil((due - now) / 86400000);
+  }
+  function nowKR() {
+    return new Date().toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  }
+
+  /* ─────────────── 토스트 ─────────────── */
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toastWrap');
+    const col = { success:'#163A33', info:'#245A4E', error:'#ef4444' };
+    const t = document.createElement('div');
+    t.style.cssText = `background:${col[type]||col.info};color:#fff;padding:12px 22px;border-radius:999px;font-size:13.5px;font-weight:600;font-family:'Noto Sans KR',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.25);opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s;white-space:nowrap;max-width:90vw;text-align:center;`;
+    t.textContent = msg;
+    c.appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => { t.style.opacity='1'; t.style.transform='translateY(0)'; }));
+    setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(10px)'; setTimeout(()=>t.remove(),350); }, 4000);
+  }
+  </script>
+</body>
+</html>

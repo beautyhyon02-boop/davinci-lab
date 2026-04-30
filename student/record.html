@@ -1,0 +1,2114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생부 관리 – 다빈치랩</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/student.css" />
+  <!-- 데이터 저장 API 모듈 -->
+  <script src="../js/dvl-storage.js"></script>
+  <!-- ✅ 핵심 함수 전역 등록 – onclick이 실행되는 시점에 window에 등록되어 있어야 함 -->
+  <script>
+    /* 탭 전환, 섹션 토글, 저장/로드/추가 함수들을 window에 미리 프록시로 등록.
+       실제 구현은 </body> 직전 메인 스크립트에 있지만, onclick은 즉시 호출되므로
+       함수가 아직 없으면 "not defined" 에러가 발생한다. 프록시는 실제 함수가
+       등록된 뒤 그것을 그대로 호출하는 래퍼이므로 항상 안전하게 동작한다. */
+    const _dvl_proxy = (name) => function(...a) {
+      if (typeof window['_dvl_real_' + name] === 'function')
+        return window['_dvl_real_' + name](...a);
+      // 실제 함수가 아직 없으면 DOMContentLoaded 후 재시도
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof window['_dvl_real_' + name] === 'function')
+          window['_dvl_real_' + name](...a);
+      });
+    };
+    // 탭 전환
+    window.switchRecTab  = _dvl_proxy('switchRecTab');
+    // 섹션 토글
+    window.toggleSection = _dvl_proxy('toggleSection');
+    // 섹션 저장
+    ['saveSection1','saveSection2','saveSection3','saveSection4',
+     'saveSection5','saveSection6','saveSection7','saveSection8','saveSection9'
+    ].forEach(n => window[n] = _dvl_proxy(n));
+    // 섹션 복원/초기화
+    ['loadSection1','loadSection2','loadSection3','loadSection4',
+     'loadSection5','loadSection8',
+     'initCCA','initSetech','initBehavior'
+    ].forEach(n => window[n] = _dvl_proxy(n));
+    // 행 추가
+    ['addSchoolHistRow','addAwardRow','addCertRow','addBookRow',
+     'openSetechModal','closeSetechModal','confirmAddSetech',
+     'removeSetech','viewPdf','downloadPdf','deletePdf'
+    ].forEach(n => window[n] = _dvl_proxy(n));
+  </script>
+  <style>
+    /* ══ 학생부 관리 전용 – 인디고-바이올렛 톤 ══ */
+    :root {
+      --rec-main:   #6d28d9;
+      --rec-light:  #ede9fe;
+      --rec-border: #c4b5fd;
+      --rec-dark:   #4c1d95;
+      --rec-mid:    #7c3aed;
+      --byte-ok:    #059669;
+      --byte-warn:  #d97706;
+      --byte-over:  #dc2626;
+    }
+    /* 히어로 */
+    .rec-hero {
+      background: linear-gradient(135deg, #1e1040 0%, #2d1f6e 50%, #1a0d3a 100%);
+      border-radius: var(--radius-xl); padding: 36px 40px;
+      margin-bottom: 28px; position: relative; overflow: hidden; color:#fff;
+    }
+    .rec-hero::before {
+      content:''; position:absolute; top:-60px; right:-60px;
+      width:260px; height:260px;
+      background: radial-gradient(circle, rgba(167,139,250,.22) 0%, transparent 70%);
+      pointer-events:none;
+    }
+    .rec-hero-inner { display:flex; align-items:center; gap:24px; position:relative; z-index:1; }
+    .rec-hero-icon {
+      width:68px; height:68px; border-radius:20px; flex-shrink:0;
+      background: linear-gradient(135deg, #a78bfa, #7c3aed);
+      display:flex; align-items:center; justify-content:center;
+      font-size:28px; color:#fff; box-shadow:0 8px 24px rgba(167,139,250,.45);
+    }
+    .rec-hero-text h2 { font-size:22px; font-weight:800; margin-bottom:6px; letter-spacing:-.03em; }
+    .rec-hero-text p  { font-size:13.5px; color:rgba(255,255,255,.65); line-height:1.6; }
+    .rec-hero-badges  { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .rec-hero-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15);
+      border-radius:20px; padding:5px 13px; font-size:12px; color:rgba(255,255,255,.85);
+    }
+
+    /* ── 탭 바 ── */
+    .rec-tab-bar {
+      display:flex; gap:3px; background:var(--bg-section);
+      border-radius:var(--radius-md); padding:4px; margin-bottom:24px; flex-wrap:wrap;
+    }
+    .rec-tab-btn {
+      flex:1; min-width:88px; padding:8px 8px;
+      border-radius:9px; border:none; background:none;
+      font-size:12.5px; font-weight:500; color:var(--text-500);
+      cursor:pointer; transition:all var(--transition);
+      text-align:center; display:flex; align-items:center; justify-content:center; gap:5px;
+      white-space:nowrap;
+    }
+    .rec-tab-btn.active {
+      background:var(--bg-card); color:var(--rec-main); font-weight:700;
+      box-shadow:var(--shadow-sm);
+    }
+    .rec-tab-btn i { font-size:12px; }
+
+    /* ── 섹션 카드 ── */
+    .rec-section {
+      background:var(--bg-card); border-radius:var(--radius-lg);
+      border:1.5px solid var(--border); margin-bottom:20px; overflow:hidden;
+    }
+    .rec-section-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:18px 22px; border-bottom:1.5px solid var(--border);
+      background:linear-gradient(135deg, #faf5ff, #f5f3ff);
+      cursor:pointer; user-select:none;
+    }
+    .rec-section-header:hover { background:linear-gradient(135deg,#ede9fe,#f5f3ff); }
+    .rec-section-title {
+      display:flex; align-items:center; gap:10px;
+      font-size:15px; font-weight:700; color:var(--text-900);
+    }
+    .rec-section-num {
+      width:26px; height:26px; border-radius:8px; flex-shrink:0;
+      background:var(--rec-main); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:13px; font-weight:800;
+    }
+    .rec-section-sub  { font-size:12px; color:var(--text-300); margin-top:2px; }
+    .rec-section-body { padding:22px; }
+
+    /* ── 폼 그리드 ── */
+    .rec-form-row {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:14px; margin-bottom:14px;
+    }
+    .rec-form-row.full { grid-template-columns:1fr; }
+    .rec-form-row.tri  { grid-template-columns:1fr 1fr 1fr; }
+    .rec-label {
+      display:block; font-size:11.5px; font-weight:700;
+      color:var(--text-500); margin-bottom:5px;
+      text-transform:uppercase; letter-spacing:.04em;
+    }
+    .rec-input, .rec-select {
+      width:100%; padding:9px 13px;
+      border:1.5px solid var(--border);
+      border-radius:var(--radius-sm);
+      font-size:13.5px; color:var(--text-900);
+      background:var(--bg-card); outline:none;
+      transition:border-color var(--transition);
+      font-family:var(--font);
+      box-sizing: border-box;
+    }
+    .rec-input:focus, .rec-select:focus { border-color:var(--rec-mid); }
+    .rec-input[readonly] {
+      background:var(--bg-section); color:var(--text-500); cursor:default;
+    }
+
+    /* ══ 세특 비교 레이아웃 ══ */
+    .setech-compare-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:16px; margin-bottom:6px;
+    }
+    .setech-panel { display:flex; flex-direction:column; gap:6px; }
+    .setech-panel-label {
+      display:flex; align-items:center; gap:8px;
+      font-size:12.5px; font-weight:700; padding:8px 12px;
+      border-radius:8px;
+    }
+    .setech-panel-label.self    { background:#ede9fe; color:#6d28d9; }
+    .setech-panel-label.teacher { background:#d1fae5; color:#065f46; }
+    .setech-textarea {
+      width:100%; box-sizing:border-box;
+      padding:12px 14px;
+      border:1.5px solid var(--border);
+      border-radius:var(--radius-sm);
+      font-size:13px; color:var(--text-900);
+      background:var(--bg-card); outline:none;
+      font-family:var(--font); line-height:1.75;
+      resize:vertical; min-height:160px;
+      transition:border-color var(--transition);
+    }
+    .setech-textarea:focus { border-color:var(--rec-mid); }
+    .setech-textarea.teacher-view {
+      background:#f0fdf4; border-color:#bbf7d0; color:var(--text-700);
+    }
+    .setech-textarea.over-limit {
+      border-color:var(--byte-over) !important;
+      background:#fff5f5;
+    }
+
+    /* ══ 바이트 카운터 ══ */
+    .byte-counter {
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:6px; font-size:12px; font-weight:600; padding:4px 2px;
+    }
+    .byte-counter .bc-bar {
+      width:120px; height:5px; background:#e5e7eb;
+      border-radius:99px; overflow:hidden;
+    }
+    .byte-counter .bc-fill {
+      height:100%; border-radius:99px;
+      transition:width .3s ease, background .3s;
+    }
+    .bc-ok   { color:var(--byte-ok); }
+    .bc-warn { color:var(--byte-warn); }
+    .bc-over { color:var(--byte-over); }
+
+    /* ══ PDF 업로드 ══ */
+    .pdf-upload-zone {
+      border:2.5px dashed var(--rec-border); border-radius:var(--radius-lg);
+      padding:32px 24px; text-align:center;
+      background:#faf5ff; cursor:pointer;
+      transition:all var(--transition);
+    }
+    .pdf-upload-zone:hover { border-color:var(--rec-mid); background:#ede9fe; }
+    .pdf-upload-zone.drag-over { border-color:var(--rec-mid); background:#ede9fe; }
+    .pdf-upload-zone i { font-size:34px; color:var(--rec-mid); margin-bottom:10px; display:block; }
+    .pdf-upload-zone p { font-size:14px; color:var(--text-700); font-weight:500; }
+    .pdf-upload-zone span { font-size:12px; color:var(--text-300); }
+    .pdf-file-list { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+    .pdf-file-item {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--bg-card); border:1.5px solid var(--rec-border);
+      border-radius:10px; padding:10px 16px;
+    }
+    .pdf-file-info { display:flex; align-items:center; gap:10px; }
+    .pdf-file-icon { font-size:22px; color:#dc2626; }
+    .pdf-file-name { font-size:13px; font-weight:600; color:var(--text-900); }
+    .pdf-file-size { font-size:11.5px; color:var(--text-300); }
+    .pdf-file-actions { display:flex; gap:6px; }
+    .btn-pdf-view {
+      padding:5px 12px; border-radius:7px; border:none; cursor:pointer;
+      font-size:12.5px; font-weight:600;
+      background:#ede9fe; color:var(--rec-main);
+      transition:background var(--transition);
+    }
+    .btn-pdf-view:hover { background:var(--rec-border); }
+    .btn-pdf-dl {
+      padding:5px 12px; border-radius:7px; border:none; cursor:pointer;
+      font-size:12.5px; font-weight:600;
+      background:#dbeafe; color:#1d4ed8;
+      transition:background var(--transition);
+    }
+    .btn-pdf-dl:hover { background:#bfdbfe; }
+    .btn-pdf-del {
+      padding:5px 10px; border-radius:7px; border:none; cursor:pointer;
+      background:#fef2f2; color:#b91c1c; font-size:12.5px;
+      transition:background var(--transition);
+    }
+    .btn-pdf-del:hover { background:#fee2e2; }
+
+    /* ── 저장 바 ── */
+    .rec-save-bar {
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:10px; padding:16px 0;
+    }
+    .btn-rec-save {
+      display:inline-flex; align-items:center; gap:8px;
+      background:linear-gradient(135deg, #a78bfa, #7c3aed);
+      color:#fff; border:none; padding:11px 28px;
+      border-radius:var(--radius-sm); font-size:14px; font-weight:700;
+      cursor:pointer; transition:opacity var(--transition);
+      box-shadow:0 3px 12px rgba(124,58,237,.3);
+    }
+    .btn-rec-save:hover { opacity:.88; }
+    .btn-rec-cancel {
+      display:inline-flex; align-items:center; gap:8px;
+      background:var(--bg-section); color:var(--text-700);
+      border:none; padding:11px 22px;
+      border-radius:var(--radius-sm); font-size:14px; font-weight:600; cursor:pointer;
+    }
+    .btn-rec-add {
+      display:inline-flex; align-items:center; gap:7px;
+      background:none; border:1.5px dashed var(--rec-border);
+      color:var(--rec-main); padding:9px 18px;
+      border-radius:var(--radius-sm); font-size:13px; font-weight:600;
+      cursor:pointer; transition:all var(--transition);
+    }
+    .btn-rec-add:hover { background:var(--rec-light); border-style:solid; }
+
+    /* ── 토스트 ── */
+    .rec-toast {
+      position:fixed; bottom:28px; right:28px;
+      background:#4c1d95; color:#fff; padding:14px 22px;
+      border-radius:var(--radius-md); font-size:14px; font-weight:600;
+      display:flex; align-items:center; gap:10px;
+      box-shadow:var(--shadow-lg);
+      opacity:0; transform:translateY(16px);
+      transition:all .3s ease; z-index:9999; pointer-events:none;
+    }
+    .rec-toast.show { opacity:1; transform:translateY(0); }
+    .rec-toast i { color:#c4b5fd; }
+
+    /* ── 이수과목 / 동적 테이블 ── */
+    .subj-table-wrap {
+      background:var(--bg-card); border-radius:var(--radius-md);
+      border:1.5px solid var(--border); overflow:hidden; margin-bottom:14px; overflow-x:auto;
+    }
+    .subj-table { width:100%; border-collapse:collapse; min-width:480px; }
+    .subj-table th {
+      background:#f5f3ff; font-size:12px; font-weight:700;
+      color:var(--rec-main); padding:10px 14px; text-align:left;
+      border-bottom:1.5px solid var(--rec-border); white-space:nowrap;
+    }
+    .subj-table td {
+      padding:9px 12px; font-size:13px;
+      color:var(--text-700); border-bottom:1px solid var(--border-light);
+      vertical-align:middle;
+    }
+    .subj-table tr:last-child td { border-bottom:none; }
+    .subj-table tr:hover td { background:#faf5ff; }
+
+    /* ── 행동특성 안내 ── */
+    .behavior-note {
+      display:flex; align-items:flex-start; gap:10px;
+      background:#fffbeb; border:1.5px solid #fde68a;
+      border-radius:10px; padding:12px 16px; margin-bottom:14px;
+      font-size:13px; color:#92400e; line-height:1.6;
+    }
+    .behavior-note i { color:#d97706; margin-top:1px; flex-shrink:0; }
+
+    /* ── 삭제 버튼 ── */
+    .btn-row-delete {
+      background:none; border:none; cursor:pointer;
+      color:var(--text-300); font-size:14px; padding:4px;
+      border-radius:6px; transition:all var(--transition);
+    }
+    .btn-row-delete:hover { color:#b91c1c; background:#fef2f2; }
+
+    /* ── 세특 모달 ── */
+    .setech-add-modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      z-index:1000; display:none; align-items:center; justify-content:center;
+    }
+    .setech-add-modal-overlay.show { display:flex; }
+    .setech-add-modal {
+      background:var(--bg-card); border-radius:var(--radius-xl);
+      padding:32px; width:100%; max-width:440px;
+      box-shadow:var(--shadow-lg); animation:modalIn .25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform:scale(.96) translateY(12px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .setech-add-modal h3 { font-size:17px; font-weight:800; margin-bottom:4px; color:var(--text-900); }
+    .setech-add-modal p  { font-size:13px; color:var(--text-500); margin-bottom:20px; }
+    .sam-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+    .sam-full { grid-column:1/-1; }
+    .sam-label { display:block; font-size:11.5px; font-weight:700; color:var(--text-500); margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; }
+    .sam-input, .sam-select {
+      width:100%; padding:9px 12px; border:1.5px solid var(--border);
+      border-radius:var(--radius-sm); font-size:13.5px; color:var(--text-900);
+      background:var(--bg-card); outline:none; font-family:var(--font);
+      transition:border-color var(--transition); box-sizing:border-box;
+    }
+    .sam-input:focus, .sam-select:focus { border-color:var(--rec-mid); }
+    .sam-btn-row { display:flex; gap:10px; justify-content:flex-end; }
+    .sam-btn-primary {
+      padding:10px 24px; background:linear-gradient(135deg,#a78bfa,#7c3aed);
+      color:#fff; border:none; border-radius:var(--radius-sm);
+      font-size:14px; font-weight:700; cursor:pointer;
+    }
+    .sam-btn-secondary {
+      padding:10px 18px; background:var(--bg-section); color:var(--text-700);
+      border:none; border-radius:var(--radius-sm); font-size:14px; font-weight:600; cursor:pointer;
+    }
+
+    /* 반응형 */
+    @media (max-width: 768px) {
+      .rec-hero { padding:24px 20px; }
+      .rec-hero-inner { flex-direction:column; align-items:flex-start; gap:16px; }
+      .setech-compare-grid { grid-template-columns:1fr; }
+      .rec-form-row, .rec-form-row.tri { grid-template-columns:1fr; }
+      .rec-tab-btn { font-size:11px; padding:7px 5px; min-width:72px; }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="dashboard.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <div class="student-sidebar-profile">
+      <div class="stu-avatar-wrap">
+        <div class="stu-avatar" id="sidebarAvatarChar">김</div>
+        <span class="stu-stage-badge">2단계</span>
+      </div>
+      <div class="stu-profile-info">
+        <strong id="sidebarStudentName">김다빈</strong>
+        <span id="sidebarStudentSchool">○○중학교 2학년</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">나의 학습</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>홈 대시보드</span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>출결 현황</span></a>
+        <a href="plan.html" class="nav-item"><i class="fas fa-tasks"></i><span>학습 플랜</span></a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">과제 &amp; 평가</span>
+        <a href="assessment.html" class="nav-item">
+          <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+          <span class="nav-badge nav-badge--alert">2</span>
+        </a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 관리</span></a>
+        <a href="record.html" class="nav-item active"><i class="fas fa-id-card"></i><span>학생부 관리</span></a>
+        <a href="report.html" class="nav-item"><i class="fas fa-chart-bar"></i><span>역량 리포트</span></a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">다빈치 전략 도구</span>
+        <a href="ai-log.html" class="nav-item"><i class="fas fa-robot"></i><span>AI 튜터링 로그</span></a>
+        <a href="golden-time.html" class="nav-item"><i class="fas fa-star"></i><span>골든타임 미션</span></a>
+        <a href="incubating.html" class="nav-item"><i class="fas fa-lightbulb"></i><span>질문 아카이브</span></a>
+        <a href="clinic.html" class="nav-item"><i class="fas fa-file-medical"></i><span>학생부 클리닉</span></a>
+      </div>
+
+      <div class="nav-section">
+        <span class="nav-section-label">커뮤니케이션</span>
+        <a href="notice.html" class="nav-item"><i class="fas fa-bullhorn"></i><span>공지사항</span><span class="nav-badge">1</span></a>
+        <a href="message.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>선생님께 질문</span></a>
+        <a href="consult.html" class="nav-item"><i class="fas fa-comments"></i><span>상담 신청</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>홈 대시보드</span></a>
+      <a href="#" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
+    </div>
+  </aside>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="mainContent">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span><i class="fas fa-chevron-right"></i>
+          <span class="active">학생부 관리</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate"></span>
+        <button class="topbar-icon-btn" title="알림"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
+        <div class="topbar-user" id="topbarUser">
+          <div class="topbar-avatar student-avatar-color" id="topbarAvatar">김</div>
+          <div class="topbar-user-info">
+            <span class="topbar-user-name" id="topbarUserName">김다빈</span>
+            <span class="topbar-user-role student-role-label">학생 · 2단계</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <!-- 히어로 -->
+      <div class="rec-hero">
+        <div class="rec-hero-inner">
+          <div class="rec-hero-icon"><i class="fas fa-id-card"></i></div>
+          <div class="rec-hero-text">
+            <h2>학교생활기록부 관리</h2>
+            <p>학생부 항목(1~9번)을 직접 입력·편집하고, 자기평가서를 작성하여 선생님 세특과 비교해보세요.<br>
+               입력된 내용은 관리자만 열람할 수 있으며, PDF 원본 파일도 업로드할 수 있습니다.</p>
+            <div class="rec-hero-badges">
+              <span class="rec-hero-badge"><i class="fas fa-pen"></i> 학생 직접 입력</span>
+              <span class="rec-hero-badge"><i class="fas fa-eye"></i> 관리자 열람</span>
+              <span class="rec-hero-badge"><i class="fas fa-file-pdf"></i> PDF 업로드</span>
+              <span class="rec-hero-badge"><i class="fas fa-columns"></i> 자기평가서 vs 세특 비교</span>
+              <span class="rec-hero-badge"><i class="fas fa-ruler"></i> 1500바이트 제한</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ 탭 바 ══ -->
+      <div class="rec-tab-bar" id="recTabBar">
+        <button class="rec-tab-btn active" data-tab="tab1" type="button" onclick="switchRecTab('tab1')">
+          <i class="fas fa-user"></i><span>①인적·학적</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab2" type="button" onclick="switchRecTab('tab2')">
+          <i class="fas fa-calendar-check"></i><span>②출결</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab3" type="button" onclick="switchRecTab('tab3')">
+          <i class="fas fa-award"></i><span>③수상</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab4" type="button" onclick="switchRecTab('tab4')">
+          <i class="fas fa-certificate"></i><span>④자격증</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab5" type="button" onclick="switchRecTab('tab5')">
+          <i class="fas fa-route"></i><span>⑤진로희망</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab6" type="button" onclick="switchRecTab('tab6')">
+          <i class="fas fa-users"></i><span>⑥창체</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab7" type="button" onclick="switchRecTab('tab7')">
+          <i class="fas fa-graduation-cap"></i><span>⑦교과세특</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab8" type="button" onclick="switchRecTab('tab8')">
+          <i class="fas fa-book-open"></i><span>⑧독서</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tab9" type="button" onclick="switchRecTab('tab9')">
+          <i class="fas fa-star"></i><span>⑨행동특성</span>
+        </button>
+        <button class="rec-tab-btn" data-tab="tabPDF" type="button" onclick="switchRecTab('tabPDF')">
+          <i class="fas fa-file-pdf" style="color:#dc2626"></i><span>PDF</span>
+        </button>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ① 인적·학적사항
+      ══════════════════════════════════════════ -->
+      <div id="tab1">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title">
+                <span class="rec-section-num">1</span>인적·학적사항
+              </div>
+              <div class="rec-section-sub">학생 기본 정보(인적사항) 및 입학·재학·졸업 학적 변동 내용(학적사항)</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300);transition:transform .25s"></i>
+          </div>
+          <div class="rec-section-body">
+
+            <!-- ══ 인적사항 소제목 ══ -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--rec-border);">
+              <span style="background:linear-gradient(135deg,#6d28d9,#7c3aed);color:#fff;font-size:12px;font-weight:700;padding:5px 14px;border-radius:8px;letter-spacing:.02em;"><i class="fas fa-user" style="margin-right:5px;"></i>인적사항</span>
+              <span style="font-size:12.5px;color:var(--text-500);">학생의 신상 기본 정보</span>
+            </div>
+
+            <!-- 인적 1행: 성명 / 성별 / 생년월일 -->
+            <div class="rec-form-row tri">
+              <div>
+                <label class="rec-label">성명</label>
+                <input class="rec-input" id="r1_name" type="text" placeholder="홍길동" />
+              </div>
+              <div>
+                <label class="rec-label">성별</label>
+                <select class="rec-select" id="r1_gender">
+                  <option value="">선택</option>
+                  <option>남</option><option>여</option>
+                </select>
+              </div>
+              <div>
+                <label class="rec-label">생년월일</label>
+                <input class="rec-input" id="r1_birth" type="date" />
+              </div>
+            </div>
+
+            <!-- 인적 2행: 주민번호 앞자리 / 주소 / 보호자 -->
+            <div class="rec-form-row tri">
+              <div>
+                <label class="rec-label">주민등록번호 앞자리</label>
+                <input class="rec-input" id="r1_jumin" type="text" placeholder="예: 081231" maxlength="6" />
+              </div>
+              <div>
+                <label class="rec-label">주소 (도로명)</label>
+                <input class="rec-input" id="r1_addr" type="text" placeholder="서울특별시 ○○구 ○○로 00" />
+              </div>
+              <div>
+                <label class="rec-label">보호자 성명</label>
+                <input class="rec-input" id="r1_parent" type="text" placeholder="홍○○" />
+              </div>
+            </div>
+
+            <!-- ══ 구분선 ══ -->
+            <div style="border-top:1.5px dashed var(--rec-border);margin:22px 0;"></div>
+
+            <!-- ══ 학적사항 소제목 ══ -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--rec-border);">
+              <span style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:12px;font-weight:700;padding:5px 14px;border-radius:8px;letter-spacing:.02em;"><i class="fas fa-school" style="margin-right:5px;"></i>학적사항</span>
+              <span style="font-size:12.5px;color:var(--text-500);">현재 재학 중인 학교 정보 및 학적 변동 내용</span>
+            </div>
+
+            <!-- 학적 1행: 학교명 / 학교코드 / 학교 소재지 -->
+            <div class="rec-form-row tri">
+              <div>
+                <label class="rec-label">학교명</label>
+                <input class="rec-input" id="r1_school" type="text" placeholder="○○고등학교" />
+              </div>
+              <div>
+                <label class="rec-label">학교코드</label>
+                <input class="rec-input" id="r1_schoolcode" type="text" placeholder="예: J100000001" />
+              </div>
+              <div>
+                <label class="rec-label">학교 소재지</label>
+                <input class="rec-input" id="r1_schooladdr" type="text" placeholder="서울특별시 ○○구" />
+              </div>
+            </div>
+
+            <!-- 학적 2행: 학년 / 반 / 번호 -->
+            <div class="rec-form-row tri">
+              <div>
+                <label class="rec-label">학년</label>
+                <select class="rec-select" id="r1_grade">
+                  <option value="">선택</option>
+                  <option>고1</option><option>고2</option><option>고3</option>
+                  <option>중1</option><option>중2</option><option>중3</option>
+                </select>
+              </div>
+              <div>
+                <label class="rec-label">반</label>
+                <input class="rec-input" id="r1_class" type="number" placeholder="3" min="1" max="20" />
+              </div>
+              <div>
+                <label class="rec-label">번호</label>
+                <input class="rec-input" id="r1_num" type="number" placeholder="15" min="1" max="40" />
+              </div>
+            </div>
+
+            <!-- ── 학적 변동 테이블 ── -->
+            <div style="margin-top:8px;margin-bottom:6px;">
+              <div style="font-size:13px;font-weight:700;color:var(--text-700);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+                <span><i class="fas fa-history" style="color:var(--rec-mid);margin-right:6px;"></i>학적 변동 사항
+                  <span style="font-size:11.5px;font-weight:400;color:var(--text-300);margin-left:6px;">입학·전입·전출·졸업 등의 일자와 내용</span>
+                </span>
+                <button class="btn-rec-add" style="padding:5px 12px;font-size:12px;" data-add="addSchoolHistRow" type="button" onclick="addSchoolHistRow()">
+                  <i class="fas fa-plus"></i> 사항 추가
+                </button>
+              </div>
+              <div class="subj-table-wrap">
+                <table class="subj-table" id="schoolHistTable">
+                  <thead>
+                    <tr>
+                      <th style="width:130px;">일자</th>
+                      <th>학적 변동 내용</th>
+                      <th style="width:40px;"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="schoolHistTbody">
+                    <!-- 기본 행 2개 -->
+                    <tr data-hist-idx="0">
+                      <td><input class="rec-input" name="sh_date" type="date" /></td>
+                      <td><input class="rec-input" name="sh_content" type="text" placeholder="예: ○○중학교 제3학년 졸업" /></td>
+                      <td></td>
+                    </tr>
+                    <tr data-hist-idx="1">
+                      <td><input class="rec-input" name="sh_date" type="date" /></td>
+                      <td><input class="rec-input" name="sh_content" type="text" placeholder="예: ○○고등학교 제1학년 입학" /></td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="loadSection1" type="button" onclick="loadSection1()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection1" type="button" onclick="saveSection1()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ② 출결사항
+      ══════════════════════════════════════════ -->
+      <div id="tab2" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title">
+                <span class="rec-section-num">2</span>출결사항
+              </div>
+              <div class="rec-section-sub">수업일수 · 결석(질병/미인정/기타) · 지각·조퇴·결과(질병/미인정/기타) · 특기사항</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+
+            <!-- 안내 -->
+            <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f5f3ff;border-radius:8px;border:1.5px solid var(--rec-border);margin-bottom:16px;font-size:12.5px;color:var(--text-700);">
+              <i class="fas fa-info-circle" style="color:var(--rec-mid);"></i>
+              <span>결석·지각·조퇴·결과는 <strong>질병 / 미인정 / 기타</strong> 세 가지로 구분하여 입력합니다. 숫자(일수)만 입력하세요.</span>
+            </div>
+
+            <div class="subj-table-wrap">
+              <table class="subj-table" style="min-width:860px;">
+                <thead>
+                  <tr>
+                    <th rowspan="2" style="text-align:center;vertical-align:middle;">학년</th>
+                    <th rowspan="2" style="text-align:center;vertical-align:middle;">수업<br>일수</th>
+                    <th colspan="3" style="text-align:center;border-bottom:1px solid var(--rec-border);">결석일수</th>
+                    <th colspan="3" style="text-align:center;border-bottom:1px solid var(--rec-border);">지각</th>
+                    <th colspan="3" style="text-align:center;border-bottom:1px solid var(--rec-border);">조퇴</th>
+                    <th colspan="3" style="text-align:center;border-bottom:1px solid var(--rec-border);">결과</th>
+                    <th rowspan="2" style="text-align:center;vertical-align:middle;">특기사항</th>
+                  </tr>
+                  <tr>
+                    <th style="text-align:center;font-size:11px;color:#6d28d9;">질병</th>
+                    <th style="text-align:center;font-size:11px;color:#dc2626;">미인정</th>
+                    <th style="text-align:center;font-size:11px;color:#6b7280;">기타</th>
+                    <th style="text-align:center;font-size:11px;color:#6d28d9;">질병</th>
+                    <th style="text-align:center;font-size:11px;color:#dc2626;">미인정</th>
+                    <th style="text-align:center;font-size:11px;color:#6b7280;">기타</th>
+                    <th style="text-align:center;font-size:11px;color:#6d28d9;">질병</th>
+                    <th style="text-align:center;font-size:11px;color:#dc2626;">미인정</th>
+                    <th style="text-align:center;font-size:11px;color:#6b7280;">기타</th>
+                    <th style="text-align:center;font-size:11px;color:#6d28d9;">질병</th>
+                    <th style="text-align:center;font-size:11px;color:#dc2626;">미인정</th>
+                    <th style="text-align:center;font-size:11px;color:#6b7280;">기타</th>
+                  </tr>
+                </thead>
+                <tbody id="attendTbody">
+                  <!-- 1학년 -->
+                  <tr>
+                    <td style="font-weight:700;text-align:center;white-space:nowrap;">1학년</td>
+                    <td><input class="rec-input" style="width:46px;text-align:center;" id="att1_days" placeholder="190" type="number" min="0" max="220"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_abs_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_abs_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_abs_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_late_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_late_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_late_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_early_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_early_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_early_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_leave_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_leave_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att1_leave_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:130px;" id="att1_note" placeholder="없음"/></td>
+                  </tr>
+                  <!-- 2학년 -->
+                  <tr>
+                    <td style="font-weight:700;text-align:center;white-space:nowrap;">2학년</td>
+                    <td><input class="rec-input" style="width:46px;text-align:center;" id="att2_days" placeholder="190" type="number" min="0" max="220"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_abs_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_abs_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_abs_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_late_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_late_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_late_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_early_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_early_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_early_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_leave_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_leave_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att2_leave_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:130px;" id="att2_note" placeholder="없음"/></td>
+                  </tr>
+                  <!-- 3학년 -->
+                  <tr>
+                    <td style="font-weight:700;text-align:center;white-space:nowrap;">3학년</td>
+                    <td><input class="rec-input" style="width:46px;text-align:center;" id="att3_days" placeholder="190" type="number" min="0" max="220"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_abs_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_abs_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_abs_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_late_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_late_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_late_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_early_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_early_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_early_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_leave_sick" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_leave_unauth" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:36px;text-align:center;" id="att3_leave_etc" placeholder="0" type="number" min="0"/></td>
+                    <td><input class="rec-input" style="width:130px;" id="att3_note" placeholder="없음"/></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="loadSection2" type="button" onclick="loadSection2()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection2" type="button" onclick="saveSection2()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ③ 수상경력
+      ══════════════════════════════════════════ -->
+      <div id="tab3" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">3</span>수상경력</div>
+              <div class="rec-section-sub">교내 수상 내역 (교외 수상은 기재 불가)</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <div class="subj-table-wrap">
+              <table class="subj-table">
+                <thead>
+                  <tr><th>수상명</th><th>등급(위)</th><th>수상연월일</th><th>수여기관</th><th>참가인원</th><th></th></tr>
+                </thead>
+                <tbody id="awardTbody"></tbody>
+              </table>
+            </div>
+            <button class="btn-rec-add" data-add="addAwardRow" type="button" onclick="addAwardRow()"><i class="fas fa-plus"></i> 수상 추가</button>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="loadSection3" type="button" onclick="loadSection3()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection3" type="button" onclick="saveSection3()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ④ 자격증 및 인증 취득상황
+      ══════════════════════════════════════════ -->
+      <div id="tab4" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">4</span>자격증 및 인증 취득상황</div>
+              <div class="rec-section-sub">취득한 자격증·인증 내역</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <div class="subj-table-wrap">
+              <table class="subj-table">
+                <thead>
+                  <tr><th>자격증명 / 인증명</th><th>번호</th><th>취득연월일</th><th>발급기관</th><th></th></tr>
+                </thead>
+                <tbody id="certTbody"></tbody>
+              </table>
+            </div>
+            <button class="btn-rec-add" data-add="addCertRow" type="button" onclick="addCertRow()"><i class="fas fa-plus"></i> 자격증 추가</button>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="loadSection4" type="button" onclick="loadSection4()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection4" type="button" onclick="saveSection4()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ⑤ 진로희망사항
+      ══════════════════════════════════════════ -->
+      <div id="tab5" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">5</span>진로희망사항</div>
+              <div class="rec-section-sub">학년별 진로희망 및 특기 또는 흥미</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <div class="subj-table-wrap">
+              <table class="subj-table">
+                <thead>
+                  <tr><th>학년</th><th>특기 또는 흥미</th><th>희망직업 (학생)</th><th>희망직업 (학부모)</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1학년</td>
+                    <td><input class="rec-input" id="ca1_skill" placeholder="예: 수학, 코딩" /></td>
+                    <td><input class="rec-input" id="ca1_student" placeholder="예: 소프트웨어 개발자" /></td>
+                    <td><input class="rec-input" id="ca1_parent" placeholder="예: 의사" /></td>
+                  </tr>
+                  <tr>
+                    <td>2학년</td>
+                    <td><input class="rec-input" id="ca2_skill" /></td>
+                    <td><input class="rec-input" id="ca2_student" /></td>
+                    <td><input class="rec-input" id="ca2_parent" /></td>
+                  </tr>
+                  <tr>
+                    <td>3학년</td>
+                    <td><input class="rec-input" id="ca3_skill" /></td>
+                    <td><input class="rec-input" id="ca3_student" /></td>
+                    <td><input class="rec-input" id="ca3_parent" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="loadSection5" type="button" onclick="loadSection5()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection5" type="button" onclick="saveSection5()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ⑥ 창의적 체험활동상황
+      ══════════════════════════════════════════ -->
+      <div id="tab6" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">6</span>창의적 체험활동상황</div>
+              <div class="rec-section-sub">자율활동 · 동아리활동 · 봉사활동 · 진로활동 | 시간수 + 특기사항 (500자·1500바이트 제한)</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+
+            <!-- 안내 -->
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;background:#f5f3ff;border-radius:8px;border:1.5px solid var(--rec-border);margin-bottom:20px;font-size:12.5px;color:var(--text-700);line-height:1.7;">
+              <i class="fas fa-info-circle" style="color:var(--rec-mid);margin-top:1px;flex-shrink:0;"></i>
+              <span>각 영역별로 <strong>학년 · 시간수</strong>를 입력하고, <strong>특기사항</strong>에 자기평가서와 선생님이 기재한 내용을 비교 입력하세요.<br>
+              봉사활동의 경우 특기사항이 별도로 기재되지 않으며, 실적 시간만 합산됩니다.</span>
+            </div>
+
+            <!-- 자율활동 -->
+            <div style="margin-bottom:30px">
+              <div style="font-size:14px;font-weight:700;color:var(--text-900);margin-bottom:12px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--rec-border);">
+                <span style="background:#6d28d9;color:#fff;padding:3px 10px;border-radius:6px;font-size:12px;">자율활동</span>
+                <span style="font-size:12px;color:var(--text-400);font-weight:400;">학급·학교 행사, 학생자치 활동 등</span>
+              </div>
+              <div id="setech-auto-wrap"></div>
+            </div>
+
+            <!-- 동아리활동 -->
+            <div style="margin-bottom:30px">
+              <div style="font-size:14px;font-weight:700;color:var(--text-900);margin-bottom:12px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--rec-border);">
+                <span style="background:#6d28d9;color:#fff;padding:3px 10px;border-radius:6px;font-size:12px;">동아리활동</span>
+                <span style="font-size:12px;color:var(--text-400);font-weight:400;">정규·자율동아리 (자율동아리명도 함께 기재)</span>
+              </div>
+              <div id="setech-club-wrap"></div>
+            </div>
+
+            <!-- 봉사활동 -->
+            <div style="margin-bottom:30px">
+              <div style="font-size:14px;font-weight:700;color:var(--text-900);margin-bottom:12px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--rec-border);">
+                <span style="background:#6d28d9;color:#fff;padding:3px 10px;border-radius:6px;font-size:12px;">봉사활동</span>
+                <span style="font-size:12px;color:var(--text-400);font-weight:400;">실적 시간 합계만 기재 (특기사항 없음)</span>
+              </div>
+              <!-- 봉사활동은 시간수만 입력하는 테이블 -->
+              <div class="subj-table-wrap">
+                <table class="subj-table">
+                  <thead>
+                    <tr><th>학년</th><th>봉사활동 실적 합계 (시간)</th><th>비고</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="font-weight:700;text-align:center;">1학년</td>
+                      <td><input class="rec-input" id="vol1_hours" type="number" min="0" placeholder="0" style="width:80px;" /></td>
+                      <td><input class="rec-input" id="vol1_note" placeholder="예: 교내 봉사 10, 지역사회 봉사 5" /></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:700;text-align:center;">2학년</td>
+                      <td><input class="rec-input" id="vol2_hours" type="number" min="0" placeholder="0" style="width:80px;" /></td>
+                      <td><input class="rec-input" id="vol2_note" placeholder="예: 교내 봉사 8, 지역사회 봉사 7" /></td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:700;text-align:center;">3학년</td>
+                      <td><input class="rec-input" id="vol3_hours" type="number" min="0" placeholder="0" style="width:80px;" /></td>
+                      <td><input class="rec-input" id="vol3_note" placeholder="" /></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- 진로활동 -->
+            <div style="margin-bottom:30px">
+              <div style="font-size:14px;font-weight:700;color:var(--text-900);margin-bottom:12px;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--rec-border);">
+                <span style="background:#6d28d9;color:#fff;padding:3px 10px;border-radius:6px;font-size:12px;">진로활동</span>
+                <span style="font-size:12px;color:var(--text-400);font-weight:400;">진로상담, 직업체험, 대학탐방 등</span>
+              </div>
+              <div id="setech-career-wrap"></div>
+            </div>
+
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="initCCA" type="button" onclick="initCCA()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection6" type="button" onclick="saveSection6()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ⑦ 교과학습발달상황 (교과 세특)
+      ══════════════════════════════════════════ -->
+      <div id="tab7" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">7</span>교과학습발달상황 (세부능력 및 특기사항)</div>
+              <div class="rec-section-sub">과목별 세특 – 자기평가서 작성 후 선생님 세특과 나란히 비교 (각 500자·1500바이트 제한)</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <!-- 컬럼 안내 -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#ede9fe;border-radius:10px;border:1.5px solid #c4b5fd;">
+                <i class="fas fa-pen" style="color:#6d28d9;font-size:15px;"></i>
+                <div>
+                  <div style="font-size:12.5px;font-weight:800;color:#6d28d9;">나의 자기평가서</div>
+                  <div style="font-size:11.5px;color:#7c3aed;margin-top:2px;">내가 직접 작성 · 교사에게 제출</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#d1fae5;border-radius:10px;border:1.5px solid #6ee7b7;">
+                <i class="fas fa-chalkboard-teacher" style="color:#065f46;font-size:15px;"></i>
+                <div>
+                  <div style="font-size:12.5px;font-weight:800;color:#065f46;">선생님 세특 기재 내용</div>
+                  <div style="font-size:11.5px;color:#047857;margin-top:2px;">학생부에 실제로 기재된 내용 복사</div>
+                </div>
+              </div>
+            </div>
+            <!-- 과목 추가 -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:13px;color:var(--text-500);">
+                <i class="fas fa-info-circle" style="color:var(--rec-mid);margin-right:5px;"></i>
+                과목을 추가하고 자기평가서와 선생님 세특을 나란히 비교하세요.
+              </div>
+              <button class="btn-rec-save" style="padding:9px 18px;font-size:13px;" data-add="openSetechModal" type="button">
+                <i class="fas fa-plus"></i> 과목 추가
+              </button>
+            </div>
+            <div id="setechList"></div>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="initSetech" type="button" onclick="initSetech()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection7" type="button" onclick="saveSection7()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ⑧ 독서활동상황
+      ══════════════════════════════════════════ -->
+      <div id="tab8" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">8</span>독서활동상황</div>
+              <div class="rec-section-sub">학년별·교과별 독서 목록</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <div class="subj-table-wrap">
+              <table class="subj-table">
+                <thead>
+                  <tr><th>학년</th><th>교과</th><th>도서명</th><th>저자</th><th></th></tr>
+                </thead>
+                <tbody id="bookTbody"></tbody>
+              </table>
+            </div>
+            <button class="btn-rec-add" data-add="addBookRow" type="button" onclick="addBookRow()"><i class="fas fa-plus"></i> 도서 추가</button>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="loadSection8" type="button" onclick="loadSection8()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection8" type="button" onclick="saveSection8()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ⑨ 행동특성 및 종합의견
+      ══════════════════════════════════════════ -->
+      <div id="tab9" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title"><span class="rec-section-num">9</span>행동특성 및 종합의견</div>
+              <div class="rec-section-sub">학년별 담임교사 종합의견 ✦ 바이트 제한 없음</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <div class="behavior-note">
+              <i class="fas fa-info-circle"></i>
+              <span>행동특성 및 종합의견은 <strong>담임교사가 작성</strong>하는 항목입니다.
+                선생님이 작성한 내용을 여기에 옮겨 기록하거나, 자신이 기억하는 내용을 메모해두세요.
+                <strong>바이트 제한이 적용되지 않습니다.</strong></span>
+            </div>
+            <div id="behaviorList"></div>
+            <div class="rec-save-bar">
+              <button class="btn-rec-cancel" data-load="initBehavior" type="button" onclick="initBehavior()"><i class="fas fa-undo"></i> 되돌리기</button>
+              <button class="btn-rec-save" data-save="saveSection9" type="button" onclick="saveSection9()"><i class="fas fa-check"></i> 저장</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           PDF 파일 관리
+      ══════════════════════════════════════════ -->
+      <div id="tabPDF" style="display:none">
+        <div class="rec-section">
+          <div class="rec-section-header" onclick="toggleSection(this)">
+            <div>
+              <div class="rec-section-title">
+                <span class="rec-section-num" style="background:#dc2626;font-size:11px;"><i class="fas fa-file-pdf"></i></span>
+                학생부 PDF 파일 관리
+              </div>
+              <div class="rec-section-sub">나이스(NEIS)에서 발급받은 학생부 PDF를 업로드하세요</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color:var(--text-300)"></i>
+          </div>
+          <div class="rec-section-body">
+            <!-- 업로드 존 -->
+            <div class="pdf-upload-zone" id="pdfDropZone">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>클릭하거나 파일을 드래그하여 업로드</p>
+              <span>PDF 파일 · 최대 10MB · 여러 파일 동시 업로드 가능</span>
+              <input type="file" id="pdfFileInput" accept=".pdf" multiple style="display:none" onchange="handlePdfUpload(event)" />
+            </div>
+
+            <!-- 파일 목록 -->
+            <div class="pdf-file-list" id="pdfFileList"></div>
+
+            <!-- 안내 -->
+            <div style="margin-top:20px;padding:14px 18px;background:#f5f3ff;border-radius:12px;border:1.5px solid var(--rec-border);font-size:13px;color:var(--text-700);line-height:1.7">
+              <i class="fas fa-shield-alt" style="color:var(--rec-mid);margin-right:6px;"></i>
+              업로드된 PDF는 <strong>관리자만 열람 가능</strong>합니다.
+              파일은 브라우저 로컬 저장소에 보관되며, 학생부 원본은 나이스(NEIS) 또는 학교에서 발급받을 수 있습니다.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-main -->
+
+  <!-- ══ 세특 과목 추가 모달 ══ -->
+  <div class="setech-add-modal-overlay" id="setechModalOverlay">
+    <div class="setech-add-modal">
+      <h3><i class="fas fa-plus-circle" style="color:var(--rec-mid);margin-right:8px;"></i>교과 세특 과목 추가</h3>
+      <p>과목명, 학년, 단위수를 입력하면 자기평가서와 세특 비교 블록이 생성됩니다.</p>
+      <div class="sam-grid">
+        <div class="sam-full">
+          <label class="sam-label">과목명</label>
+          <input class="sam-input" id="samSubject" type="text" placeholder="예: 공통국어1, 수학Ⅱ, 생명과학Ⅰ" />
+        </div>
+        <div>
+          <label class="sam-label">학년</label>
+          <select class="sam-select" id="samGrade">
+            <option value="1학년">1학년</option>
+            <option value="2학년">2학년</option>
+            <option value="3학년">3학년</option>
+          </select>
+        </div>
+        <div>
+          <label class="sam-label">단위수</label>
+          <input class="sam-input" id="samCredit" type="number" min="1" max="8" placeholder="3" value="3" />
+        </div>
+      </div>
+      <div class="sam-btn-row">
+        <button class="sam-btn-secondary" data-load="closeSetechModal" type="button">취소</button>
+        <button class="sam-btn-primary" data-save="confirmAddSetech" type="button"><i class="fas fa-plus"></i> 추가하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 -->
+  <div class="rec-toast" id="recToast">
+    <i class="fas fa-check-circle"></i>
+    <span id="recToastMsg">저장되었습니다.</span>
+  </div>
+
+  <script>
+  /* ═══════════════════════════════════════════════
+     학생부 관리 – 클라이언트 로직  v10
+  ═══════════════════════════════════════════════ */
+
+  const MAX_BYTES  = 1500;
+  const STUDENT_ID = (function() {
+    try {
+      const u = JSON.parse(localStorage.getItem('dvl_student_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvl_user') || sessionStorage.getItem('dvl_session') || '{}');
+      if (!u.id) { location.href = '../login.html'; return ''; }
+      return u.id;
+    } catch(e) { location.href = '../login.html'; return ''; }
+  })();
+
+  /* ── 날짜 ── */
+  (function(){
+    const d = new Date();
+    document.getElementById('topbarDate').textContent =
+      `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+  })();
+
+  /* ══════════════════════════════════════════
+     탭 전환 – data-tab 속성 기반 이벤트 위임
+  ══════════════════════════════════════════ */
+  const ALL_TABS = ['tab1','tab2','tab3','tab4','tab5','tab6','tab7','tab8','tab9','tabPDF'];
+
+  function switchRecTab(tabId) {
+    ALL_TABS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    document.querySelectorAll('.rec-tab-btn').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById(tabId);
+    if (target) target.style.display = '';
+    const btn = document.querySelector(`.rec-tab-btn[data-tab="${tabId}"]`);
+    if (btn) btn.classList.add('active');
+  }
+  // ✅ 프록시 실체 등록 (head에서 등록한 프록시가 이 함수를 호출하도록)
+  window._dvl_real_switchRecTab = switchRecTab;
+
+  // 탭 바 이벤트 위임 (탭 버튼 onclick 폴백용)
+  document.getElementById('recTabBar').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-tab]');
+    if (!btn) return;
+    switchRecTab(btn.dataset.tab);
+  });
+
+  // 저장/취소/추가 버튼 이벤트 위임 (전체 document)
+  document.addEventListener('click', function(e) {
+    // PDF 업로드 존 클릭
+    if (e.target.closest('#pdfDropZone') && !e.target.closest('input')) {
+      document.getElementById('pdfFileInput').click();
+      return;
+    }
+
+    const t = e.target.closest('button, a, .rec-section-header');
+    if (!t) return;
+
+    // 섹션 헤더 토글
+    if (t.classList.contains('rec-section-header')) {
+      toggleSection(t);
+      return;
+    }
+
+    const btn = t.closest('button, a');
+    if (!btn) return;
+
+    // data-save → 함수 호출
+    if (btn.dataset.save) { btn.dataset.save.split(',').forEach(fn => { if(window[fn]) window[fn](); }); return; }
+    // data-load → 함수 호출
+    if (btn.dataset.load) { if(window[btn.dataset.load]) window[btn.dataset.load](); return; }
+    // data-add  → 함수 호출
+    if (btn.dataset.add)  { if(window[btn.dataset.add])  window[btn.dataset.add]();  return; }
+  });
+
+  /* ── 섹션 접기/펼치기 ── */
+  function toggleSection(header) {
+    const body = header.nextElementSibling;
+    const icon = header.querySelector('.fa-chevron-down');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : '';
+    if (icon) icon.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+  }
+  window._dvl_real_toggleSection = toggleSection;
+
+  /* ══════════════════════════════════════════
+     바이트 카운터 핵심 함수
+  ══════════════════════════════════════════ */
+  /** UTF-8 기준 바이트 수 계산 (한글 3바이트) */
+  function getByteLen(str) {
+    let b = 0;
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      b += (c <= 0x7f) ? 1 : (c <= 0x7ff) ? 2 : 3;
+    }
+    return b;
+  }
+
+  /**
+   * textarea에 바이트 카운터를 연결하고 1500바이트 초과 시 저장 차단
+   * @param {string} textareaId
+   * @param {string} counterId - 카운터를 렌더링할 div id
+   * @param {number} maxBytes  - 기본값 1500
+   */
+  function makeByteCounter(textareaId, counterId, maxBytes) {
+    const ta   = document.getElementById(textareaId);
+    const wrap = document.getElementById(counterId);
+    if (!ta || !wrap) return;
+
+    function update() {
+      const bytes = getByteLen(ta.value);
+      const pct   = Math.min((bytes / maxBytes) * 100, 100);
+      let cls = 'bc-ok', barColor = '#059669';
+
+      if (bytes > maxBytes) {
+        cls = 'bc-over';  barColor = '#dc2626';
+        ta.classList.add('over-limit');
+      } else {
+        ta.classList.remove('over-limit');
+        if (bytes > maxBytes * 0.85) { cls = 'bc-warn'; barColor = '#d97706'; }
+      }
+
+      const chars = ta.value.length;
+      wrap.innerHTML = `
+        <div class="bc-bar">
+          <div class="bc-fill" style="width:${pct}%;background:${barColor}"></div>
+        </div>
+        <span class="${cls}">
+          ${bytes}<span style="color:var(--text-300);font-weight:400"> / ${maxBytes} bytes</span>
+          &nbsp;<span style="color:var(--text-300);font-weight:400">(${chars}자)</span>
+        </span>`;
+    }
+
+    /* 입력 시 바이트 초과하면 자동으로 잘라내기 */
+    ta.addEventListener('input', function() {
+      // 초과 시 마지막 입력 취소 (rollback)
+      let bytes = getByteLen(ta.value);
+      if (bytes > maxBytes) {
+        // 뒤에서부터 한 글자씩 제거해 한도 안에 맞춤
+        let val = ta.value;
+        while (getByteLen(val) > maxBytes && val.length > 0) {
+          val = val.slice(0, -1);
+        }
+        ta.value = val;
+        showRecToast(`⚠️ ${maxBytes}바이트를 초과하여 더 이상 입력되지 않습니다.`, 'warn');
+      }
+      update();
+    });
+    update();
+  }
+
+  /* ══════════════════════════════════════════
+     세특 비교 블록 생성기
+     containerId : 블록을 삽입할 부모 div id
+     blockId     : 저장 키 prefix (localStorage)
+     labelText   : 패널 라벨 텍스트
+     showCounter : 바이트 카운터 표시 여부 (기본 true = 1500바이트 제한)
+     maxBytes    : 바이트 제한 (기본 1500)
+  ══════════════════════════════════════════ */
+  function buildSetechBlock(containerId, blockId, labelText, showCounter = true, maxBytes = 1500) {
+    const selfId    = `${blockId}_self`;
+    const teacherId = `${blockId}_teacher`;
+    const selfCnt   = `${blockId}_selfCnt`;
+    const teachCnt  = `${blockId}_teachCnt`;
+
+    const saved = JSON.parse(
+      localStorage.getItem(`dvl_record_${STUDENT_ID}_${blockId}`) || '{}'
+    );
+
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.insertAdjacentHTML('beforeend', `
+      <div class="setech-compare-grid" style="margin-bottom:${showCounter?'4px':'14px'}">
+        <div class="setech-panel">
+          <div class="setech-panel-label self">
+            <i class="fas fa-pen"></i>
+            ${labelText} – <strong style="margin-left:3px">나의 자기평가서</strong>
+            ${showCounter ? `<span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text-300);">최대 ${maxBytes}bytes</span>` : ''}
+          </div>
+          <textarea class="setech-textarea" id="${selfId}"
+            placeholder="이 과목(활동)에서 배운 내용, 탐구 활동, 느낀 점, 기여한 역할 등을 자유롭게 작성하세요. (최대 ${maxBytes}바이트)
+선생님이 세특 작성 시 참고하는 기초 자료가 됩니다."
+          >${saved.self || ''}</textarea>
+          ${showCounter ? `<div class="byte-counter" id="${selfCnt}"></div>` : ''}
+        </div>
+        <div class="setech-panel">
+          <div class="setech-panel-label teacher">
+            <i class="fas fa-chalkboard-teacher"></i>
+            ${labelText} – <strong style="margin-left:3px">선생님 세특 기재 내용</strong>
+            ${showCounter ? `<span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text-300);">최대 ${maxBytes}bytes</span>` : ''}
+          </div>
+          <textarea class="setech-textarea teacher-view" id="${teacherId}"
+            placeholder="선생님이 학생부에 실제로 기재한 세특 내용을 복사하여 붙여넣으세요. (최대 ${maxBytes}바이트)
+내 자기평가서가 얼마나 반영되었는지 비교할 수 있습니다."
+          >${saved.teacher || ''}</textarea>
+          ${showCounter ? `<div class="byte-counter" id="${teachCnt}"></div>` : ''}
+        </div>
+      </div>`
+    );
+
+    if (showCounter) {
+      makeByteCounter(selfId,    selfCnt,  maxBytes);
+      makeByteCounter(teacherId, teachCnt, maxBytes);
+    }
+  }
+
+  /* ══════════════════════════════════════════
+     ⑥ 창의적 체험활동 초기화
+  ══════════════════════════════════════════ */
+  const GRADE_LABELS = ['1학년', '2학년', '3학년'];
+  const CCA_TYPES = [
+    { wrapId:'setech-auto-wrap',      key:'auto',      name:'자율활동' },
+    { wrapId:'setech-club-wrap',      key:'club',      name:'동아리활동' },
+    { wrapId:'setech-volunteer-wrap', key:'volunteer', name:'봉사활동' },
+    { wrapId:'setech-career-wrap',    key:'career',    name:'진로활동' },
+  ];
+
+  function initCCA() {
+    CCA_TYPES.forEach(type => {
+      const wrap = document.getElementById(type.wrapId);
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      GRADE_LABELS.forEach((gl, gi) => {
+        const blockId = `cca_${type.key}_g${gi+1}`;
+        wrap.insertAdjacentHTML('beforeend', `
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12.5px;font-weight:700;color:var(--text-500);
+              margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              <span style="background:var(--rec-light);color:var(--rec-main);
+                padding:2px 10px;border-radius:10px;font-size:12px;">${gl}</span>
+              ${type.name}
+            </div>
+            <div id="${blockId}_wrap"></div>
+          </div>`
+        );
+        buildSetechBlock(`${blockId}_wrap`, blockId, `${gl} ${type.name}`);
+      });
+    });
+  }
+
+  /* ══════════════════════════════════════════
+     ⑦ 교과 세특 목록
+  ══════════════════════════════════════════ */
+  let setechItems = [];
+
+  function initSetech() {
+    const saved = JSON.parse(
+      localStorage.getItem(`dvl_record_${STUDENT_ID}_setechList`) || 'null'
+    );
+    setechItems = saved || [
+      { id:'ste_1', subject:'공통국어1', grade:'1학년', credit:4 },
+      { id:'ste_2', subject:'공통수학1', grade:'1학년', credit:4 },
+      { id:'ste_3', subject:'통합사회1', grade:'1학년', credit:3 },
+    ];
+    renderSetechList();
+  }
+
+  function renderSetechList() {
+    const list = document.getElementById('setechList');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!setechItems.length) {
+      list.innerHTML = `<div style="text-align:center;padding:36px;color:var(--text-300);">
+        <i class="fas fa-plus-circle" style="font-size:32px;display:block;margin-bottom:10px;color:var(--rec-border);"></i>
+        <p>과목을 추가해주세요.</p>
+      </div>`;
+      return;
+    }
+
+    setechItems.forEach((item, idx) => {
+      const blockId = item.id;
+      list.insertAdjacentHTML('beforeend', `
+        <div class="rec-section" style="margin-bottom:16px;border-color:var(--rec-border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;
+            padding:13px 18px;background:#faf5ff;border-bottom:1.5px solid var(--rec-border);">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <span style="background:var(--rec-main);color:#fff;padding:3px 10px;
+                border-radius:8px;font-size:12px;font-weight:700;">${item.grade}</span>
+              <span style="font-size:15px;font-weight:700;color:var(--text-900);">${item.subject}</span>
+              <span style="font-size:12px;color:var(--text-400);background:#f3f4f6;
+                padding:2px 8px;border-radius:6px;">${item.credit}단위</span>
+            </div>
+            <button onclick="removeSetech(${idx})" title="삭제"
+              style="background:none;border:none;cursor:pointer;color:var(--text-300);font-size:13px;padding:5px;border-radius:6px;transition:all var(--transition);"
+              onmouseover="this.style.color='#b91c1c';this.style.background='#fef2f2'"
+              onmouseout="this.style.color='var(--text-300)';this.style.background='none'">
+              <i class="fas fa-trash-can"></i>
+            </button>
+          </div>
+          <div style="padding:16px 18px;">
+            <div id="${blockId}_wrap"></div>
+          </div>
+        </div>`
+      );
+      buildSetechBlock(`${blockId}_wrap`, blockId, `${item.grade} ${item.subject}(${item.credit}단위)`);
+    });
+  }
+
+  /* 과목 추가 모달 */
+  function openSetechModal() {
+    document.getElementById('setechModalOverlay').classList.add('show');
+    document.getElementById('samSubject').value = '';
+    document.getElementById('samCredit').value  = '3';
+  }
+  function closeSetechModal() {
+    document.getElementById('setechModalOverlay').classList.remove('show');
+  }
+  function confirmAddSetech() {
+    const subject = document.getElementById('samSubject').value.trim();
+    const grade   = document.getElementById('samGrade').value;
+    const credit  = parseInt(document.getElementById('samCredit').value) || 3;
+    if (!subject) { alert('과목명을 입력해주세요.'); return; }
+    const id = `ste_${Date.now()}`;
+    setechItems.push({ id, subject, grade, credit });
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_setechList`, JSON.stringify(setechItems));
+    renderSetechList();
+    closeSetechModal();
+    showRecToast(`✅ "${subject}" 과목이 추가되었습니다.`);
+  }
+  document.getElementById('setechModalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeSetechModal();
+  });
+
+  function removeSetech(idx) {
+    if (!confirm('이 과목 세특을 삭제할까요?')) return;
+    const removed = setechItems.splice(idx, 1)[0];
+    localStorage.removeItem(`dvl_record_${STUDENT_ID}_${removed.id}`);
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_setechList`, JSON.stringify(setechItems));
+    renderSetechList();
+    showRecToast('삭제되었습니다.');
+  }
+
+  /* ══════════════════════════════════════════
+     ⑨ 행동특성 초기화
+  ══════════════════════════════════════════ */
+  function initBehavior() {
+    const list = document.getElementById('behaviorList');
+    if (!list) return;
+    list.innerHTML = '';
+    const BEHAVIOR_MAX = 1200;   // ⑨ 행동특성 바이트 제한
+    GRADE_LABELS.forEach((gl, gi) => {
+      const blockId = `behavior_g${gi+1}`;
+      const saved   = JSON.parse(
+        localStorage.getItem(`dvl_record_${STUDENT_ID}_${blockId}`) || '{}'
+      );
+      list.insertAdjacentHTML('beforeend', `
+        <div style="margin-bottom:26px;">
+          <div style="font-size:13.5px;font-weight:700;color:var(--text-900);
+            margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+            <span style="background:var(--rec-main);color:#fff;padding:3px 12px;
+              border-radius:10px;font-size:12.5px;">${gl}</span>
+            행동특성 및 종합의견
+            <span style="font-size:11.5px;color:var(--text-300);font-weight:400;">(최대 ${BEHAVIOR_MAX}바이트)</span>
+          </div>
+          <textarea class="setech-textarea teacher-view" id="${blockId}_content"
+            style="min-height:130px;"
+            placeholder="${gl} 담임 선생님이 학생부에 기재한 행동특성 및 종합의견을 복사하여 붙여넣으세요.&#10;(최대 ${BEHAVIOR_MAX}바이트)"
+          >${saved.content || ''}</textarea>
+          <div class="byte-counter" id="${blockId}_byteCnt"></div>
+        </div>`
+      );
+      /* makeByteCounter 로 1200바이트 제한 연결 */
+      makeByteCounter(`${blockId}_content`, `${blockId}_byteCnt`, BEHAVIOR_MAX);
+    });
+  }
+
+  /* ══════════════════════════════════════════
+     학적 변동 행 추가
+  ══════════════════════════════════════════ */
+  function addSchoolHistRow() {
+    const tbody = document.getElementById('schoolHistTbody');
+    if (!tbody) return;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><input class="rec-input" name="sh_date" type="date" /></td>
+        <td><input class="rec-input" name="sh_content" type="text" placeholder="예: ○○고등학교 제1학년 입학" /></td>
+        <td><button class="btn-row-delete" onclick="this.closest('tr').remove()" title="행 삭제">
+          <i class="fas fa-minus"></i></button></td>
+      </tr>`);
+  }
+
+  /* ══════════════════════════════════════════
+     동적 테이블 행 추가
+  ══════════════════════════════════════════ */
+  function addAwardRow() {
+    const tbody = document.getElementById('awardTbody');
+    const idx   = tbody.rows.length;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><input class="rec-input" name="award_name_${idx}" placeholder="수상명" /></td>
+        <td><input class="rec-input" style="width:80px" name="award_rank_${idx}" placeholder="최우수" /></td>
+        <td><input class="rec-input" type="date" name="award_date_${idx}" /></td>
+        <td><input class="rec-input" name="award_org_${idx}" placeholder="○○학교" /></td>
+        <td><input class="rec-input" style="width:70px" name="award_cnt_${idx}" placeholder="120명" /></td>
+        <td><button class="btn-row-delete" onclick="this.closest('tr').remove()" title="삭제">
+          <i class="fas fa-trash-can"></i></button></td>
+      </tr>`);
+  }
+
+  function addCertRow() {
+    const tbody = document.getElementById('certTbody');
+    const idx   = tbody.rows.length;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><input class="rec-input" name="cert_name_${idx}" placeholder="자격증명" /></td>
+        <td><input class="rec-input" style="width:110px" name="cert_num_${idx}" placeholder="제○○호" /></td>
+        <td><input class="rec-input" type="date" name="cert_date_${idx}" /></td>
+        <td><input class="rec-input" name="cert_org_${idx}" placeholder="발급기관" /></td>
+        <td><button class="btn-row-delete" onclick="this.closest('tr').remove()" title="삭제">
+          <i class="fas fa-trash-can"></i></button></td>
+      </tr>`);
+  }
+
+  function addBookRow() {
+    const tbody = document.getElementById('bookTbody');
+    const idx   = tbody.rows.length;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>
+          <select class="rec-select" style="width:80px" name="book_grade_${idx}">
+            <option>1학년</option><option>2학년</option><option>3학년</option>
+          </select>
+        </td>
+        <td><input class="rec-input" style="width:90px" name="book_subject_${idx}" placeholder="국어" /></td>
+        <td><input class="rec-input" name="book_title_${idx}" placeholder="도서명" /></td>
+        <td><input class="rec-input" name="book_author_${idx}" placeholder="저자" /></td>
+        <td><button class="btn-row-delete" onclick="this.closest('tr').remove()" title="삭제">
+          <i class="fas fa-trash-can"></i></button></td>
+      </tr>`);
+  }
+
+  /* ══════════════════════════════════════════
+     세특 텍스트 일괄 저장 헬퍼
+  ══════════════════════════════════════════ */
+  function saveAllTextareas() {
+    document.querySelectorAll('[id$="_self"], [id$="_teacher"], [id$="_content"]').forEach(el => {
+      if (!el.id) return;
+      const blockId = el.id.replace(/_self$|_teacher$|_content$/, '');
+      const key = `dvl_record_${STUDENT_ID}_${blockId}`;
+      const saved = JSON.parse(localStorage.getItem(key) || '{}');
+      if (el.id.endsWith('_self'))    saved.self    = el.value;
+      if (el.id.endsWith('_teacher')) saved.teacher = el.value;
+      if (el.id.endsWith('_content')) saved.content = el.value;
+      localStorage.setItem(key, JSON.stringify(saved));
+    });
+  }
+
+  /* ── 각 섹션 저장 함수 ── */
+  /* ──────────────────────────────────────────
+     ① 인적·학적사항 저장 / 복원
+  ────────────────────────────────────────── */
+  function saveSection1() {
+    const sectionMap = {};
+    // 인적사항 필드
+    ['name','birth','gender','jumin','addr','parent'].forEach(f => {
+      const el = document.getElementById(`r1_${f}`);
+      if (el) {
+        localStorage.setItem(`dvl_record_${STUDENT_ID}_r1_${f}`, el.value);
+        sectionMap[`r1_${f}`] = el.value;
+      }
+    });
+    // 학적사항 필드
+    ['school','schoolcode','schooladdr','grade','class','num'].forEach(f => {
+      const el = document.getElementById(`r1_${f}`);
+      if (el) {
+        localStorage.setItem(`dvl_record_${STUDENT_ID}_r1_${f}`, el.value);
+        sectionMap[`r1_${f}`] = el.value;
+      }
+    });
+    // 학적 변동 테이블 행 저장
+    const histRows = [];
+    document.querySelectorAll('#schoolHistTbody tr').forEach(tr => {
+      const dateEl    = tr.querySelector('[name="sh_date"]');
+      const contentEl = tr.querySelector('[name="sh_content"]');
+      histRows.push({
+        date:    dateEl    ? dateEl.value    : '',
+        content: contentEl ? contentEl.value : ''
+      });
+    });
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_hist`, JSON.stringify(histRows));
+    sectionMap['hist'] = JSON.stringify(histRows);
+    showRecToast('✅ ①인적·학적사항이 저장되었습니다.');
+  }
+
+  function loadSection1() {
+    // 인적사항 필드 복원
+    ['name','birth','gender','jumin','addr','parent'].forEach(f => {
+      const el = document.getElementById(`r1_${f}`);
+      if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_r1_${f}`) || '';
+    });
+    // 학적사항 필드 복원
+    ['school','schoolcode','schooladdr','grade','class','num'].forEach(f => {
+      const el = document.getElementById(`r1_${f}`);
+      if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_r1_${f}`) || '';
+    });
+    // 학적 변동 행 복원
+    const histRows = JSON.parse(
+      localStorage.getItem(`dvl_record_${STUDENT_ID}_hist`) || '[]'
+    );
+    const tbody = document.getElementById('schoolHistTbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      if (histRows.length === 0) {
+        addSchoolHistRow(); addSchoolHistRow(); // 기본 빈 행 2개
+      } else {
+        histRows.forEach(r => {
+          addSchoolHistRow();
+          const lastTr = tbody.lastElementChild;
+          const dateEl    = lastTr.querySelector('[name="sh_date"]');
+          const contentEl = lastTr.querySelector('[name="sh_content"]');
+          if (dateEl)    dateEl.value    = r.date    || '';
+          if (contentEl) contentEl.value = r.content || '';
+        });
+      }
+    }
+    showRecToast('되돌렸습니다.');
+  }
+
+  function saveSection2() {
+    // 결석/지각/조퇴/결과 3분류 + 수업일수 + 특기사항
+    const keys = [
+      'att1_days',
+      'att1_abs_sick','att1_abs_unauth','att1_abs_etc',
+      'att1_late_sick','att1_late_unauth','att1_late_etc',
+      'att1_early_sick','att1_early_unauth','att1_early_etc',
+      'att1_leave_sick','att1_leave_unauth','att1_leave_etc',
+      'att1_note',
+      'att2_days',
+      'att2_abs_sick','att2_abs_unauth','att2_abs_etc',
+      'att2_late_sick','att2_late_unauth','att2_late_etc',
+      'att2_early_sick','att2_early_unauth','att2_early_etc',
+      'att2_leave_sick','att2_leave_unauth','att2_leave_etc',
+      'att2_note',
+      'att3_days',
+      'att3_abs_sick','att3_abs_unauth','att3_abs_etc',
+      'att3_late_sick','att3_late_unauth','att3_late_etc',
+      'att3_early_sick','att3_early_unauth','att3_early_etc',
+      'att3_leave_sick','att3_leave_unauth','att3_leave_etc',
+      'att3_note'
+    ];
+    keys.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) localStorage.setItem(`dvl_record_${STUDENT_ID}_${k}`, el.value);
+    });
+    showRecToast('✅ ②출결사항이 저장되었습니다.');
+  }
+  function loadSection2() {
+    const keys = [
+      'att1_days',
+      'att1_abs_sick','att1_abs_unauth','att1_abs_etc',
+      'att1_late_sick','att1_late_unauth','att1_late_etc',
+      'att1_early_sick','att1_early_unauth','att1_early_etc',
+      'att1_leave_sick','att1_leave_unauth','att1_leave_etc',
+      'att1_note',
+      'att2_days',
+      'att2_abs_sick','att2_abs_unauth','att2_abs_etc',
+      'att2_late_sick','att2_late_unauth','att2_late_etc',
+      'att2_early_sick','att2_early_unauth','att2_early_etc',
+      'att2_leave_sick','att2_leave_unauth','att2_leave_etc',
+      'att2_note',
+      'att3_days',
+      'att3_abs_sick','att3_abs_unauth','att3_abs_etc',
+      'att3_late_sick','att3_late_unauth','att3_late_etc',
+      'att3_early_sick','att3_early_unauth','att3_early_etc',
+      'att3_leave_sick','att3_leave_unauth','att3_leave_etc',
+      'att3_note'
+    ];
+    keys.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_${k}`) || '';
+    });
+    showRecToast('되돌렸습니다.');
+  }
+
+  function saveSection3() {
+    const rows = [];
+    document.querySelectorAll('#awardTbody tr').forEach((tr, i) => {
+      rows.push({
+        name:  tr.querySelector(`[name="award_name_${i}"]`)?.value || '',
+        rank:  tr.querySelector(`[name="award_rank_${i}"]`)?.value || '',
+        date:  tr.querySelector(`[name="award_date_${i}"]`)?.value || '',
+        org:   tr.querySelector(`[name="award_org_${i}"]`)?.value  || '',
+        cnt:   tr.querySelector(`[name="award_cnt_${i}"]`)?.value  || '',
+      });
+    });
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_awards`, JSON.stringify(rows));
+    showRecToast('✅ ③수상경력이 저장되었습니다.');
+  }
+  function loadSection3(silent) {
+    const rows = JSON.parse(localStorage.getItem(`dvl_record_${STUDENT_ID}_awards`) || '[]');
+    const tbody = document.getElementById('awardTbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    rows.forEach(() => addAwardRow());
+    document.querySelectorAll('#awardTbody tr').forEach((tr, i) => {
+      const r = rows[i] || {};
+      if(tr.querySelector(`[name="award_name_${i}"]`)) tr.querySelector(`[name="award_name_${i}"]`).value = r.name||'';
+      if(tr.querySelector(`[name="award_rank_${i}"]`)) tr.querySelector(`[name="award_rank_${i}"]`).value = r.rank||'';
+      if(tr.querySelector(`[name="award_date_${i}"]`)) tr.querySelector(`[name="award_date_${i}"]`).value = r.date||'';
+      if(tr.querySelector(`[name="award_org_${i}"]`))  tr.querySelector(`[name="award_org_${i}"]`).value  = r.org||'';
+      if(tr.querySelector(`[name="award_cnt_${i}"]`))  tr.querySelector(`[name="award_cnt_${i}"]`).value  = r.cnt||'';
+    });
+    if (!silent) showRecToast('되돌렸습니다.');
+  }
+
+  function saveSection4() {
+    const rows = [];
+    document.querySelectorAll('#certTbody tr').forEach((tr, i) => {
+      rows.push({
+        name: tr.querySelector(`[name="cert_name_${i}"]`)?.value || '',
+        num:  tr.querySelector(`[name="cert_num_${i}"]`)?.value  || '',
+        date: tr.querySelector(`[name="cert_date_${i}"]`)?.value || '',
+        org:  tr.querySelector(`[name="cert_org_${i}"]`)?.value  || '',
+      });
+    });
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_certs`, JSON.stringify(rows));
+    showRecToast('✅ ④자격증이 저장되었습니다.');
+  }
+  function loadSection4(silent) {
+    const rows = JSON.parse(localStorage.getItem(`dvl_record_${STUDENT_ID}_certs`) || '[]');
+    const tbody = document.getElementById('certTbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    rows.forEach(() => addCertRow());
+    document.querySelectorAll('#certTbody tr').forEach((tr, i) => {
+      const r = rows[i] || {};
+      if(tr.querySelector(`[name="cert_name_${i}"]`)) tr.querySelector(`[name="cert_name_${i}"]`).value = r.name||'';
+      if(tr.querySelector(`[name="cert_num_${i}"]`))  tr.querySelector(`[name="cert_num_${i}"]`).value  = r.num||'';
+      if(tr.querySelector(`[name="cert_date_${i}"]`)) tr.querySelector(`[name="cert_date_${i}"]`).value = r.date||'';
+      if(tr.querySelector(`[name="cert_org_${i}"]`))  tr.querySelector(`[name="cert_org_${i}"]`).value  = r.org||'';
+    });
+    if (!silent) showRecToast('되돌렸습니다.');
+  }
+
+  function saveSection5() {
+    const sectionMap = {};
+    ['1','2','3'].forEach(n => {
+      ['skill','student','parent'].forEach(f => {
+        const el = document.getElementById(`ca${n}_${f}`);
+        if (el) {
+          localStorage.setItem(`dvl_record_${STUDENT_ID}_ca${n}_${f}`, el.value);
+          sectionMap[`ca${n}_${f}`] = el.value;
+        }
+      });
+    });
+    showRecToast('✅ ⑤진로희망사항이 저장되었습니다.');
+  }
+  function loadSection5(silent) {
+    ['1','2','3'].forEach(n => {
+      ['skill','student','parent'].forEach(f => {
+        const el = document.getElementById(`ca${n}_${f}`);
+        if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_ca${n}_${f}`) || '';
+      });
+    });
+    if (!silent) showRecToast('되돌렸습니다.');
+  }
+
+  function saveSection6() {
+    saveAllTextareas();
+    showRecToast('✅ ⑥창의적 체험활동이 저장되었습니다.');
+  }
+
+  function saveSection7() {
+    saveAllTextareas();
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_setechList`, JSON.stringify(setechItems));
+    showRecToast('✅ ⑦교과 세특이 저장되었습니다.');
+  }
+
+  function saveSection8() {
+    const rows = [];
+    document.querySelectorAll('#bookTbody tr').forEach((tr, i) => {
+      rows.push({
+        grade:   tr.querySelector(`[name="book_grade_${i}"]`)?.value   || '',
+        subject: tr.querySelector(`[name="book_subject_${i}"]`)?.value || '',
+        title:   tr.querySelector(`[name="book_title_${i}"]`)?.value   || '',
+        author:  tr.querySelector(`[name="book_author_${i}"]`)?.value  || '',
+      });
+    });
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_books`, JSON.stringify(rows));
+    showRecToast('✅ ⑧독서활동이 저장되었습니다.');
+  }
+  function loadSection8(silent) {
+    const rows = JSON.parse(localStorage.getItem(`dvl_record_${STUDENT_ID}_books`) || '[]');
+    const tbody = document.getElementById('bookTbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    rows.forEach(() => addBookRow());
+    document.querySelectorAll('#bookTbody tr').forEach((tr, i) => {
+      const r = rows[i] || {};
+      if(tr.querySelector(`[name="book_grade_${i}"]`))   tr.querySelector(`[name="book_grade_${i}"]`).value   = r.grade||'1학년';
+      if(tr.querySelector(`[name="book_subject_${i}"]`)) tr.querySelector(`[name="book_subject_${i}"]`).value = r.subject||'';
+      if(tr.querySelector(`[name="book_title_${i}"]`))   tr.querySelector(`[name="book_title_${i}"]`).value   = r.title||'';
+      if(tr.querySelector(`[name="book_author_${i}"]`))  tr.querySelector(`[name="book_author_${i}"]`).value  = r.author||'';
+    });
+    if (!silent) showRecToast('되돌렸습니다.');
+  }
+
+  function saveSection9() {
+    const sectionMap = {};
+    GRADE_LABELS.forEach((_, gi) => {
+      const blockId = `behavior_g${gi+1}`;
+      const ta = document.getElementById(`${blockId}_content`);
+      if (ta) {
+        const key = `dvl_record_${STUDENT_ID}_${blockId}`;
+        const d = JSON.parse(localStorage.getItem(key) || '{}');
+        d.content = ta.value;
+        localStorage.setItem(key, JSON.stringify(d));
+        sectionMap[blockId] = JSON.stringify(d);
+      }
+    });
+    showRecToast('✅ ⑨행동특성이 저장되었습니다.');
+  }
+
+  /* ══════════════════════════════════════════
+     PDF 업로드
+  ══════════════════════════════════════════ */
+  let pdfFiles = JSON.parse(
+    localStorage.getItem(`dvl_record_${STUDENT_ID}_pdfs`) || '[]'
+  );
+
+  function handlePdfUpload(e) {
+    const files = Array.from(e.target.files || e.dataTransfer?.files || []);
+    let processed = 0;
+    files.forEach(file => {
+      if (file.type !== 'application/pdf') {
+        alert(`"${file.name}" : PDF 파일만 업로드할 수 있습니다.`);
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`"${file.name}" : 파일 크기는 10MB 이하여야 합니다.`);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        pdfFiles.push({
+          name:    file.name,
+          size:    file.size,
+          date:    new Date().toLocaleDateString('ko-KR'),
+          dataUrl: ev.target.result
+        });
+        processed++;
+        if (processed === files.length) {
+          localStorage.setItem(`dvl_record_${STUDENT_ID}_pdfs`, JSON.stringify(pdfFiles));
+          renderPdfList();
+          showRecToast(`✅ ${processed}개 파일이 업로드되었습니다.`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+    if (e.target) e.target.value = '';
+  }
+
+  function renderPdfList() {
+    const list = document.getElementById('pdfFileList');
+    if (!list) return;
+    if (!pdfFiles.length) {
+      list.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-300);font-size:13px;">
+        <i class="fas fa-folder-open" style="font-size:26px;display:block;margin-bottom:8px;"></i>
+        업로드된 파일이 없습니다.</div>`;
+      return;
+    }
+    list.innerHTML = pdfFiles.map((f, i) => `
+      <div class="pdf-file-item">
+        <div class="pdf-file-info">
+          <i class="fas fa-file-pdf pdf-file-icon"></i>
+          <div>
+            <div class="pdf-file-name">${f.name}</div>
+            <div class="pdf-file-size">${(f.size/1024).toFixed(1)} KB · ${f.date}</div>
+          </div>
+        </div>
+        <div class="pdf-file-actions">
+          <button class="btn-pdf-view" onclick="viewPdf(${i})"><i class="fas fa-eye"></i> 보기</button>
+          <button class="btn-pdf-dl"   onclick="downloadPdf(${i})"><i class="fas fa-download"></i> 저장</button>
+          <button class="btn-pdf-del"  onclick="deletePdf(${i})"><i class="fas fa-trash-can"></i></button>
+        </div>
+      </div>`).join('');
+  }
+
+  function viewPdf(idx) {
+    const f = pdfFiles[idx];
+    if (!f) return;
+    const w = window.open('', '_blank');
+    w.document.write(`<!DOCTYPE html><html><head><title>${f.name}</title></head>
+      <body style="margin:0;background:#222;">
+        <iframe src="${f.dataUrl}" width="100%" height="100%"
+          style="border:none;height:100vh;display:block;"></iframe>
+      </body></html>`);
+  }
+
+  function downloadPdf(idx) {
+    const f = pdfFiles[idx];
+    if (!f) return;
+    const a = document.createElement('a');
+    a.href     = f.dataUrl;
+    a.download = f.name;
+    a.click();
+  }
+
+  function deletePdf(idx) {
+    if (!confirm(`"${pdfFiles[idx]?.name}" 파일을 삭제할까요?`)) return;
+    pdfFiles.splice(idx, 1);
+    localStorage.setItem(`dvl_record_${STUDENT_ID}_pdfs`, JSON.stringify(pdfFiles));
+    renderPdfList();
+    showRecToast('파일이 삭제되었습니다.');
+  }
+
+  /* PDF 드래그 앤 드롭 */
+  const dropZone = document.getElementById('pdfDropZone');
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', ()=> { dropZone.classList.remove('drag-over'); });
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    handlePdfUpload({ dataTransfer: e.dataTransfer });
+  });
+
+  /* ══════════════════════════════════════════
+     토스트
+  ══════════════════════════════════════════ */
+  let toastTimer = null;
+  function showRecToast(msg, type='ok') {
+    const el  = document.getElementById('recToast');
+    const msg_el = document.getElementById('recToastMsg');
+    msg_el.textContent = msg;
+    el.style.background = type === 'warn' ? '#92400e' : '#4c1d95';
+    el.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  /* ── 사이드바 토글 (표준) ── */
+  (function() {
+    const sb  = document.getElementById('sidebar');
+    const dim = document.getElementById('sidebarDim');
+    if (!sb || !dim) return;
+    const open  = () => { sb.classList.add('open');    dim.classList.add('show');    document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); dim.classList.remove('show'); document.body.style.overflow=''; };
+    ['menuToggle','menuBtn'].forEach(id => document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb.classList.contains('open') ? close() : open(); }));
+    document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+    dim.addEventListener('click', close);
+  })();
+  document.getElementById('logoutBtn')?.addEventListener('click', e => {
+    e.preventDefault();
+    ['dvl_user','dvl_session','dvSession','dvl_student_session','dvl_parent_session'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)});
+    sessionStorage.clear();
+    location.href = '../login.html';
+  });
+
+  /* ══════════════════════════════════════════
+     초기화 (DOMContentLoaded)
+  ══════════════════════════════════════════ */
+  (function init() {
+    /* localStorage 기반 즉시 렌더링 */
+    reinitFromStorage();
+  })();
+
+  function reinitFromStorage() {
+    // ① 인적사항 필드 복원
+    ['name','birth','gender','jumin','addr','parent'].forEach(f => {
+      const el = document.getElementById(`r1_${f}`);
+      if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_r1_${f}`) || '';
+    });
+    // ① 학적사항 필드 복원
+    ['school','schoolcode','schooladdr','grade','class','num'].forEach(f => {
+      const el = document.getElementById(`r1_${f}`);
+      if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_r1_${f}`) || '';
+    });
+    // ① 학적 변동 행 복원
+    const histRows = JSON.parse(
+      localStorage.getItem(`dvl_record_${STUDENT_ID}_hist`) || '[]'
+    );
+    const histTbody = document.getElementById('schoolHistTbody');
+    if (histTbody && histRows.length > 0) {
+      histTbody.innerHTML = '';
+      histRows.forEach(r => {
+        addSchoolHistRow();
+        const lastTr = histTbody.lastElementChild;
+        const dateEl = lastTr.querySelector('[name="sh_date"]');
+        const contEl = lastTr.querySelector('[name="sh_content"]');
+        if (dateEl) dateEl.value = r.date    || '';
+        if (contEl) contEl.value = r.content || '';
+      });
+    }
+    // ② 출결 복원 (3분류)
+    ['att1','att2','att3'].forEach(pfx => {
+      [
+        'days',
+        'abs_sick','abs_unauth','abs_etc',
+        'late_sick','late_unauth','late_etc',
+        'early_sick','early_unauth','early_etc',
+        'leave_sick','leave_unauth','leave_etc',
+        'note'
+      ].forEach(suf => {
+        const el = document.getElementById(`${pfx}_${suf}`);
+        if (el) el.value = localStorage.getItem(`dvl_record_${STUDENT_ID}_${pfx}_${suf}`) || '';
+      });
+    });
+    // ③ 수상경력 복원
+    loadSection3(true);
+    // ④ 자격증 복원
+    loadSection4(true);
+    // ⑤ 진로희망 복원
+    loadSection5(true);
+    // ⑥ 창의적 체험활동
+    initCCA();
+    // ⑦ 교과 세특
+    initSetech();
+    // ⑨ 행동특성
+    initBehavior();
+    // PDF 목록
+    renderPdfList();
+    // ⑧ 독서활동 복원
+    loadSection8(true);
+
+    // 세션 사용자 정보
+    try {
+      const u = JSON.parse(sessionStorage.getItem('dvl_user') || '{}');
+      if (u.name) {
+        const first = u.name.charAt(0);
+        document.getElementById('sidebarAvatarChar').textContent = first;
+        document.getElementById('topbarAvatar').textContent      = first;
+        document.getElementById('topbarUserName').textContent    = u.name;
+        document.getElementById('sidebarStudentName').textContent = u.name;
+      }
+      if (u.school) document.getElementById('sidebarStudentSchool').textContent = u.school;
+    } catch(e) {}
+  } // reinitFromStorage 끝
+
+  /* ✅ 모든 실제 함수를 _dvl_real_ 네임스페이스에 등록
+     head 프록시가 이 등록을 기다렸다가 실제 함수를 호출한다 */
+  ;[
+    'switchRecTab','toggleSection',
+      'saveSection1','saveSection2','saveSection3','saveSection4',
+      'saveSection5','saveSection6','saveSection7','saveSection8','saveSection9',
+      'loadSection1','loadSection2','loadSection3','loadSection4',
+      'loadSection5','loadSection8',
+      'initCCA','initSetech','initBehavior',
+      'addSchoolHistRow','addAwardRow','addCertRow','addBookRow',
+      'openSetechModal','closeSetechModal','confirmAddSetech',
+      'removeSetech','viewPdf','downloadPdf','deletePdf',
+      'showRecToast'
+    ].forEach(name => {
+      if (typeof window[name] === 'function' && name !== 'switchRecTab' && name !== 'toggleSection') {
+        window['_dvl_real_' + name] = window[name];
+      }
+    });
+  </script>
+</body>
+</html>

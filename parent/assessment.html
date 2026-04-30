@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수행평가 – 다빈치랩 학부모</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <style>
+    /* ── 페이지 변수 ── */
+    :root {
+      --pa-main: #7c3aed;
+      --pa-light: #ede9fe;
+      --pa-success: #10b981;
+      --pa-warn: #f59e0b;
+      --pa-danger: #ef4444;
+    }
+
+    /* ── 레이아웃 ── */
+    .pa-wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+
+    /* ── 히어로 배너 ── */
+    .pa-hero {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      border-radius: 18px; padding: 28px 32px; color: white;
+      margin-bottom: 24px; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .pa-hero-left h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+    .pa-hero-left p  { font-size: .9rem; opacity: .85; }
+    .pa-hero-stats   { display: flex; gap: 20px; }
+    .pa-hero-stat    { text-align: center; }
+    .pa-hero-stat .hs-val { font-size: 1.8rem; font-weight: 800; }
+    .pa-hero-stat .hs-lbl { font-size: .75rem; opacity: .8; }
+
+    /* ── KPI 그리드 ── */
+    .pa-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .pa-kpi-card {
+      background: white; border-radius: 14px; padding: 18px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); display: flex;
+      flex-direction: column; gap: 6px;
+    }
+    .pa-kpi-card .pkc-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; margin-bottom: 4px;
+    }
+    .pkc-icon.red    { background: #fee2e2; color: #ef4444; }
+    .pkc-icon.green  { background: #d1fae5; color: #059669; }
+    .pkc-icon.amber  { background: #fef3c7; color: #d97706; }
+    .pkc-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .pa-kpi-card .pkc-val  { font-size: 1.6rem; font-weight: 800; color: #1e1b4b; }
+    .pa-kpi-card .pkc-lbl  { font-size: .8rem; color: #6b7280; font-weight: 600; }
+
+    /* ── 탭 ── */
+    .pa-tabs {
+      display: flex; gap: 8px; margin-bottom: 18px;
+      border-bottom: 2px solid #e5e7eb; flex-wrap: wrap;
+    }
+    .pa-tab {
+      padding: 8px 16px; font-size: .88rem; font-weight: 600;
+      cursor: pointer; border: none; background: none;
+      color: #6b7280; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; transition: all .2s; font-family: 'Noto Sans KR', sans-serif;
+    }
+    .pa-tab.active { color: var(--pa-main); border-bottom-color: var(--pa-main); }
+    .pa-tab .pa-tab-cnt {
+      background: #e5e7eb; color: #374151; font-size: .75rem;
+      padding: 1px 7px; border-radius: 20px; margin-left: 5px; font-weight: 700;
+    }
+    .pa-tab.active .pa-tab-cnt { background: var(--pa-light); color: var(--pa-main); }
+
+    /* ── 수행평가 카드 ── */
+    .pa-card-list { display: flex; flex-direction: column; gap: 14px; }
+
+    .pa-card {
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      overflow: hidden; transition: box-shadow .2s;
+      cursor: pointer;
+    }
+    .pa-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+
+    .pa-card-top {
+      display: flex; align-items: flex-start;
+      padding: 18px 20px; gap: 14px;
+    }
+    .pa-subj-dot {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 800; flex-shrink: 0;
+    }
+    .pa-card-info { flex: 1; min-width: 0; }
+    .pa-card-title {
+      font-size: .95rem; font-weight: 700; color: #1e1b4b;
+      margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pa-card-meta {
+      font-size: .8rem; color: #6b7280; display: flex;
+      align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .pa-card-meta i { color: #9ca3af; }
+    .pa-card-right {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: 6px; flex-shrink: 0;
+    }
+
+    /* ── 상태 배지 ── */
+    .status-pill {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: .76rem; font-weight: 700;
+    }
+    .sp-pending  { background: #fef3c7; color: #92400e; }
+    .sp-submit   { background: #dbeafe; color: #1d4ed8; }
+    .sp-feedback { background: #d1fae5; color: #065f46; }
+    .sp-revising { background: #ede9fe; color: #5b21b6; }
+    .sp-confirmed{ background: #ecfdf5; color: #059669; }
+
+    /* ── D-day 배지 ── */
+    .dday-pill {
+      padding: 3px 10px; border-radius: 20px;
+      font-size: .76rem; font-weight: 700;
+    }
+    .dd-danger { background: #fee2e2; color: #991b1b; }
+    .dd-warn   { background: #fef3c7; color: #92400e; }
+    .dd-ok     { background: #d1fae5; color: #065f46; }
+    .dd-past   { background: #f3f4f6; color: #9ca3af; }
+    .dd-urgent-pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+
+    /* ── 피드백 패널 (접기/펼치기) ── */
+    .pa-feedback-panel {
+      border-top: 1px solid #f3f4f6;
+      padding: 16px 20px;
+      background: #fafafa;
+      display: none;
+    }
+    .pa-feedback-panel.open { display: block; }
+    .pf-head {
+      font-size: .82rem; font-weight: 700; color: #374151;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+    }
+    .pf-type-badge {
+      padding: 2px 8px; border-radius: 6px; font-size: .72rem; font-weight: 700;
+      background: #ede9fe; color: #5b21b6;
+    }
+    .pf-content {
+      font-size: .88rem; color: #374151; line-height: 1.7;
+      background: white; border: 1px solid #e5e7eb;
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 12px;
+    }
+    .pf-score {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 8px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      font-size: .85rem; font-weight: 700; color: #1e1b4b;
+    }
+    .pf-memo {
+      font-size: .82rem; color: #6b7280; margin-top: 8px;
+      padding: 8px 12px; background: #fffbeb; border-radius: 8px;
+      border-left: 3px solid #f59e0b;
+    }
+
+    /* ── 빈 상태 ── */
+    .pa-empty {
+      text-align: center; padding: 60px 24px; color: #9ca3af;
+    }
+    .pa-empty i { font-size: 40px; margin-bottom: 12px; display: block; color: #d1d5db; }
+    .pa-empty p { font-size: .9rem; }
+
+    /* ── 로딩 스피너 ── */
+    .pa-loading {
+      text-align: center; padding: 48px;
+      color: #9ca3af; font-size: .9rem;
+    }
+    .pa-loading i { font-size: 28px; margin-bottom: 10px; display: block; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 모바일 하단 네비 ── */
+    .mobile-bottom-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: white; border-top: 1px solid #e5e7eb;
+      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    .mobile-bottom-nav .nav-items {
+      display: flex; justify-content: space-around;
+    }
+    .mobile-bottom-nav .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      font-size: .68rem; color: #9ca3af; text-decoration: none; gap: 3px;
+    }
+    .mobile-bottom-nav .nav-item i  { font-size: 1.1rem; }
+    .mobile-bottom-nav .nav-item.active { color: var(--pa-main); }
+
+    @media (max-width: 768px) {
+      .mobile-bottom-nav { display: block; }
+      .pa-wrap { padding-bottom: 80px; }
+      .pa-hero  { padding: 20px; }
+      .pa-hero-stats { gap: 14px; }
+      .pa-hero-stat .hs-val { font-size: 1.4rem; }
+    }
+
+    /* ── 토스트 ── */
+    .pa-toast {
+      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+      background: #1e1b4b; color: white; padding: 12px 24px;
+      border-radius: 999px; font-size: .88rem; font-weight: 600;
+      z-index: 9999; opacity: 0; transition: opacity .3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .pa-toast.show { opacity: 1; }
+
+    /* ── 과목 색상 ── */
+    .subj-math { background:#dbeafe; color:#1d4ed8; }
+    .subj-eng  { background:#d1fae5; color:#065f46; }
+    .subj-kor  { background:#ede9fe; color:#5b21b6; }
+    .subj-sci  { background:#fef3c7; color:#92400e; }
+    .subj-soc  { background:#fce7f3; color:#9d174d; }
+    .subj-hist { background:#fee2e2; color:#991b1b; }
+    .subj-etc  { background:#f3f4f6; color:#374151; }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">홈</span>
+        <a href="dashboard.html" class="nav-item" data-page="dashboard">
+          <i class="fas fa-th-large"></i><span>홈 대시보드</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">자녀 학습</span>
+        <a href="exam.html" class="nav-item" data-page="exam">
+          <i class="fas fa-calendar-alt"></i><span>시험 플래너</span>
+        </a>
+        <a href="assessment.html" class="nav-item active" data-page="assessment">
+          <i class="fas fa-clipboard-check"></i><span>수행평가</span>
+        </a>
+        <a href="grades.html" class="nav-item" data-page="grades">
+          <i class="fas fa-chart-line"></i><span>성적 관리</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">소통</span>
+        <a href="notice.html" class="nav-item" data-page="notice">
+          <i class="fas fa-bullhorn"></i><span>공지사항</span>
+        </a>
+        <a href="consult.html" class="nav-item" data-page="consult">
+          <i class="fas fa-comments"></i><span>상담 신청</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="sidebarAvatar">학</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarName">학부모</span>
+          <span class="sidebar-user-role" id="sidebarChild">자녀: -</span>
+        </div>
+        <button class="sidebar-logout" id="logoutBtn" title="로그아웃">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="admin-main" id="adminMain">
+
+    <!-- Top Bar -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span>
+          <i class="fas fa-chevron-right"></i>
+          <span class="active">수행평가</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-icon-btn" title="홈페이지로">
+          <a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="admin-content">
+      <div class="pa-wrap">
+
+        <!-- 히어로 배너 -->
+        <div class="pa-hero">
+          <div class="pa-hero-left">
+            <h2 id="heroChildName">자녀 수행평가 현황</h2>
+            <p id="heroSub">전체 수행평가 목록과 선생님 피드백을 확인하세요.</p>
+          </div>
+          <div class="pa-hero-stats">
+            <div class="pa-hero-stat">
+              <div class="hs-val" id="heroTotal">-</div>
+              <div class="hs-lbl">전체</div>
+            </div>
+            <div class="pa-hero-stat">
+              <div class="hs-val" id="heroPending">-</div>
+              <div class="hs-lbl">마감 대기</div>
+            </div>
+            <div class="pa-hero-stat">
+              <div class="hs-val" id="heroFeedback">-</div>
+              <div class="hs-lbl">피드백 완료</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI 카드 -->
+        <div class="pa-kpi-grid">
+          <div class="pa-kpi-card">
+            <div class="pkc-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="pkc-val" id="kpiUrgent">-</div>
+            <div class="pkc-lbl">긴급 마감</div>
+          </div>
+          <div class="pa-kpi-card">
+            <div class="pkc-icon amber"><i class="fas fa-clock"></i></div>
+            <div class="pkc-val" id="kpiUpcoming">-</div>
+            <div class="pkc-lbl">7일 이내 마감</div>
+          </div>
+          <div class="pa-kpi-card">
+            <div class="pkc-icon purple"><i class="fas fa-comment-dots"></i></div>
+            <div class="pkc-val" id="kpiFeedbackNew">-</div>
+            <div class="pkc-lbl">새 피드백</div>
+          </div>
+          <div class="pa-kpi-card">
+            <div class="pkc-icon green"><i class="fas fa-check-circle"></i></div>
+            <div class="pkc-val" id="kpiDone">-</div>
+            <div class="pkc-lbl">최종 확정</div>
+          </div>
+        </div>
+
+        <!-- 탭 -->
+        <div class="pa-tabs" id="paTabs">
+          <button class="pa-tab active" data-filter="all">전체<span class="pa-tab-cnt" id="cnt-all">0</span></button>
+          <button class="pa-tab" data-filter="pending">마감 대기<span class="pa-tab-cnt" id="cnt-pending">0</span></button>
+          <button class="pa-tab" data-filter="submitted">제출 완료<span class="pa-tab-cnt" id="cnt-submitted">0</span></button>
+          <button class="pa-tab" data-filter="feedback">피드백 수령<span class="pa-tab-cnt" id="cnt-feedback">0</span></button>
+          <button class="pa-tab" data-filter="confirmed">최종 확정<span class="pa-tab-cnt" id="cnt-confirmed">0</span></button>
+        </div>
+
+        <!-- 카드 목록 -->
+        <div class="pa-card-list" id="paCardList">
+          <div class="pa-loading">
+            <i class="fas fa-circle-notch"></i>
+            수행평가 정보를 불러오는 중...
+          </div>
+        </div>
+
+      </div><!-- /pa-wrap -->
+    </div><!-- /admin-content -->
+  </div><!-- /admin-main -->
+
+  <!-- 사이드바 딜 오버레이 -->
+  <div class="sidebar-dim" id="sidebarDim"></div>
+
+  <!-- 토스트 -->
+  <div class="pa-toast" id="paToast"></div>
+
+  <script>
+    /* ── 상수 ── */
+    const TABLE_ASSESS   = 'assessments';
+    const TABLE_PARENTS  = 'parent_profiles';
+    const TABLE_STUDENTS = 'student_profiles';
+
+    /* ── 과목 색상 맵 ── */
+    const SUBJ_MAP = {
+      '수학':'subj-math', '영어':'subj-eng', '국어':'subj-kor',
+      '과학':'subj-sci',  '사회':'subj-soc', '한국사':'subj-hist',
+      '생명과학':'subj-sci', '화학':'subj-sci', '물리학':'subj-sci',
+      '역사':'subj-hist', '지리':'subj-soc',
+    };
+    const SUBJ_ICON = {
+      '수학':'π', '영어':'A', '국어':'글', '과학':'🔬',
+      '사회':'🌏', '한국사':'史', '생명과학':'🧬',
+      '화학':'⚗', '물리학':'⚡', '역사':'📜',
+    };
+
+    /* ── 상태 레이블 ── */
+    const STATUS_LABEL = {
+      pending:   '마감 대기',
+      submitted: '제출 완료',
+      feedback:  '피드백 수령',
+      revising:  '수정 중',
+      confirmed: '최종 확정',
+    };
+    const STATUS_CLASS = {
+      pending:   'sp-pending',
+      submitted: 'sp-submit',
+      feedback:  'sp-feedback',
+      revising:  'sp-revising',
+      confirmed: 'sp-confirmed',
+    };
+
+    /* ── 전역 ── */
+    let allAssessments = [];
+    let childId        = '';
+    let childName      = '';
+    let currentFilter  = 'all';
+
+    /* ══════════════════════════════════════════
+       초기화
+    ══════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', async () => {
+      initSidebar();
+
+      // 세션에서 학부모 정보 로드
+      const session = (() => {
+        try { const r = localStorage.getItem('dvl_parent_session') || localStorage.getItem('dvl_user') || localStorage.getItem('dvl_session') || sessionStorage.getItem('dvSession') || sessionStorage.getItem('dvl_user') || '{}'; if(r&&r!=='{}'){sessionStorage.setItem('dvl_user',r);sessionStorage.setItem('dvSession',r);} return JSON.parse(r); }
+        catch { return {}; }
+      })();
+
+      if (!session.id) {
+        location.href = '../login.html'; return;
+      }
+
+      // 학부모 프로필 → 자녀 ID 획득
+      await loadParentProfile(session.id);
+
+      if (!childId) {
+        document.getElementById('paCardList').innerHTML =
+          `<div class="pa-empty">
+            <i class="fas fa-user-slash"></i>
+            <p>연결된 자녀 정보가 없습니다.<br>관리자에게 문의해주세요.</p>
+          </div>`;
+        return;
+      }
+
+      // 수행평가 로드
+      await loadAssessments();
+    });
+
+    /* ── 학부모 프로필 ── */
+    async function loadParentProfile(parentId) {
+      try {
+        const res  = await fetch(`../tables/${TABLE_PARENTS}?limit=200`);
+        const data = await res.json();
+        const rec  = (data.data || []).find(r => r.parent_id === parentId);
+        if (rec) {
+          childId   = rec.child_id   || '';
+          childName = rec.child_name || '자녀';
+          const av  = rec.parent_name ? rec.parent_name[0] : '학';
+
+          document.getElementById('sidebarAvatar').textContent = av;
+          document.getElementById('sidebarName').textContent   = rec.parent_name || '학부모';
+          document.getElementById('sidebarChild').textContent  = `자녀: ${childName}`;
+          document.getElementById('heroChildName').textContent = `${childName} 수행평가 현황`;
+          document.getElementById('heroSub').textContent       =
+            `${childName} 학생의 수행평가 목록과 선생님 피드백을 확인하세요.`;
+        }
+      } catch (e) {
+        console.error('학부모 프로필 로드 실패:', e);
+      }
+    }
+
+    /* ── 수행평가 로드 ── */
+    async function loadAssessments() {
+      try {
+        const res  = await fetch(`../tables/${TABLE_ASSESS}?limit=200`);
+        const data = await res.json();
+        allAssessments = (data.data || []).filter(a => a.student_id === childId);
+
+        updateCounts();
+        renderKPIs();
+        renderCards('all');
+      } catch (e) {
+        document.getElementById('paCardList').innerHTML =
+          `<div class="pa-empty">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>데이터를 불러오지 못했습니다.<br>잠시 후 다시 시도해주세요.</p>
+          </div>`;
+      }
+    }
+
+    /* ── 탭 카운트 업데이트 ── */
+    function updateCounts() {
+      const cnt = {
+        all:       allAssessments.length,
+        pending:   allAssessments.filter(a => a.status === 'pending').length,
+        submitted: allAssessments.filter(a => a.status === 'submitted').length,
+        feedback:  allAssessments.filter(a => a.status === 'feedback' || a.status === 'revising').length,
+        confirmed: allAssessments.filter(a => a.status === 'confirmed').length,
+      };
+      Object.keys(cnt).forEach(k => {
+        const el = document.getElementById(`cnt-${k}`);
+        if (el) el.textContent = cnt[k];
+      });
+
+      // 히어로 배너
+      document.getElementById('heroTotal').textContent    = cnt.all;
+      document.getElementById('heroPending').textContent  = cnt.pending + cnt.submitted;
+      document.getElementById('heroFeedback').textContent = cnt.feedback + cnt.confirmed;
+    }
+
+    /* ── KPI 렌더링 ── */
+    function renderKPIs() {
+      const today = new Date();
+
+      const urgent   = allAssessments.filter(a => {
+        if (!a.due_date) return false;
+        const diff = Math.ceil((new Date(a.due_date) - today) / 86400000);
+        return diff >= 0 && diff <= 3 && a.status !== 'confirmed';
+      }).length;
+
+      const upcoming = allAssessments.filter(a => {
+        if (!a.due_date) return false;
+        const diff = Math.ceil((new Date(a.due_date) - today) / 86400000);
+        return diff >= 0 && diff <= 7 && a.status !== 'confirmed';
+      }).length;
+
+      const feedbackNew = allAssessments.filter(a =>
+        a.status === 'feedback' && a.feedback
+      ).length;
+
+      const done = allAssessments.filter(a => a.status === 'confirmed').length;
+
+      document.getElementById('kpiUrgent').textContent     = urgent;
+      document.getElementById('kpiUpcoming').textContent   = upcoming;
+      document.getElementById('kpiFeedbackNew').textContent = feedbackNew;
+      document.getElementById('kpiDone').textContent       = done;
+    }
+
+    /* ── 카드 렌더링 ── */
+    function renderCards(filter) {
+      currentFilter = filter;
+      const container = document.getElementById('paCardList');
+
+      let list = [...allAssessments];
+      if (filter !== 'all') {
+        if (filter === 'feedback') {
+          list = list.filter(a => a.status === 'feedback' || a.status === 'revising');
+        } else {
+          list = list.filter(a => a.status === filter);
+        }
+      }
+
+      // 마감 임박 순 정렬
+      list.sort((a, b) => {
+        const da = a.due_date || '9999';
+        const db = b.due_date || '9999';
+        return da.localeCompare(db);
+      });
+
+      if (!list.length) {
+        container.innerHTML = `<div class="pa-empty">
+          <i class="fas fa-clipboard"></i>
+          <p>${filter === 'all' ? '등록된 수행평가가 없습니다.' : '해당 항목이 없습니다.'}</p>
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(a => buildCard(a)).join('');
+
+      // 클릭 이벤트 – 피드백 패널 토글
+      container.querySelectorAll('.pa-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const panel = card.querySelector('.pa-feedback-panel');
+          if (panel) panel.classList.toggle('open');
+        });
+      });
+    }
+
+    /* ── 카드 HTML 생성 ── */
+    function buildCard(a) {
+      const today   = new Date();
+      const due     = a.due_date ? new Date(a.due_date) : null;
+      const diff    = due ? Math.ceil((due - today) / 86400000) : null;
+
+      // D-day 배지
+      let ddLabel = '', ddClass = '';
+      if (diff !== null) {
+        if (diff < 0)       { ddLabel = `D+${Math.abs(diff)}`;  ddClass = 'dd-past'; }
+        else if (diff === 0){ ddLabel = 'D-day';                ddClass = 'dd-danger dd-urgent-pulse'; }
+        else if (diff <= 3) { ddLabel = `D-${diff}`;            ddClass = 'dd-danger'; }
+        else if (diff <= 7) { ddLabel = `D-${diff}`;            ddClass = 'dd-warn'; }
+        else                { ddLabel = `D-${diff}`;            ddClass = 'dd-ok'; }
+      }
+
+      // 상태 배지
+      const stLabel = STATUS_LABEL[a.status] || a.status;
+      const stClass = STATUS_CLASS[a.status] || 'sp-pending';
+
+      // 과목 색상
+      const subjCls  = SUBJ_MAP[a.subject]  || 'subj-etc';
+      const subjIcon = SUBJ_ICON[a.subject] || (a.subject ? a.subject[0] : '?');
+
+      // 긴급 표시
+      const urgentBadge = a.is_urgent
+        ? `<span style="padding:2px 8px;background:#fee2e2;color:#ef4444;border-radius:6px;font-size:.72rem;font-weight:700;">🔴 긴급</span>`
+        : '';
+
+      // 피드백 패널
+      let feedbackHtml = '';
+      if (a.feedback) {
+        const typeLabel = a.feedback_type || '종합';
+        const scoreHtml = a.score
+          ? `<div class="pf-score"><i class="fas fa-star" style="color:#f59e0b"></i> 점수: ${a.score}점</div>`
+          : '';
+        const memoHtml  = a.student_memo
+          ? `<div class="pf-memo"><i class="fas fa-pen" style="margin-right:6px"></i>${a.student_memo}</div>`
+          : '';
+        feedbackHtml = `
+          <div class="pa-feedback-panel">
+            <div class="pf-head">
+              <i class="fas fa-comment-dots" style="color:#7c3aed"></i>
+              선생님 피드백
+              <span class="pf-type-badge">${typeLabel}</span>
+            </div>
+            <div class="pf-content">${a.feedback}</div>
+            ${scoreHtml}
+            ${memoHtml}
+          </div>`;
+      } else if (a.note) {
+        feedbackHtml = `
+          <div class="pa-feedback-panel">
+            <div class="pf-head">
+              <i class="fas fa-info-circle" style="color:#7c3aed"></i>
+              수행평가 안내
+            </div>
+            <div class="pf-content">${a.note}</div>
+          </div>`;
+      }
+
+      const hasFeedback = a.feedback || a.note;
+      const expandHint  = hasFeedback
+        ? `<div style="font-size:.72rem;color:#9ca3af;padding:6px 20px 10px;border-top:1px solid #f3f4f6;">
+            <i class="fas fa-chevron-down" style="margin-right:4px"></i>
+            ${a.feedback ? '선생님 피드백 보기' : '안내사항 보기'}
+          </div>`
+        : '';
+
+      return `
+        <div class="pa-card" data-id="${a.id}">
+          <div class="pa-card-top">
+            <div class="pa-subj-dot ${subjCls}">${subjIcon}</div>
+            <div class="pa-card-info">
+              <div class="pa-card-title">${a.title || '수행평가'}</div>
+              <div class="pa-card-meta">
+                <span><i class="fas fa-book"></i> ${a.subject || '-'}</span>
+                ${a.assess_type ? `<span><i class="fas fa-tag"></i> ${a.assess_type}</span>` : ''}
+                ${due ? `<span><i class="fas fa-calendar"></i> ${formatDate(a.due_date)}</span>` : ''}
+                ${a.scope ? `<span><i class="fas fa-list-ul"></i> ${a.scope}</span>` : ''}
+              </div>
+              <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+                ${urgentBadge}
+                <span class="status-pill ${stClass}">${stLabel}</span>
+                ${a.feedback ? `<span style="padding:2px 8px;background:#ede9fe;color:#5b21b6;border-radius:6px;font-size:.72rem;font-weight:700;">💬 피드백 있음</span>` : ''}
+              </div>
+            </div>
+            <div class="pa-card-right">
+              ${ddLabel ? `<span class="dday-pill ${ddClass}">${ddLabel}</span>` : ''}
+            </div>
+          </div>
+          ${expandHint}
+          ${feedbackHtml}
+        </div>`;
+    }
+
+    /* ── 날짜 포맷 ── */
+    function formatDate(str) {
+      if (!str) return '-';
+      const [y, m, d] = str.split('-');
+      const DAY = ['일','월','화','수','목','금','토'];
+      const dow = DAY[new Date(str).getDay()];
+      return `${m}월 ${d}일 (${dow})`;
+    }
+
+    /* ── 탭 이벤트 ── */
+    document.querySelectorAll('.pa-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.pa-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderCards(btn.dataset.filter);
+      });
+    });
+
+    /* ── 사이드바 (표준) ── */
+    function initSidebar() {
+      const sb  = document.getElementById('sidebar');
+      const dim = document.getElementById('sidebarDim');
+      const open  = () => { sb?.classList.add('open');    dim?.classList.add('show');    document.body.style.overflow = 'hidden'; };
+      const close = () => { sb?.classList.remove('open'); dim?.classList.remove('show'); document.body.style.overflow = ''; };
+
+      ['sidebarToggle','menuToggle','menuBtn'].forEach(id =>
+        document.getElementById(id)?.addEventListener('click', e => { e.stopPropagation(); sb?.classList.contains('open') ? close() : open(); })
+      );
+      document.querySelectorAll('#sidebarClose, .sidebar-close').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); close(); }));
+      dim?.addEventListener('click', close);
+
+      document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        sessionStorage.clear();
+        location.href = '../login.html';
+      });
+    }
+
+    /* ── 토스트 ── */
+    function showToast(msg) {
+      const t = document.getElementById('paToast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+  </script>
+
+  <!-- 모바일 하단 네비게이션 -->
+  <nav class="mobile-nav mobile-nav--parent" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-home"></i><span>홈</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="learning.html" class="mobile-nav-item"><i class="fas fa-book-open"></i><span>학습</span></a>
+      <a href="attendance.html" class="mobile-nav-item"><i class="fas fa-calendar-check"></i><span>출결</span></a>
+      <a href="assessment.html" class="mobile-nav-item active"><i class="fas fa-clipboard-check"></i><span>수행평가</span></a>
+    </div>
+  </nav>
+</body>
+</html>
