@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/tables/:path*",
-      "destination": "https://www.genspark.ai/api/code_sandbox_light/preview/8913df2f-c861-4c8f-b106-521a96c99c0e/tables/:path*"
+      "destination": "https://genspark.genspark.site/api/code_sandbox_light/preview/8913df2f-c861-4c8f-b106-521a96c99c0e/tables/:path*"
     }
   ]
 }
