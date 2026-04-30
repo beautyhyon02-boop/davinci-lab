@@ -3,8 +3,8 @@
    완전 DB 연동 / 하드코딩 데이터 제거
    ============================================= */
 
-/* ★ Genspark DB API — Vercel 배포 환경에서도 동작 */
-const _API = 'https://ueygjubz.gensparkspace.com/tables';
+/* ★ Genspark DB API — 루트 기준 상대경로 사용 */
+const _API = 'tables';
 
 const TABLE_PROFILES = 'student_profiles';
 

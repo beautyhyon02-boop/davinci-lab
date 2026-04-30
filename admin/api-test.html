@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>API URL 테스트</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .ok  { color: #4ade80; }
+    .err { color: #f87171; }
+    .info{ color: #60a5fa; }
+    pre  { background: #0f0f1a; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-all; }
+    button { margin: 6px; padding: 10px 20px; background: #3b82f6; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #2563eb; }
+    hr { border-color: #333; }
+  </style>
+</head>
+<body>
+<h2>🔧 DaVinci Lab — API URL 진단</h2>
+<p class="info">현재 호스트: <strong id="host"></strong></p>
+<p class="info">현재 전체 URL: <strong id="fullUrl"></strong></p>
+<hr>
+
+<button onclick="testRelative()">① 상대경로 테스트 (tables/student_profiles)</button>
+<button onclick="testAbsolute()">② 절대경로 테스트 (ueygjubz.gensparkspace.com)</button>
+<button onclick="testCurrentHost()">③ 현재 호스트 기반 테스트</button>
+<button onclick="clearLog()">로그 지우기</button>
+
+<pre id="log">버튼을 클릭해서 테스트하세요...</pre>
+
+<script>
+  document.getElementById('host').textContent = location.hostname;
+  document.getElementById('fullUrl').textContent = location.href;
+
+  const log = document.getElementById('log');
+  function appendLog(msg, cls) {
+    const line = document.createElement('span');
+    line.className = cls || '';
+    line.textContent = msg + '\n';
+    log.appendChild(line);
+  }
+  function clearLog() { log.innerHTML = ''; }
+
+  async function testRelative() {
+    appendLog('\n[① 상대경로 테스트]', 'info');
+    const url = '../tables/student_profiles?limit=3';
+    appendLog('URL: ' + url, 'info');
+    try {
+      const r = await fetch(url);
+      appendLog('status: ' + r.status, r.ok ? 'ok' : 'err');
+      if (r.ok) {
+        const d = await r.json();
+        appendLog('✅ 성공! 데이터 수: ' + (d.data?.length ?? JSON.stringify(d).substring(0,100)), 'ok');
+      } else {
+        appendLog('❌ 실패: HTTP ' + r.status, 'err');
+      }
+    } catch(e) {
+      appendLog('❌ 네트워크 오류: ' + e.message, 'err');
+    }
+  }
+
+  async function testAbsolute() {
+    appendLog('\n[② 절대경로 테스트 — ueygjubz.gensparkspace.com]', 'info');
+    const url = 'https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=3';
+    appendLog('URL: ' + url, 'info');
+    try {
+      const r = await fetch(url);
+      appendLog('status: ' + r.status, r.ok ? 'ok' : 'err');
+      if (r.ok) {
+        const d = await r.json();
+        appendLog('✅ 성공! 데이터 수: ' + (d.data?.length ?? JSON.stringify(d).substring(0,100)), 'ok');
+      } else {
+        appendLog('❌ 실패: HTTP ' + r.status, 'err');
+      }
+    } catch(e) {
+      appendLog('❌ 네트워크 오류 (CORS 또는 존재하지 않는 URL): ' + e.message, 'err');
+    }
+  }
+
+  async function testCurrentHost() {
+    const base = location.origin;
+    appendLog('\n[③ 현재 호스트 기반 테스트]', 'info');
+    const url = base + '/tables/student_profiles?limit=3';
+    appendLog('URL: ' + url, 'info');
+    try {
+      const r = await fetch(url);
+      appendLog('status: ' + r.status, r.ok ? 'ok' : 'err');
+      if (r.ok) {
+        const d = await r.json();
+        appendLog('✅ 성공! 데이터 수: ' + (d.data?.length ?? JSON.stringify(d).substring(0,100)), 'ok');
+      } else {
+        appendLog('❌ 실패: HTTP ' + r.status, 'err');
+      }
+    } catch(e) {
+      appendLog('❌ 네트워크 오류: ' + e.message, 'err');
+    }
+  }
+</script>
+</body>
+</html>

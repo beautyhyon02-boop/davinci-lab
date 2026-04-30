@@ -360,7 +360,7 @@
     /* ── 1. 자녀 ID 목록 ── */
     let childIds = [];
     try {
-      const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/parent_profiles?limit=200&search=${PID}`);
+      const r = await fetch(`tables/parent_profiles?limit=200&search=${PID}`);
       const d = await r.json();
       const p = (d.data||[]).find(x => x.parent_id===PID || x.id===PID);
       if (p) {
@@ -374,7 +374,7 @@
     /* ── 2. 학생 프로필 ── */
     let ALL_STU = [];
     try {
-      const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=200');
+      const r = await fetch('tables/student_profiles?limit=200');
       ALL_STU = (await r.json()).data || [];
     } catch(e) {}
 
@@ -401,10 +401,10 @@
       const [monStr,sunStr] = [mon.toISOString().slice(0,10), sun.toISOString().slice(0,10)];
 
       const [aR,atR,pR,nR] = await Promise.allSettled([
-        fetch(`https://ueygjubz.gensparkspace.com/tables/assessments?limit=100&search=${cid}`),
-        fetch(`https://ueygjubz.gensparkspace.com/tables/attendance?limit=200&search=${cid}`),
-        fetch(`https://ueygjubz.gensparkspace.com/tables/planner_tasks?limit=200&search=${cid}`),
-        fetch('https://ueygjubz.gensparkspace.com/tables/notices?limit=10'),
+        fetch(`tables/assessments?limit=100&search=${cid}`),
+        fetch(`tables/attendance?limit=200&search=${cid}`),
+        fetch(`tables/planner_tasks?limit=200&search=${cid}`),
+        fetch('tables/notices?limit=10'),
       ]);
 
       let assessList=[], attendList=[], planList=[], noticeList=[];

@@ -459,7 +459,7 @@
     /* ── 학부모 프로필 ── */
     async function loadParentProfile(parentId) {
       try {
-        const res  = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PARENTS}?limit=200`);
+        const res  = await fetch(`tables/${TABLE_PARENTS}?limit=200`);
         const data = await res.json();
         const rec  = (data.data || []).find(r => r.parent_id === parentId);
         if (rec) {
@@ -482,7 +482,7 @@
     /* ── 수행평가 로드 ── */
     async function loadAssessments() {
       try {
-        const res  = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_ASSESS}?limit=200`);
+        const res  = await fetch(`tables/${TABLE_ASSESS}?limit=200`);
         const data = await res.json();
         allAssessments = (data.data || []).filter(a => a.student_id === childId);
 

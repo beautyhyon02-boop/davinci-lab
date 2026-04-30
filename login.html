@@ -296,7 +296,7 @@ async function doLogin() {
     // 1-A. DB에서 관리자 계정 조회
     let adminFound = false;
     try {
-      const aRes = await fetch('https://ueygjubz.gensparkspace.com/tables/admin_accounts?limit=100');
+      const aRes = await fetch('tables/admin_accounts?limit=100');
       if (aRes.ok) {
         const aData = await aRes.json();
         const acc = (aData.data || []).find(r => r.admin_id === id);
@@ -318,7 +318,7 @@ async function doLogin() {
             return;
           }
           try {
-            await fetch('https://ueygjubz.gensparkspace.com/tables/admin_accounts/' + acc.id, {
+            await fetch('tables/admin_accounts/' + acc.id, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ last_login: new Date().toISOString() }),
@@ -360,7 +360,7 @@ async function doLogin() {
        2. 학부모 로그인
     ════════════════════════════════ */
     try {
-      const pRes = await fetch('https://ueygjubz.gensparkspace.com/tables/parent_profiles?search=' + encodeURIComponent(id) + '&limit=20');
+      const pRes = await fetch('tables/parent_profiles?search=' + encodeURIComponent(id) + '&limit=20');
       if (pRes.ok) {
         const pData = await pRes.json();
         const parent = (pData.data || []).find(r => r.parent_id === id || r.id === id);
@@ -395,7 +395,7 @@ async function doLogin() {
     // 3-A. search 파라미터로 빠른 조회
     let student = null;
     try {
-      const sRes = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?search=' + encodeURIComponent(id) + '&limit=50');
+      const sRes = await fetch('tables/student_profiles?search=' + encodeURIComponent(id) + '&limit=50');
       if (sRes.ok) {
         const sData = await sRes.json();
         student = (sData.data || []).find(r => r.student_id === id || r.id === id) || null;
@@ -405,7 +405,7 @@ async function doLogin() {
     // 3-B. 전체 조회 폴백 (search가 누락할 경우)
     if (!student) {
       try {
-        const sAll = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=300');
+        const sAll = await fetch('tables/student_profiles?limit=300');
         if (sAll.ok) {
           const sAllData = await sAll.json();
           student = (sAllData.data || []).find(r => r.student_id === id || r.id === id) || null;

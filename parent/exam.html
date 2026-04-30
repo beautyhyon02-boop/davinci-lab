@@ -243,9 +243,9 @@
   async function loadData() {
     try {
       const [planRes, taskRes, schedRes] = await Promise.all([
-        fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_PLANNERS}?search=${childId}&limit=50`),
-        fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_TASKS}?search=${childId}&limit=500`),
-        fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_SCHEDULES}?search=${childId}&limit=100`),
+        fetch(`tables/${TABLE_PLANNERS}?search=${childId}&limit=50`),
+        fetch(`tables/${TABLE_TASKS}?search=${childId}&limit=500`),
+        fetch(`tables/${TABLE_SCHEDULES}?search=${childId}&limit=100`),
       ]);
       const [planData, taskData, schedData] = await Promise.all([
         planRes.json(), taskRes.json(), schedRes.json()

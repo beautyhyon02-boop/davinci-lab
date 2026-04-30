@@ -407,13 +407,13 @@
         childIds = [session.child_id];
       }
       try {
-        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/parent_profiles?limit=200`);
+        const r = await fetch(`tables/parent_profiles?limit=200`);
         const d = await r.json();
         const mine = (d.data||[]).filter(p => p.parent_id === (session.id||session.username));
         if (mine.length > 0) {
           myChildren = mine.map(p => ({ id: p.child_id, name: p.child_name || p.child_id }));
         } else if (childIds.length > 0) {
-          const rs = await fetch(`https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=100`);
+          const rs = await fetch(`tables/student_profiles?limit=100`);
           const ds = await rs.json();
           myChildren = childIds.map(cid => {
             const p = (ds.data||[]).find(x => x.student_id === cid);
@@ -468,7 +468,7 @@
 
     async function loadRequests() {
       try {
-        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_REQUESTS}?limit=100`);
+        const r = await fetch(`tables/${TABLE_REQUESTS}?limit=100`);
         const d = await r.json();
         const pid = session.id || session.username;
         myRequests = (d.data||[]).filter(x =>
@@ -481,7 +481,7 @@
 
     async function loadHistory() {
       try {
-        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_CONSULTATIONS}?limit=100`);
+        const r = await fetch(`tables/${TABLE_CONSULTATIONS}?limit=100`);
         const d = await r.json();
         myHistory = (d.data||[]).filter(x =>
           x.status === 'completed' &&
@@ -574,7 +574,7 @@
       }
 
       try {
-        const r = await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_REQUESTS}`, {
+        const r = await fetch(`tables/${TABLE_REQUESTS}`, {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
             requester_id:   session.id||session.username,
@@ -600,7 +600,7 @@
     async function cancelRequest(id) {
       if (!confirm('상담 신청을 취소하시겠습니까?')) return;
       try {
-        await fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_REQUESTS}/${id}`, {
+        await fetch(`tables/${TABLE_REQUESTS}/${id}`, {
           method:'PATCH', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({status:'cancelled'})
         });

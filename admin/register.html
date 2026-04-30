@@ -377,7 +377,7 @@
     /* ── 아이디 중복 확인 ── */
     async function checkDuplicate(adminId) {
       try {
-        const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/admin_accounts?search=${encodeURIComponent(adminId)}&limit=10`);
+        const res = await fetch(`tables/admin_accounts?search=${encodeURIComponent(adminId)}&limit=10`);
         if (!res.ok) return false;
         const data = await res.json();
         return (data.data || []).some(r => r.admin_id === adminId);
@@ -443,7 +443,7 @@
 
       // DB에 저장
       try {
-        const res = await fetch('https://ueygjubz.gensparkspace.com/tables/admin_accounts', {
+        const res = await fetch('tables/admin_accounts', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({

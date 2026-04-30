@@ -787,9 +787,9 @@
 
       try {
         const [stuRes, schRes, mockRes] = await Promise.all([
-          fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_STUDENTS_G}?limit=200`),
-          fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_GRADES_SCH}?limit=500`),
-          fetch(`https://ueygjubz.gensparkspace.com/tables/${TABLE_GRADES_MOCK}?limit=300`),
+          fetch(`tables/${TABLE_STUDENTS_G}?limit=200`),
+          fetch(`tables/${TABLE_GRADES_SCH}?limit=500`),
+          fetch(`tables/${TABLE_GRADES_MOCK}?limit=300`),
         ]);
         const stuData  = await stuRes.json();
         const schData  = await schRes.json();
@@ -1021,7 +1021,7 @@
       const btn = event.target;
       btn.disabled = true; btn.textContent = '저장 중…';
       try {
-        const res = await fetch('https://ueygjubz.gensparkspace.com/tables/grades_school', {
+        const res = await fetch('tables/grades_school', {
           method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(rec)
         });
         if (!res.ok) throw new Error();
@@ -1136,7 +1136,7 @@
       const btn = event.target;
       btn.disabled = true; btn.textContent = '저장 중…';
       try {
-        const res = await fetch('https://ueygjubz.gensparkspace.com/tables/grades_mock', {
+        const res = await fetch('tables/grades_mock', {
           method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(rec)
         });
         if (!res.ok) throw new Error();
@@ -1419,7 +1419,7 @@
     async function deleteSchoolGrade(recordId) {
       if (!recordId || !confirm('이 성적을 삭제하시겠습니까?')) return;
       try {
-        const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/grades_school/${recordId}`, { method:'DELETE' });
+        const res = await fetch(`tables/grades_school/${recordId}`, { method:'DELETE' });
         if (res.ok || res.status===204) {
           ALL_SCHOOL_GRADES = ALL_SCHOOL_GRADES.filter(g => g.id !== recordId);
           renderDrawerSchool();
@@ -1435,7 +1435,7 @@
     async function deleteMockGrade(recordId) {
       if (!recordId || !confirm('이 모의고사 성적을 삭제하시겠습니까?')) return;
       try {
-        const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/grades_mock/${recordId}`, { method:'DELETE' });
+        const res = await fetch(`tables/grades_mock/${recordId}`, { method:'DELETE' });
         if (res.ok || res.status===204) {
           ALL_MOCK_GRADES = ALL_MOCK_GRADES.filter(m => m.id !== recordId);
           renderDrawerMock();
@@ -1537,7 +1537,7 @@
       if (row) { row.style.opacity='0.5'; }
 
       try {
-        const res = await fetch(`https://ueygjubz.gensparkspace.com/tables/grades_school/${recordId}`, {
+        const res = await fetch(`tables/grades_school/${recordId}`, {
           method : 'PATCH',
           headers: { 'Content-Type':'application/json' },
           body   : JSON.stringify(updated),

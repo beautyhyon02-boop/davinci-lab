@@ -4,55 +4,28 @@
    ================================================================ */
 
 /* ──────────────────────────────────────────────────────────────
-   ★ API Base URL 자동 감지
-   - Genspark 환경  : 상대경로 그대로 사용 (내장 API)
-   - Vercel/외부    : Genspark 절대 URL로 자동 전환
-   모든 JS에서 window.DVL_API('테이블명') 으로 호출
+   ★ API Base URL
+   Genspark 내장 API는 항상 루트 기준 'tables/' 로 접근
+   (Genspark 프리뷰/Vercel 모두 동일하게 동작)
 ────────────────────────────────────────────────────────────── */
 (function () {
-  /* Genspark 프로젝트 고유 ID - 절대 변경하지 마세요 */
-  const GENSPARK_BASE = 'https://ueygjubz.gensparkspace.com';
-
-  const isGenspark = location.hostname.includes('gensparkspace.com') ||
-                     location.hostname.includes('genspark.ai') ||
-                     location.hostname === 'localhost' ||
-                     location.hostname === '127.0.0.1';
-
-  /* 페이지 depth에 따라 상대경로 prefix 계산 */
-  function relPrefix() {
-    const parts = location.pathname.split('/').filter(Boolean);
-    /* /admin/students.html → depth 1 → '../' */
-    /* /login.html         → depth 0 → ''    */
-    const depth = parts.length > 0 &&
-      (parts[parts.length - 1].includes('.') || parts.length === 1) ?
-      parts.length - 1 : parts.length;
-    return depth > 0 ? '../'.repeat(depth) : '';
-  }
-
   /**
    * window.DVL_API(tableName)
-   * 예: window.DVL_API('student_profiles')
-   * → Genspark: '../tables/student_profiles'
-   * → Vercel  : 'https://ueygjubz.gensparkspace.com/tables/student_profiles'
+   * 예: window.DVL_API('student_profiles') → 'tables/student_profiles'
    */
   window.DVL_API = function (tableName) {
-    if (isGenspark) {
-      return relPrefix() + 'tables/' + tableName;
-    }
-    return GENSPARK_BASE + '/tables/' + tableName;
+    return 'tables/' + tableName;
   };
 
   /**
    * window.DVL_API_RECORD(tableName, id)
-   * 예: window.DVL_API_RECORD('student_profiles', 'abc-123')
+   * 예: window.DVL_API_RECORD('student_profiles', 'abc-123') → 'tables/student_profiles/abc-123'
    */
   window.DVL_API_RECORD = function (tableName, id) {
-    return window.DVL_API(tableName) + '/' + id;
+    return 'tables/' + tableName + '/' + id;
   };
 
-  /* 디버그 로그 */
-  console.log('[DVL] 환경:', isGenspark ? 'Genspark(상대경로)' : 'External(절대URL)',
-    '| API Base:', isGenspark ? relPrefix() + 'tables/' : GENSPARK_BASE + '/tables/');
+  console.log('[DVL] API Base: tables/ (루트 기준 상대경로)');
 })();
 
 /* ──────────────────────────────────────────────────────────────

@@ -82,7 +82,7 @@ async function searchAccount() {
   if (!id) { log('아이디를 입력하세요.'); return; }
   log('검색 중...');
   try {
-    const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?search=' + encodeURIComponent(id) + '&limit=30');
+    const r = await fetch('tables/student_profiles?search=' + encodeURIComponent(id) + '&limit=30');
     const d = await r.json();
     const rows = (d.data || []).filter(x => x.student_id === id || (x.student_id||'').includes(id) || (x.name||'').includes(id));
     if (!rows.length) {
@@ -111,7 +111,7 @@ async function searchAccount() {
 async function listAll() {
   log('전체 목록 조회 중...');
   try {
-    const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=100&sort=student_id');
+    const r = await fetch('tables/student_profiles?limit=100&sort=student_id');
     const d = await r.json();
     const rows = d.data || [];
     let out = `총 ${rows.length}명:\n\n`;
@@ -131,7 +131,7 @@ async function fixPassword() {
   if (!recId || !pw) { log('record ID와 비밀번호를 모두 입력하세요.'); return; }
   log('수정 중...');
   try {
-    const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles/' + recId, {
+    const r = await fetch('tables/student_profiles/' + recId, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pw, status: 'active' })
@@ -147,12 +147,12 @@ async function fixPassword() {
 async function deleteEmpty() {
   log('빈 행 삭제 중...');
   try {
-    const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles?limit=100');
+    const r = await fetch('tables/student_profiles?limit=100');
     const d = await r.json();
     const empties = (d.data || []).filter(row => !row.student_id && !row.name);
     if (!empties.length) { logHtml('<span class="ok">빈 행 없음.</span>'); return; }
     for (const row of empties) {
-      await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles/' + row.id, { method: 'DELETE' });
+      await fetch('tables/student_profiles/' + row.id, { method: 'DELETE' });
     }
     logHtml(`<span class="ok">✅ 빈 행 ${empties.length}개 삭제 완료.</span>`);
   } catch(e) {
@@ -170,7 +170,7 @@ async function addAccount() {
   if (!sid || !name || !pw) { log('아이디, 이름, 비밀번호는 필수입니다.'); return; }
   log('추가 중...');
   try {
-    const r = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles', {
+    const r = await fetch('tables/student_profiles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

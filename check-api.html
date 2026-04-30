@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>API 확인</title></head>
+<body>
+<script>
+  // 현재 origin을 콘솔에 출력
+  console.log('ORIGIN:', location.origin);
+  console.log('HOSTNAME:', location.hostname);
+  console.log('HREF:', location.href);
+
+  // tables API 직접 테스트
+  fetch('tables/student_profiles?limit=1')
+    .then(r => { console.log('relative tables/ status:', r.status); return r.json(); })
+    .then(d => console.log('relative tables/ data:', JSON.stringify(d).substring(0,200)))
+    .catch(e => console.log('relative tables/ ERROR:', e.message));
+
+  fetch('../tables/student_profiles?limit=1')
+    .then(r => { console.log('../tables/ status:', r.status); return r.json(); })
+    .then(d => console.log('../tables/ data:', JSON.stringify(d).substring(0,200)))
+    .catch(e => console.log('../tables/ ERROR:', e.message));
+</script>
+<p>콘솔 확인 중...</p>
+</body>
+</html>

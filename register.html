@@ -654,7 +654,7 @@
     /* 중복 아이디 확인 */
     async function checkDuplicateId(id, table, field) {
       try {
-        const res  = await fetch(`https://ueygjubz.gensparkspace.com/tables/${table}?search=${encodeURIComponent(id)}&limit=5`);
+        const res  = await fetch(`tables/${table}?search=${encodeURIComponent(id)}&limit=5`);
         const data = await res.json();
         return (data.data || []).some(r => r[field] === id || r.id === id);
       } catch { return false; }
@@ -699,7 +699,7 @@
 
       /* DB 저장 */
       try {
-        const res = await fetch('https://ueygjubz.gensparkspace.com/tables/student_profiles', {
+        const res = await fetch('tables/student_profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -762,7 +762,7 @@
       }
 
       try {
-        const res = await fetch('https://ueygjubz.gensparkspace.com/tables/parent_profiles', {
+        const res = await fetch('tables/parent_profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
