@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>API 직접 테스트</title></head>
+<body>
+<script>
+  const BASE = 'https://www.genspark.ai/api/code_sandbox_light/preview/8913df2f-c861-4c8f-b106-521a96c99c0e';
+
+  console.log('현재 URL:', location.href);
+
+  // 인증 없이 외부에서 접근 가능한지 테스트
+  fetch(BASE + '/tables/student_profiles?limit=1')
+    .then(r => {
+      console.log('Genspark preview API status:', r.status);
+      return r.json();
+    })
+    .then(d => console.log('결과:', JSON.stringify(d).substring(0,200)))
+    .catch(e => console.log('오류:', e.message));
+</script>
+<p>테스트 중...</p>
+</body>
+</html>
