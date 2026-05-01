@@ -84,8 +84,23 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT NOW()
       );
       CREATE TABLE IF NOT EXISTS exam_planners (
-        id SERIAL PRIMARY KEY, student_id VARCHAR(50), exam_date DATE,
-        title VARCHAR(200), subjects JSONB, semester VARCHAR(20),
+        id SERIAL PRIMARY KEY,
+        student_id VARCHAR(50),
+        student_name VARCHAR(100),
+        exam_type VARCHAR(50),
+        exam_date DATE,
+        exam_start_date DATE,
+        exam_end_date DATE,
+        exam_days INTEGER DEFAULT 0,
+        plan_start_date DATE,
+        title VARCHAR(200),
+        subjects JSONB,
+        schedule JSONB DEFAULT '{}',
+        scope JSONB DEFAULT '{}',
+        status VARCHAR(20) DEFAULT '진행중',
+        created_by VARCHAR(50),
+        year VARCHAR(10),
+        semester VARCHAR(20),
         created_at TIMESTAMP DEFAULT NOW()
       );
       CREATE TABLE IF NOT EXISTS planner_tasks (
@@ -103,10 +118,34 @@ async function initDB() {
         id SERIAL PRIMARY KEY, student_id VARCHAR(50),
         section VARCHAR(50), content TEXT, updated_at TIMESTAMP DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS student_logs (
+        id SERIAL PRIMARY KEY, student_id VARCHAR(50), student_name VARCHAR(100),
+        type VARCHAR(50), duration INTEGER, date DATE, memo TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
       INSERT INTO admin_accounts (username, password, name, role, title)
       VALUES ('admin', 'dvlAdmin!', '원장', 'admin', '원장')
       ON CONFLICT (username) DO NOTHING;
     `);
+
+    // 기존 exam_planners 테이블에 누락된 컬럼 추가 (이미 있으면 무시)
+    const alterCols = [
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS student_name VARCHAR(100)",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS exam_type VARCHAR(50)",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS exam_start_date DATE",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS exam_end_date DATE",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS exam_days INTEGER DEFAULT 0",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS plan_start_date DATE",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS schedule JSONB DEFAULT '{}'",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS scope JSONB DEFAULT '{}'",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT '진행중'",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS created_by VARCHAR(50)",
+      "ALTER TABLE exam_planners ADD COLUMN IF NOT EXISTS year VARCHAR(10)",
+    ];
+    for (const sql of alterCols) {
+      await client.query(sql);
+    }
+
     console.log('DB 초기화 완료');
   } finally {
     client.release();
@@ -156,7 +195,10 @@ function tableRouter(tableName) {
   });
   router.post('/', async (req, res) => {
     try {
-      const data = { ...req.body, created_at: new Date(), updated_at: new Date() };
+      const data = { ...req.body, created_at: new Date() };
+      if (!data.updated_at && ['student_profiles','parent_profiles'].includes(tableName)) {
+        data.updated_at = new Date();
+      }
       const keys = Object.keys(data);
       const vals = Object.values(data);
       const r = await pool.query(
@@ -190,7 +232,7 @@ function tableRouter(tableName) {
 ['student_profiles','parent_profiles','admin_accounts','attendance',
  'assessments','notices','notice_reads','consultations','consult_requests',
  'grades_school','grades_mock','exam_planners','planner_tasks',
- 'exam_schedules','student_records'].forEach(t => {
+ 'exam_schedules','student_records','student_logs'].forEach(t => {
   app.use('/tables/' + t, tableRouter(t));
 });
 
