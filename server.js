@@ -200,7 +200,9 @@ function tableRouter(tableName) {
         data.updated_at = new Date();
       }
       const keys = Object.keys(data);
-      const vals = Object.values(data);
+      const vals = Object.values(data).map(v =>
+        (v !== null && typeof v === 'object' && !(v instanceof Date)) ? JSON.stringify(v) : v
+      );
       const r = await pool.query(
         `INSERT INTO ${tableName} (${keys.join(',')}) VALUES (${keys.map((_,i)=>'$'+(i+1)).join(',')}) RETURNING *`,
         vals
@@ -212,7 +214,9 @@ function tableRouter(tableName) {
     try {
       const data = { ...req.body, updated_at: new Date() };
       const keys = Object.keys(data);
-      const vals = [...Object.values(data), req.params.id];
+      const vals = [...Object.values(data).map(v =>
+        (v !== null && typeof v === 'object' && !(v instanceof Date)) ? JSON.stringify(v) : v
+      ), req.params.id];
       const r = await pool.query(
         `UPDATE ${tableName} SET ${keys.map((k,i)=>`${k}=$${i+1}`).join(',')} WHERE id=$${vals.length} RETURNING *`,
         vals
