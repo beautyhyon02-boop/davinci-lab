@@ -477,25 +477,35 @@
 
   function showTier(tier) {
     currentTier = tier;
-    document.querySelectorAll('.tier-tab').forEach(btn => {
-      const active = parseInt(btn.dataset.tier) === tier;
+    document.querySelectorAll('.tier-tab').forEach(function(btn) {
+      var active = parseInt(btn.dataset.tier) === tier;
       btn.style.borderColor = active ? 'var(--ep-main)' : '#e5e7eb';
       btn.style.background  = active ? '#f0fdf4' : 'white';
       btn.style.color       = active ? 'var(--ep-main)' : '#374151';
     });
-    const rows = allRecs.filter(r => r.tier === tier);
-    const COLORS = {'국어':'#8b5cf6','영어':'#3b82f6','수학':'#ec4899','사회':'#f59e0b','과학':'#10b981','한국사':'#ef4444'};
-    document.getElementById('recTableBody').innerHTML = rows.map(r =>
-      '<tr style="border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">' +
-      '<td style="padding:10px 12px;font-weight:700;color:' + (COLORS[r.subject]||'#374151') + '">' + r.subject + '</td>' +
-      '<td style="padding:10px 12px;color:#6b7280;font-size:12px">' + (r.platform||'') + '</td>' +
-      '<td style="padding:10px 12px" contenteditable="true" data-field="lecture" data-id="' + r.id + '" onblur="saveRecField(this)">' + (r.lecture||'') + '</td>' +
-      '<td style="padding:10px 12px" contenteditable="true" data-field="textbook" data-id="' + r.id + '" onblur="saveRecField(this)">' + (r.textbook||'') + '</td>' +
-      '<td style="padding:10px 12px;color:#6b7280;font-size:12px" contenteditable="true" data-field="strategy" data-id="' + r.id + '" onblur="saveRecField(this)">' + (r.strategy||'') + '</td>' +
-      '<td style="padding:10px 12px;text-align:center"><i class="fas fa-pencil-alt" style="color:#9ca3af;font-size:12px" title="클릭하여 인라인 편집"></i></td>' +
-      '</tr>'
-    ).join('');
-    if (!rows.length) document.getElementById('recTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#9ca3af">서버 재배포 후 데이터가 자동 생성됩니다</td></tr>';
+    var rows = allRecs.filter(function(r) { return r.tier === tier; });
+    var COLORS = {'국어':'#8b5cf6','영어':'#3b82f6','수학':'#ec4899','사회':'#f59e0b','과학':'#10b981','한국사':'#ef4444'};
+    var tbody = document.getElementById('recTableBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#9ca3af">서버 재배포 후 데이터가 자동 생성됩니다</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    rows.forEach(function(r) {
+      var tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid #f3f4f6';
+      tr.onmouseover = function() { this.style.background = '#f9fafb'; };
+      tr.onmouseout  = function() { this.style.background = ''; };
+      var color = COLORS[r.subject] || '#374151';
+      tr.innerHTML =
+        '<td style="padding:10px 12px;font-weight:700;color:' + color + '">' + (r.subject||'') + '</td>' +
+        '<td style="padding:10px 12px;color:#6b7280;font-size:12px">' + (r.platform||'') + '</td>' +
+        '<td style="padding:10px 12px" contenteditable="true" data-field="lecture" data-id="' + r.id + '" onblur="saveRecField(this)">' + (r.lecture||'') + '</td>' +
+        '<td style="padding:10px 12px" contenteditable="true" data-field="textbook" data-id="' + r.id + '" onblur="saveRecField(this)">' + (r.textbook||'') + '</td>' +
+        '<td style="padding:10px 12px;color:#6b7280;font-size:12px" contenteditable="true" data-field="strategy" data-id="' + r.id + '" onblur="saveRecField(this)">' + (r.strategy||'') + '</td>' +
+        '<td style="padding:10px 12px;text-align:center"><i class="fas fa-pencil-alt" style="color:#9ca3af;font-size:12px"></i></td>';
+      tbody.appendChild(tr);
+    });
   }
 
   async function saveRecField(el) {
