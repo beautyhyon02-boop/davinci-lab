@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학생등록 디버그</title>
+  <style>
+    body { font-family: monospace; padding: 24px; background: #0f172a; color: #e2e8f0; }
+    h2 { color: #38bdf8; }
+    .box { background: #1e293b; padding: 16px; border-radius: 8px; margin: 12px 0; }
+    .ok  { color: #4ade80; }
+    .err { color: #f87171; }
+    .warn{ color: #fbbf24; }
+    button { background: #3b82f6; color: white; border: none; padding: 10px 20px;
+             border-radius: 6px; cursor: pointer; margin: 6px; font-size: 14px; }
+    button:hover { background: #2563eb; }
+    pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; }
+    input { background:#334155; color:#e2e8f0; border:1px solid #475569;
+            padding:8px 12px; border-radius:4px; width:300px; margin:4px; }
+    label { color:#94a3b8; font-size:13px; }
+  </style>
+</head>
+<body>
+
+<h2>🔍 학생등록 디버그 페이지</h2>
+<p style="color:#94a3b8">이 페이지에서 실제 fetch URL과 응답을 확인합니다.</p>
+
+<div class="box">
+  <h3 style="color:#fbbf24">① 현재 페이지 정보</h3>
+  <pre id="pageInfo"></pre>
+</div>
+
+<div class="box">
+  <h3 style="color:#fbbf24">② _API 변수 확인</h3>
+  <pre id="apiInfo"></pre>
+</div>
+
+<div class="box">
+  <h3 style="color:#fbbf24">③ /tables/student_profiles GET 테스트</h3>
+  <button onclick="testGet()">GET 테스트</button>
+  <pre id="getResult">버튼을 눌러 테스트하세요</pre>
+</div>
+
+<div class="box">
+  <h3 style="color:#fbbf24">④ 학생등록 POST 테스트 (실제 등록)</h3>
+  <div>
+    <label>학생 ID</label><br>
+    <input type="text" id="testId" value="test_debug_001" /><br>
+    <label>이름</label><br>
+    <input type="text" id="testName" value="디버그테스트" /><br>
+  </div>
+  <button onclick="testPost()">POST 테스트 (실제 등록됨)</button>
+  <pre id="postResult">버튼을 눌러 테스트하세요</pre>
+</div>
+
+<div class="box">
+  <h3 style="color:#fbbf24">⑤ js/students.js 로드 여부 확인</h3>
+  <pre id="jsCheck"></pre>
+</div>
+
+<script>
+  // ① 페이지 정보
+  document.getElementById('pageInfo').textContent = 
+    'location.href   = ' + location.href + '\n' +
+    'location.origin = ' + location.origin + '\n' +
+    'location.pathname = ' + location.pathname;
+
+  // ② _API 변수 (students.js가 로드된 경우)
+  setTimeout(() => {
+    const apiVal = typeof _API !== 'undefined' ? _API : '❌ _API 변수 없음 (students.js 미로드)';
+    document.getElementById('apiInfo').textContent = 
+      'typeof _API = ' + typeof _API + '\n' +
+      '_API 값 = ' + apiVal + '\n' +
+      '→ 실제 fetch URL = ' + (typeof _API !== 'undefined' ? _API + '/student_profiles' : '알 수 없음');
+    
+    const jsEl = document.getElementById('jsCheck');
+    if (typeof _API !== 'undefined') {
+      jsEl.innerHTML = '<span class="ok">✅ js/students.js 로드됨. _API = "' + _API + '"</span>';
+    } else {
+      jsEl.innerHTML = '<span class="warn">⚠️ js/students.js 미로드 (이 페이지에는 미포함 — 정상)</span>';
+    }
+  }, 500);
+
+  // ③ GET 테스트
+  async function testGet() {
+    const el = document.getElementById('getResult');
+    const url = '/tables/student_profiles?limit=1';
+    el.innerHTML = '<span class="warn">요청 중... URL: ' + location.origin + url + '</span>';
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      let display;
+      try {
+        const json = JSON.parse(text);
+        display = JSON.stringify(json, null, 2).substring(0, 500);
+      } catch(e) { display = text.substring(0, 300); }
+      
+      if (res.ok) {
+        el.innerHTML = '<span class="ok">✅ 성공! status=' + res.status + '\n\n' + display + '</span>';
+      } else {
+        el.innerHTML = '<span class="err">❌ 실패! status=' + res.status + '\n\n' + display + '</span>';
+      }
+    } catch(err) {
+      el.innerHTML = '<span class="err">❌ fetch 오류: ' + err.message + '\n\n실제 요청 URL: ' + location.origin + url + '</span>';
+    }
+  }
+
+  // ④ POST 테스트
+  async function testPost() {
+    const el = document.getElementById('postResult');
+    const url = '/tables/student_profiles';
+    const id   = document.getElementById('testId').value.trim();
+    const name = document.getElementById('testName').value.trim();
+    
+    const payload = {
+      student_id: id,
+      name: name,
+      school: '디버그중학교',
+      grade: '중1',
+      grade_num: 1,
+      class_num: 1,
+      student_num: 1,
+      stage: '1단계',
+      consulting: false,
+      status: '재원',
+      password: 'dvl2024!',
+      memo: '디버그 테스트용 — 삭제 필요'
+    };
+
+    el.innerHTML = '<span class="warn">POST 요청 중...\n전체 URL: ' + location.origin + url + '\n\n요청 데이터:\n' + JSON.stringify(payload, null, 2) + '</span>';
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      let display;
+      try {
+        const json = JSON.parse(text);
+        display = JSON.stringify(json, null, 2).substring(0, 800);
+      } catch(e) { display = text.substring(0, 500); }
+
+      if (res.ok || res.status === 201) {
+        el.innerHTML = '<span class="ok">✅ 등록 성공! status=' + res.status + '\n\n응답:\n' + display + '</span>';
+      } else {
+        el.innerHTML = '<span class="err">❌ 등록 실패! status=' + res.status + '\n\n응답:\n' + display + '</span>';
+      }
+    } catch(err) {
+      el.innerHTML = '<span class="err">❌ fetch 오류: ' + err.message + '\n\n가능한 원인:\n- vercel.json 미적용\n- CORS 차단\n- 네트워크 오류</span>';
+    }
+  }
+</script>
+
+</body>
+</html>
