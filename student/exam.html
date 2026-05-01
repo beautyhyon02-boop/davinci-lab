@@ -620,8 +620,20 @@
               </div>
             </div>
             <div>
-              <label>과목 선택 <span style="color:#9ca3af;font-weight:400">(쉼표로 구분)</span></label>
-              <input type="text" id="setupSubjects" placeholder="예: 국어, 수학, 영어, 한국사, 사회, 과학" value="국어, 수학, 영어, 한국사, 사회, 과학" />
+              <label>기본 과목 <span style="color:#9ca3af;font-weight:400">(자동 순환 배정)</span></label>
+              <div id="subjectCheckboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                <label style="display:flex;align-items:center;gap:5px;padding:7px 14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;color:#166534;"><input type="checkbox" value="국어" checked style="accent-color:#16a34a;width:15px;height:15px;"> 국어</label>
+                <label style="display:flex;align-items:center;gap:5px;padding:7px 14px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;color:#1d4ed8;"><input type="checkbox" value="영어" checked style="accent-color:#2563eb;width:15px;height:15px;"> 영어</label>
+                <label style="display:flex;align-items:center;gap:5px;padding:7px 14px;background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;color:#7e22ce;"><input type="checkbox" value="수학" checked style="accent-color:#9333ea;width:15px;height:15px;"> 수학</label>
+                <label style="display:flex;align-items:center;gap:5px;padding:7px 14px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;color:#c2410c;"><input type="checkbox" value="사회" checked style="accent-color:#ea580c;width:15px;height:15px;"> 사회</label>
+                <label style="display:flex;align-items:center;gap:5px;padding:7px 14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;color:#15803d;"><input type="checkbox" value="과학" checked style="accent-color:#16a34a;width:15px;height:15px;"> 과학</label>
+                <label style="display:flex;align-items:center;gap:5px;padding:7px 14px;background:#fefce8;border:1.5px solid #fde68a;border-radius:20px;cursor:pointer;font-size:14px;font-weight:600;color:#854d0e;"><input type="checkbox" value="한국사" style="accent-color:#a16207;width:15px;height:15px;"> 한국사</label>
+              </div>
+            </div>
+            <div style="margin-top:4px;">
+              <label>취약 과목 <span style="color:#ef4444;font-weight:600;font-size:12px;">★ 매일 플래너에 추가</span></label>
+              <input type="text" id="setupWeakSubjects" placeholder="예: 수학, 영어  (쉼표로 구분)" style="margin-top:6px;width:100%;padding:10px 14px;border:1.5px solid #fca5a5;border-radius:10px;font-size:14px;background:#fff5f5;outline:none;box-sizing:border-box;" />
+              <p style="font-size:11px;color:#9ca3af;margin-top:4px;"><i class="fas fa-info-circle"></i> 취약 과목은 기본 순환 외에 매일 별도로 추가됩니다</p>
             </div>
             <button class="btn-create-planner" onclick="createPlanner()">
               <i class="fas fa-magic"></i> 플래너 자동 생성!
@@ -1093,7 +1105,8 @@
           const subjects = Array.isArray(currentPlanner.subjects)
             ? currentPlanner.subjects
             : (currentPlanner.subjects || '').split(',').map(s => s.trim()).filter(Boolean);
-          await generateDefaultTasks(currentPlanner.id, subjects, todayLocal, examStartDate);
+          const scopeWeak1 = (() => { try { const s = typeof currentPlanner.scope === 'object' ? currentPlanner.scope : JSON.parse(currentPlanner.scope || '{}'); return s.weak || []; } catch(e) { return []; } })();
+          await generateDefaultTasks(currentPlanner.id, subjects, scopeWeak1, todayLocal, examEndDate || examStartDate);
         }
         // ──────────────────────────────────────────────────────────────
 
@@ -1111,7 +1124,8 @@
               })();
           const today = new Date(); today.setHours(0,0,0,0);
           const planStart = plannerStartDate && plannerStartDate <= today ? plannerStartDate : today;
-          await generateDefaultTasks(currentPlanner.id, subjects, planStart, examStartDate);
+          const scopeWeak2 = (() => { try { const s = typeof currentPlanner.scope === 'object' ? currentPlanner.scope : JSON.parse(currentPlanner.scope || '{}'); return s.weak || []; } catch(e) { return []; } })();
+          await generateDefaultTasks(currentPlanner.id, subjects, scopeWeak2, planStart, examEndDate || examStartDate);
           await loadTasks();
           console.log(`[loadPlanner] 재생성 후 태스크: ${allTasks.length}개`);
         }
@@ -1162,11 +1176,15 @@
     const endDate   = document.getElementById('setupEndDate').value;
     const year      = document.getElementById('setupYear').value;
     const semester  = document.getElementById('setupSemester').value;
-    const subjectsRaw = document.getElementById('setupSubjects').value;
-
     if (!startDate || !endDate) { showToast('⚠️ 시험 시작일과 종료일을 입력해주세요.'); return; }
 
-    const subjects = subjectsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    // 체크박스에서 선택된 과목 수집
+    const subjects = [...document.querySelectorAll('#subjectCheckboxes input:checked')].map(cb => cb.value);
+    if (subjects.length === 0) { showToast('⚠️ 과목을 하나 이상 선택해주세요.'); return; }
+
+    // 취약 과목 (매일 추가)
+    const weakRaw = document.getElementById('setupWeakSubjects').value || '';
+    const weakSubjects = weakRaw.split(',').map(s => s.trim()).filter(Boolean);
     const examStartD = parseLocalDate(startDate);  // ← UTC 버그 수정
     const planStart  = new Date(examStartD);
     planStart.setDate(planStart.getDate() - 28); // 4주 전 시작
@@ -1188,7 +1206,7 @@
       plan_start_date: toLocalDateStr(planStart),  // ← UTC 오프셋 버그 수정
       subjects: subjects,
       schedule: '{}',
-      scope: '{}',
+      scope: JSON.stringify({ weak: weakSubjects }),
       status: '진행중',
       created_by: STUDENT_ID,
       year,
@@ -1207,7 +1225,7 @@
       plannerStartDate = planStart;
 
       // 기본 task 자동 생성
-      await generateDefaultTasks(currentPlanner.id, subjects, planStart, examStartD);
+      await generateDefaultTasks(currentPlanner.id, subjects, weakSubjects, planStart, parseLocalDate(endDate));
       await loadTasks();
       showToast('✅ 플래너가 생성되었습니다!');
       showPlannerMain();
@@ -1216,93 +1234,87 @@
     }
   }
 
-  // ===== 기본 태스크 자동 생성 (하루 최대 3과목) =====
-  async function generateDefaultTasks(plannerId, subjects, planStart, examStart) {
+  // ===== 기본 태스크 자동 생성 (6일 순환 + 취약과목 매일) =====
+  async function generateDefaultTasks(plannerId, subjects, weakSubjects, planStart, examEnd) {
     const tasks = [];
-    // 플래너 시작일부터 시험 시작일까지 실제 일수 계산 (최대 28일)
-    const diffDays  = Math.round((examStart - planStart) / 86400000);
-    const totalDays = Math.min(Math.max(diffDays, 7), 28);
 
-    // 주차별 학습 전략
-    const weekStrategy = ['개념 정리', '문제풀이', '프린트·기출', '오답·회독'];
+    // ── 6일 순환 패턴 정의 ──────────────────────────────────
+    // 각 셀: [주과목키, 부과목키]
+    const ROTATION_KEYS = [
+      ['국어','사회'],
+      ['영어','과학'],
+      ['수학','사회'],
+      ['국어','과학'],
+      ['영어','사회'],
+      ['수학','과학'],
+    ];
 
-    // 과목 우선순위 정렬: 수학 > 영어 > 국어 > 기타
-    const ORDER = ['수학','영어','국어'];
-    const sortedSubjects = [...subjects].sort((a, b) => {
-      const ai = ORDER.findIndex(o => a.includes(o));
-      const bi = ORDER.findIndex(o => b.includes(o));
-      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-    });
+    // subjects 배열에서 키워드 매칭 (한국사도 사회 그룹)
+    function findSub(key) {
+      if (key === '사회') return subjects.find(s => s.includes('사회') || s.includes('한국사') || s.includes('역사')) || null;
+      return subjects.find(s => s.includes(key)) || null;
+    }
 
-    // 날짜별 순환 인덱스 (기타 과목 골고루 배분)
-    let otherIdx = 0;
+    // 주차별 전략 라벨
+    const WEEK_STRATEGY = ['개념 정리', '문제풀이', '프린트·기출', '오답·회독', '최종 점검', '시험 대비'];
+
+    // 플래너 기간 (플랜 시작 → 시험 마지막 날) 최대 42일
+    const diffDays  = Math.round((examEnd - planStart) / 86400000) + 1;
+    const totalDays = Math.min(Math.max(diffDays, 7), 42);
 
     for (let day = 0; day < totalDays; day++) {
       const d = new Date(planStart);
       d.setDate(d.getDate() + day);
-      const dayOfWeek = d.getDay();
-      // 일요일/토요일 포함 – 주말에는 더 많은 학습 가능 (maxSubjects 조정)
-      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-      const maxSubjects = isWeekend ? 4 : 3; // 주말엔 최대 4과목
+      const dateStr = toLocalDateStr(d);
+      const weekNum = Math.floor(day / 7) + 1;
+      const strategy = WEEK_STRATEGY[Math.min(weekNum - 1, WEEK_STRATEGY.length - 1)];
 
-      const dateStr  = toLocalDateStr(d);  // ← UTC 오프셋 버그 수정
-      const weekNum  = Math.floor(day / 7) + 1;
-      const strategy = weekStrategy[(weekNum - 1) % 4];
-      // 주말 전략 표시
-      const dayStrategy = isWeekend ? `${strategy} (집중학습)` : strategy;
-
-      // 오늘 배정할 과목 선택 (주말은 maxSubjects까지)
-      const todaySubjects = [];
-
-      // 1순위: 수학 (매일)
-      const math = sortedSubjects.find(s => s.includes('수학'));
-      if (math) todaySubjects.push({ sub: math, color: 'math' });
-
-      // 2순위: 영어 (매일)
-      const eng = sortedSubjects.find(s => s.includes('영어'));
-      if (eng && todaySubjects.length < maxSubjects) todaySubjects.push({ sub: eng, color: 'eng' });
-
-      // 3순위: 국어 – 주말엔 매일, 평일엔 격일
-      const others = sortedSubjects.filter(s => !s.includes('수학') && !s.includes('영어'));
-      const kor = others.find(s => s.includes('국어'));
-      if (kor && todaySubjects.length < maxSubjects) {
-        if (isWeekend || day % 2 === 0) {
-          todaySubjects.push({ sub: kor, color: 'kor' });
-        }
-      }
-
-      // 4순위: 기타과목 순환 배정
-      const nonKor = others.filter(s => !s.includes('국어'));
-      if (nonKor.length > 0 && todaySubjects.length < maxSubjects) {
-        // 이미 배정 안 된 기타과목을 순환하여 빈 슬롯 채우기
-        let attempts = 0;
-        while (todaySubjects.length < maxSubjects && attempts < nonKor.length) {
-          const sub = nonKor[otherIdx % nonKor.length];
-          if (!todaySubjects.find(x => x.sub === sub)) {
-            todaySubjects.push({ sub, color: getSubjectColor(sub) });
-          }
-          otherIdx++;
-          attempts++;
-        }
-      }
-
-      // 배정된 과목으로 태스크 생성
-      todaySubjects.forEach((item, i) => {
+      // 취약 과목 → 매일 최우선 추가
+      for (const weak of (weakSubjects || [])) {
         tasks.push({
-          planner_id:   plannerId,
-          student_id:   STUDENT_ID,
-          task_date:    dateStr,
-          subject:      item.sub,
-          subject_type: i === 0 ? '주요' : '보조',
-          week_num:     weekNum,
-          is_done:      false,
-          task_content: `${item.sub} – ${dayStrategy}`,
-          col_order:    i + 1,
-          color_tag:    item.color,
-          student_memo: '',
+          planner_id:    plannerId,
+          student_id:    STUDENT_ID,
+          task_date:     dateStr,
+          subject:       weak,
+          is_done:       false,
+          task_content:  `${weak} – 취약 집중 학습`,
+          student_memo:  '',
           admin_comment: '',
         });
-      });
+      }
+
+      // 6일 순환 과목 배정
+      const [mainKey, sideKey] = ROTATION_KEYS[day % ROTATION_KEYS.length];
+      const mainSub = findSub(mainKey);
+      const sideSub = findSub(sideKey);
+
+      if (mainSub) {
+        tasks.push({
+          planner_id:    plannerId,
+          student_id:    STUDENT_ID,
+          task_date:     dateStr,
+          subject:       mainSub,
+          is_done:       false,
+          task_content:  `${mainSub} – ${strategy}`,
+          student_memo:  '',
+          admin_comment: '',
+        });
+      }
+
+      // 부과목은 취약과목과 중복이면 생략
+      const weakSet = new Set(weakSubjects || []);
+      if (sideSub && !weakSet.has(sideSub)) {
+        tasks.push({
+          planner_id:    plannerId,
+          student_id:    STUDENT_ID,
+          task_date:     dateStr,
+          subject:       sideSub,
+          is_done:       false,
+          task_content:  `${sideSub} – ${strategy}`,
+          student_memo:  '',
+          admin_comment: '',
+        });
+      }
     }
 
     console.log(`[generateDefaultTasks] 생성할 태스크: ${tasks.length}개`);
