@@ -123,6 +123,14 @@ async function initDB() {
         type VARCHAR(50), duration INTEGER, date DATE, memo TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS study_recommendations (
+        id SERIAL PRIMARY KEY,
+        tier INTEGER, tier_name VARCHAR(100),
+        score_min INTEGER, score_max INTEGER,
+        subject VARCHAR(50), platform VARCHAR(200),
+        lecture VARCHAR(300), textbook VARCHAR(500), strategy TEXT,
+        created_at TIMESTAMP DEFAULT NOW(), updated_at TIMESTAMP DEFAULT NOW()
+      );
       INSERT INTO admin_accounts (username, password, name, role, title)
       VALUES ('admin', 'dvlAdmin!', '원장', 'admin', '원장')
       ON CONFLICT (username) DO NOTHING;
@@ -146,6 +154,44 @@ async function initDB() {
       await client.query(sql);
     }
 
+    // 추천 인강/문제집 초기 데이터
+    const recCnt = await client.query('SELECT COUNT(*) FROM study_recommendations');
+    if (parseInt(recCnt.rows[0].count) === 0) {
+      const recs = [
+        [1,'기초 확립형',0,59,'국어','EBS 중학','EBS 중학 (강송연)','빠작 중학 국어 첫 문법','교과서 지문 소리 내어 읽기 및 어휘 암기'],
+        [1,'기초 확립형',0,59,'영어','EBS 중학','EBS 중학 (정승익)','능률 VOCA 중등 필수, Grammar Inside Starter','하루 단어 20개, 기초 문법 용어 익히기'],
+        [1,'기초 확립형',0,59,'수학','밀크T/EBS','밀크T (전수진), EBS (이지연)','수력충전, 개념쎈','연산 반복 및 교과서 예제 무한 복습'],
+        [1,'기초 확립형',0,59,'과학','EBS 중학','EBS (김청해)','체크체크 과학','용어 정의와 그림/도표 위주 암기'],
+        [1,'기초 확립형',0,59,'사회','EBS 중학','EBS (강현태)','한끝 사회/역사','역사 흐름(스토리) 위주 시청'],
+        [2,'취약 보완형',60,69,'국어','강남인강/온리원','온리원 (김지연)','빠작 비문학 독해 1단계','문단별 핵심 문장 찾기 연습'],
+        [2,'취약 보완형',60,69,'영어','강남인강','강남인강 (정승익)','Grammar Inside Level 1','문장 구조 분석(끊어 읽기) 시작'],
+        [2,'취약 보완형',60,69,'수학','강남인강','강남인강 (개념원리 강의)','개념원리, 라이트쎈','틀린 문제의 개념 역추적 학습'],
+        [2,'취약 보완형',60,69,'과학','온리원','온리원 (안현정)','오투 과학','오투 기본 문제 및 실험 영상 반복 시청'],
+        [2,'취약 보완형',60,69,'사회','강남인강','강남인강 (임진우)','완자 사회/역사','단원별 핵심 키워드 마인드맵 작성'],
+        [3,'실전 응용형',70,79,'국어','엠베스트','엠베스트 (유현진 - 기본)','빠작 문학 독해, 체크체크','문제 선택지에서 근거 지문 찾기'],
+        [3,'실전 응용형',70,79,'영어','엠베스트','엠베스트 (박영아 - 기본)','중학영문법 3800제 1~2권','3800제 반복 풀이로 문법 체득'],
+        [3,'실전 응용형',70,79,'수학','엠베스트','엠베스트 (이지연)','RPM, 쎈 (B단계 위주)','유형별 문제 풀이법 암기 및 적용'],
+        [3,'실전 응용형',70,79,'과학','엠베스트','엠베스트 (장풍 - 내신)','오투 과학, 완자 기출 PICK','암기법 활용 및 기출 유형 정복'],
+        [3,'실전 응용형',70,79,'사회','엠베스트','엠베스트 (박경아)','체크체크 사회/역사','교과서 날개 내용 및 사료 꼼꼼히 보기'],
+        [4,'상위권 도약형',80,89,'국어','엠베스트','엠베스트 (유현진 - 심화)','중학 매3비, 빠작 고난도','낯선 지문 분석력 키우기'],
+        [4,'상위권 도약형',80,89,'영어','엠베스트','엠베스트 (박영아 - 심화)','3800제 3권, 천일문 중등','구문 분석 및 고난도 문법 적용'],
+        [4,'상위권 도약형',80,89,'수학','엠베스트','엠베스트 (민정범 - 쎈)','쎈 (C단계 포함), 일품','오답 노트를 통한 약점 보완'],
+        [4,'상위권 도약형',80,89,'과학','엠베스트','엠베스트 (장풍 - 심화)','오투, 하이탑 (기초)','원리 이해를 통한 추론 문제 연습'],
+        [4,'상위권 도약형',80,89,'사회','엠베스트','엠베스트 (곽주현)','완자 기출 PICK, 서술형 대비서','고난도 사료 해석 및 서술형 문장 연습'],
+        [5,'최상위 유지형',90,100,'국어','엠베스트','엠베스트 (유현진 - 수능형)','예비 고등 매3 시리즈','고등 수능 기초 지문 도전'],
+        [5,'최상위 유지형',90,100,'영어','엠베스트','엠베스트 (박영아 - 고등연계)','천일문 기본, 자이스토리','고등 모의고사 1등급 수준 독해 연습'],
+        [5,'최상위 유지형',90,100,'수학','엠베스트','엠베스트 (민정범 - 심화)','블랙라벨, 에이급 수학','고난도 심화 문제 해결 및 선행 병행'],
+        [5,'최상위 유지형',90,100,'과학','엠베스트','엠베스트 (장풍 - 하이탑)','하이탑, 고등 통합과학 기초','심화 과학 원리 정립 및 올림피아드 기초'],
+        [5,'최상위 유지형',90,100,'사회','엠베스트','엠베스트 (곽주현 - 한국사)','한능검 교재, 심화 기출','한능검 1급 도전'],
+      ];
+      for (const [tier,tname,smin,smax,subj,plat,lec,tb,strat] of recs) {
+        await client.query(
+          'INSERT INTO study_recommendations (tier,tier_name,score_min,score_max,subject,platform,lecture,textbook,strategy) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+          [tier,tname,smin,smax,subj,plat,lec,tb,strat]
+        );
+      }
+      console.log('추천 데이터 25건 삽입 완료');
+    }
     console.log('DB 초기화 완료');
   } finally {
     client.release();
@@ -236,7 +282,7 @@ function tableRouter(tableName) {
 ['student_profiles','parent_profiles','admin_accounts','attendance',
  'assessments','notices','notice_reads','consultations','consult_requests',
  'grades_school','grades_mock','exam_planners','planner_tasks',
- 'exam_schedules','student_records','student_logs'].forEach(t => {
+ 'exam_schedules','student_records','student_logs','study_recommendations'].forEach(t => {
   app.use('/tables/' + t, tableRouter(t));
 });
 
