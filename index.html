@@ -3,111 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>다빈치랩 | 맞춤형 학습 로드맵</title>
+    <title>다빈치랩 관리 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Pretendard', sans-serif; }
+        .sidebar-item:hover { background-color: rgba(99, 102, 241, 0.1); }
+        .active-menu { background-color: rgba(99, 102, 241, 0.1); color: #4f46e5; border-right: 4px solid #4f46e5; }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
-        <!-- 헤더 섹션 -->
-        <div class="text-center mb-12">
-            <h1 class="text-3xl font-bold text-slate-800 mb-2">DaVinci Lab</h1>
-            <p class="text-slate-500">당신의 성적에 딱 맞는 최적의 인강과 교재를 추천해 드립니다.</p>
-        </div>
+<body class="bg-slate-50 flex h-screen overflow-hidden">
 
-        <!-- 점수 입력 섹션 -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8 text-center">
-            <h2 class="text-lg font-semibold mb-4 text-slate-700">현재 자신의 평균 점수를 입력하세요</h2>
-            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
-                <input type="number" id="scoreInput" min="0" max="100" placeholder="예: 85" 
-                       class="w-32 p-3 text-2xl font-bold text-center border-2 border-indigo-100 rounded-xl focus:border-indigo-500 focus:outline-none transition-all">
-                <button onclick="getRecommendation()" 
-                        class="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
-                    맞춤 솔루션 확인하기
-                </button>
+    <!-- 사이드바 (메뉴) -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold text-indigo-600">DaVinci Lab</h1>
+            <p class="text-xs text-slate-400 mt-1">Management System</p>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-1">
+            <button onclick="showSection('planner')" id="menu-planner" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 transition-all font-semibold">
+                <i class="fa-solid fa-calendar-check w-5"></i> 시험 플래너 (D-Day)
+            </button>
+            <button onclick="showSection('recommend')" id="menu-recommend" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 transition-all font-semibold">
+                <i class="fa-solid fa-lightbulb w-5"></i> 인강/교재 추천
+            </button>
+            <button onclick="showSection('problems')" id="menu-problems" class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 transition-all font-semibold">
+                <i class="fa-solid fa-file-signature w-5"></i> 문제 배부 요청
+            </button>
+            <div class="border-t border-slate-100 my-4"></div>
+            <button class="sidebar-item w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 font-medium">
+                <i class="fa-solid fa-users w-5"></i> 학생 관리
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100">
+            <div class="bg-slate-50 p-3 rounded-lg text-xs text-slate-500">
+                <p><strong>운영자:</strong> Soyeon 원장님</p>
             </div>
         </div>
+    </aside>
 
-        <!-- 결과 출력 섹션 -->
-        <div id="resultArea" class="hidden space-y-6">
-            <div class="flex items-center gap-3 mb-4">
-                <span id="tierBadge" class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm"></span>
-                <h3 class="text-xl font-bold text-slate-800">추천 학습 로드맵</h3>
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="flex-1 overflow-y-auto p-8">
+        
+        <!-- [섹션 1] 시험 플래너 (준비 중) -->
+        <section id="section-planner" class="hidden">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">🗓️ 시험 플래너 만들기</h2>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+                <p class="text-slate-500">곧 여기에 시험 날짜 입력과 3회독 자동 스케줄러가 구현됩니다!</p>
+            </div>
+        </section>
+
+        <!-- [섹션 2] 인강/교재 추천 (기존 기능) -->
+        <section id="section-recommend">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800">💡 인강/교재 추천 도우미</h2>
+                <p class="text-slate-500 mt-1 text-sm">성적대별 최적의 학습 도구를 조회합니다.</p>
             </div>
             
-            <div id="recommendationCards" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- 여기에 카드가 동적으로 생성됩니다 -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-8">
+                <div class="flex items-center gap-4">
+                    <input type="number" id="scoreInput" min="0" max="100" placeholder="점수 입력" 
+                           class="w-32 p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="getRecommendation()" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all">조회하기</button>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <div id="resultArea" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 결과 카드 동적 생성 -->
+            </div>
+        </section>
+
+        <!-- [섹션 3] 문제 배부 요청 (준비 중) -->
+        <section id="section-problems" class="hidden">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6">📝 문제 배부 요청 관리</h2>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+                <p class="text-slate-500">학생들의 문제 요청 목록이 이곳에 나타납니다.</p>
+            </div>
+        </section>
+
+    </main>
 
     <script>
-        async function getRecommendation() {
-            const score = parseInt(document.getElementById('scoreInput').value);
-            if (isNaN(score) || score < 0 || score > 100) {
-                alert('0에서 100 사이의 점수를 입력해주세요!');
-                return;
-            }
-
-            try {
-                // 아까 만든 배달부(API)에게 데이터 요청
-                const response = await fetch('/api/recommendations');
-                const result = await response.json();
-                
-                if (result.success) {
-                    // 입력한 점수가 포함된 티어 데이터만 필터링
-                    const myData = result.data.filter(item => score >= item.score_min && score <= item.score_max);
-                    displayResults(myData);
-                }
-            } catch (error) {
-                console.error('데이터를 가져오는데 실패했습니다:', error);
-                alert('데이터 연결 중 오류가 발생했습니다.');
-            }
+        // 메뉴 전환 로직
+        function showSection(sectionName) {
+            const sections = ['planner', 'recommend', 'problems'];
+            sections.forEach(s => {
+                document.getElementById(`section-${s}`).classList.add('hidden');
+                document.getElementById(`menu-${s}`).classList.remove('active-menu');
+            });
+            document.getElementById(`section-${sectionName}`).classList.remove('hidden');
+            document.getElementById(`menu-${sectionName}`).classList.add('active-menu');
         }
 
-        function displayResults(data) {
-            const resultArea = document.getElementById('resultArea');
-            const cardContainer = document.getElementById('recommendationCards');
-            const tierBadge = document.getElementById('tierBadge');
+        // 초기 시작 섹션 설정
+        showSection('recommend');
 
-            if (data.length === 0) {
-                alert('해당 점수대의 추천 데이터를 찾을 수 없습니다.');
-                return;
-            }
+        // 기존 인강 추천 로직 (유지)
+        async function getRecommendation() {
+            const score = parseInt(document.getElementById('scoreInput').value);
+            if (isNaN(score) || score < 0 || score > 100) return;
 
-            // 티어 이름 설정
-            tierBadge.innerText = data[0].tier_name;
-            
-            // 기존 카드 삭제
-            cardContainer.innerHTML = '';
-
-            // 과목별 카드 생성
-            data.forEach(item => {
-                const card = `
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
-                        <div class="flex justify-between items-start mb-3">
-                            <span class="bg-slate-800 text-white px-3 py-1 rounded-lg text-xs font-bold">${item.subject}</span>
-                            <span class="text-indigo-600 text-xs font-semibold">${item.platform}</span>
-                        </div>
-                        <h4 class="font-bold text-slate-800 mb-1">${item.lecture}</h4>
-                        <p class="text-sm text-slate-600 mb-3"><i class="fa-solid fa-book-open mr-1"></i> ${item.textbook}</p>
-                        <div class="bg-indigo-50 p-3 rounded-lg">
-                            <p class="text-xs text-indigo-800 leading-relaxed font-medium">
-                                <i class="fa-solid fa-lightbulb mr-1"></i> <strong>공략법:</strong> ${item.strategy}
-                            </p>
-                        </div>
-                    </div>
-                `;
-                cardContainer.innerHTML += card;
-            });
-
-            // 결과 영역 보이기
-            resultArea.classList.remove('hidden');
-            resultArea.scrollIntoView({ behavior: 'smooth' });
+            try {
+                const response = await fetch('/api/recommendations');
+                const result = await response.json();
+                if (result.success) {
+                    const myData = result.data.filter(item => score >= item.score_min && score <= item.score_max);
+                    const container = document.getElementById('resultArea');
+                    container.innerHTML = '';
+                    myData.forEach(item => {
+                        container.innerHTML += `
+                            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                                <span class="text-xs font-bold text-indigo-500">${item.subject}</span>
+                                <h4 class="font-bold text-slate-800">${item.lecture}</h4>
+                                <p class="text-sm text-slate-500 mt-1">${item.textbook}</p>
+                            </div>
+                        `;
+                    });
+                    container.classList.remove('hidden');
+                }
+            } catch (error) { console.error(error); }
         }
     </script>
 </body>
