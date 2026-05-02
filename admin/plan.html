@@ -31,7 +31,6 @@
 </head>
 <body class="admin-body">
 
-  <!-- 사이드바 -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="dashboard.html" class="sidebar-logo">
@@ -53,15 +52,6 @@
         <a href="daily.html" class="nav-item"><i class="fas fa-pen-alt"></i><span>일일 학습 기록</span></a>
       </div>
     </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-user-avatar">박</div>
-        <div class="sidebar-user-info">
-          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
-          <span class="sidebar-user-role">총괄 관리자</span>
-        </div>
-      </div>
-    </div>
   </aside>
 
   <div class="admin-main">
@@ -79,15 +69,13 @@
       <div class="page-title-row">
         <div>
           <h1 class="page-title">학습 플랜 관리</h1>
-          <p class="page-subtitle">학생의 주간 계획을 관리하고 사진 인증을 확인합니다.</p>
+          <p class="page-subtitle">학생별 주간 계획 수립 및 사진 인증을 관리합니다.</p>
         </div>
-        <button class="btn-add" id="writePlanBtn" onclick="openPlanModal()"><i class="fas fa-plus"></i> 플랜 작성</button>
+        <button class="btn-add" onclick="openPlanModal()"><i class="fas fa-plus"></i> 플랜 작성</button>
       </div>
 
-      <!-- 학생 선택 탭 -->
       <div class="plan-student-tabs" id="planStudentTabs"></div>
 
-      <!-- 상단 현황판 -->
       <div class="plan-kpi-row">
         <div class="plan-kpi"> <span class="plan-kpi-val" id="planKpiTotal">0</span> <span class="plan-kpi-label">전체 과제</span> </div>
         <div class="plan-kpi plan-kpi-done"> <span class="plan-kpi-val" id="planKpiDone">0</span> <span class="plan-kpi-label">완료</span> </div>
@@ -115,7 +103,6 @@
     </div>
   </div>
 
-  <!-- 플랜 추가 모달 -->
   <div class="modal-overlay" id="planItemModal">
     <div class="modal">
       <div class="modal-header"><h3>플랜 항목 추가</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
@@ -142,7 +129,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeModal()">취소</button>
-        <button class="btn-submit" onclick="savePlan()">저장</button>
+        <button id="saveBtn" class="btn-submit" onclick="savePlan()">저장</button>
       </div>
     </div>
   </div>
@@ -209,30 +196,44 @@
       document.getElementById('planKpiRate').textContent = total ? Math.round((done/total)*100) + '%' : '0%';
     }
 
-    // 💡 원장님의 Railway 서버 로그 형식을 100% 반영한 저장 함수
     async function savePlan() {
       const date = document.getElementById('piDate').value;
       const subject = document.getElementById('piSubject').value;
       const target = document.getElementById('piTarget').value;
       const content = document.getElementById('piContent').value;
+      const saveBtn = document.getElementById('saveBtn');
 
       if(!currentStudentId) return alert('학생을 선택해주세요.');
       if(!date || !subject || !content) return alert('필수 항목을 입력해주세요.');
 
-      // 서버 로그 기반 9개 필수 항목 구성
-      const item = {
-        planner_id: "manual_entry",         // $1
-        student_id: currentStudentId,       // $2
-        task_date: date,                    // $3
-        subject: subject,                   // $4
-        is_done: document.getElementById('piStatus').value === 'done', // $5
-        task_content: target ? `[목표:${target}] ${content}` : content, // $6
-        student_memo: "",                   // $7 (필수 빈값)
-        admin_comment: document.getElementById('piComment').value || "", // $8
-        created_at: new Date().toISOString() // $9
-      };
+      saveBtn.disabled = true;
+      saveBtn.innerText = "저장 중...";
 
       try {
+        // 1. 해당 학생의 유효한 플래너 ID를 먼저 조회 (500 에러 방지)
+        const plannerRes = await fetch(`/tables/exam_planners?search=${currentStudentId}`);
+        const plannerData = await plannerRes.json();
+        let validPlannerId = (plannerData.data && plannerData.data.length > 0) ? plannerData.data[0].id : null;
+
+        // 2. 만약 등록된 플래너가 없다면, 임시 플래너를 생성하거나 기본값을 사용
+        if (!validPlannerId) {
+          // 플래너가 없을 경우, 에러 방지를 위해 0 또는 null을 보낼 수 있지만
+          // 원장님 DB 설정에 따라 반드시 필요할 수 있으므로 '0'을 시도해봅니다.
+          validPlannerId = 0; 
+        }
+
+        const item = {
+          planner_id: validPlannerId,         // 유효한 ID 또는 0 전달
+          student_id: currentStudentId,
+          task_date: date,
+          subject: subject,
+          is_done: document.getElementById('piStatus').value === 'done',
+          task_content: target ? `[목표:${target}] ${content}` : content,
+          student_memo: "",
+          admin_comment: document.getElementById('piComment').value || "",
+          created_at: new Date().toISOString()
+        };
+
         const res = await fetch('/tables/planner_tasks', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -245,10 +246,15 @@
           await loadPlans();
         } else {
           const errorMsg = await res.text();
-          alert('저장 실패: ' + res.status);
+          alert('저장 실패: ' + res.status + '\n플래너가 등록되지 않은 학생일 수 있습니다.');
           console.error(errorMsg);
         }
-      } catch(e) { alert('서버 통신 오류'); }
+      } catch(e) { 
+        alert('서버 통신 오류'); 
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerText = "저장";
+      }
     }
 
     async function deletePlan(id) {
