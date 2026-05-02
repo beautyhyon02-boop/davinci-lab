@@ -18,16 +18,16 @@
   <link rel="stylesheet" href="../css/admin.css" />
   <link rel="stylesheet" href="../css/plan.css" />
   <style>
-    /* 사진 인증 확인용 스타일 추가 */
+    /* 사진 인증 확인 및 UI 보정 */
     .photo-verify-btn { padding: 4px 8px; background: #e0e7ff; color: #4338ca; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; }
-    .photo-verify-btn:hover { background: #c7d2fe; }
     .status-tag { padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
     .status-todo { background: #f3f4f6; color: #6b7280; }
     .status-ing { background: #dbeafe; color: #1d4ed8; }
     .status-done { background: #d1fae5; color: #065f46; }
-    .plan-student-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-    .stu-tab { padding: 8px 16px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .plan-student-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stu-tab { padding: 8px 16px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
     .stu-tab.active { background: #163A33; color: #fff; border-color: #163A33; }
+    .required { color: red; margin-left: 2px; }
   </style>
 </head>
 <body class="admin-body">
@@ -52,7 +52,6 @@
         <a href="plan.html" class="nav-item active"><i class="fas fa-tasks"></i><span>학습 플랜 관리</span></a>
         <a href="daily.html" class="nav-item"><i class="fas fa-pen-alt"></i><span>일일 학습 기록</span></a>
       </div>
-      <!-- ... 기타 메뉴 생략 (원장님 기존 코드와 동일) ... -->
     </nav>
   </aside>
 
@@ -71,17 +70,15 @@
       <div class="page-title-row">
         <div>
           <h1 class="page-title">학습 플랜 & 일일 기록</h1>
-          <p class="page-subtitle" id="currentDateLabel">현재 주차 학습 계획</p>
+          <p class="page-subtitle">학생별 주간 학습 플랜을 작성하고 매일의 진행 상황을 관리합니다.</p>
         </div>
         <button class="btn-add" id="writePlanBtn" onclick="openPlanModal()"><i class="fas fa-plus"></i> 플랜 작성</button>
       </div>
 
       <!-- 학생 선택 탭 -->
-      <div class="plan-student-tabs" id="planStudentTabs">
-        <!-- JS로 학생 목록을 채웁니다 -->
-      </div>
+      <div class="plan-student-tabs" id="planStudentTabs"></div>
 
-      <!-- 완료율 KPI -->
+      <!-- KPI 현황 -->
       <div class="plan-kpi-row">
         <div class="plan-kpi"> <span class="plan-kpi-val" id="planKpiTotal">0</span> <span class="plan-kpi-label">전체 과제</span> </div>
         <div class="plan-kpi plan-kpi-done"> <span class="plan-kpi-val" id="planKpiDone">0</span> <span class="plan-kpi-label">완료</span> </div>
@@ -92,37 +89,66 @@
         <div class="panel-header">
           <h3><i class="fas fa-tasks"></i> 플랜 상세 목록</h3>
         </div>
-        <div class="panel-body">
+        <div class="panel-body" style="overflow-x:auto;">
           <table class="admin-table">
             <thead>
               <tr>
+                <th>날짜</th>
                 <th>과목</th>
-                <th>학습 내용</th>
                 <th>목표량</th>
+                <th>학습 내용</th>
                 <th>상태</th>
                 <th>인증샷</th>
-                <th>코멘트</th>
-                <th>삭제</th>
+                <th>관리</th>
               </tr>
             </thead>
-            <tbody id="planTbody">
-              <!-- 데이터가 여기에 렌더링됩니다 -->
-            </tbody>
+            <tbody id="planTbody"></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 플랜 모달 -->
+  <!-- 플랜 항목 추가 모달 -->
   <div class="modal-overlay" id="planItemModal">
     <div class="modal">
-      <div class="modal-header"><h3>플랜 항목 추가</h3></div>
+      <div class="modal-header"><h3>플랜 항목 추가</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
-        <div class="form-group"><label>과목</label><select id="piSubject"><option>수학</option><option>영어</option><option>국어</option><option>기타</option></select></div>
-        <div class="form-group"><label>목표량</label><input type="text" id="piTarget" placeholder="예: 30문제"></div>
-        <div class="form-group"><label>학습 내용</label><textarea id="piContent" rows="3"></textarea></div>
-        <div class="form-group"><label>관리자 코멘트</label><input type="text" id="piComment"></div>
+        <div class="add-form-grid">
+          <div class="form-group">
+            <label>수행 날짜 <span class="required">*</span></label>
+            <input type="date" id="piDate">
+          </div>
+          <div class="form-group">
+            <label>과목 <span class="required">*</span></label>
+            <select id="piSubject">
+              <option value="">선택</option>
+              <option>수학</option><option>영어</option><option>국어</option>
+              <option>물리학</option><option>화학</option><option>생명과학</option>
+              <option>지구과학</option><option>사회</option><option>한국사</option><option>기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>목표량</label>
+            <input type="text" id="piTarget" placeholder="예: 30문항, 3단원">
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>학습 내용 <span class="required">*</span></label>
+            <textarea id="piContent" rows="3" placeholder="구체적인 학습 내용을 입력하세요."></textarea>
+          </div>
+          <div class="form-group">
+            <label>진행 상태</label>
+            <select id="piStatus">
+              <option value="todo">미완료</option>
+              <option value="ing">진행 중</option>
+              <option value="done">완료</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>관리자 코멘트</label>
+            <input type="text" id="piComment" placeholder="학생에게 전달할 메시지">
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" onclick="closeModal()">취소</button>
@@ -136,57 +162,63 @@
     let allTasks = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // 오늘 날짜 기본 세팅
+      document.getElementById('piDate').value = new Date().toISOString().split('T')[0];
       await loadStudents();
     });
 
-    // 1. 학생 목록 불러오기
     async function loadStudents() {
-      const res = await fetch('/tables/student_profiles');
-      const data = await res.json();
-      const container = document.getElementById('planStudentTabs');
-      
-      container.innerHTML = data.data.map(s => `
-        <button class="stu-tab ${currentStudentId === s.student_id ? 'active' : ''}" 
-                onclick="selectStudent('${s.student_id}')">${s.name}</button>
-      `).join('');
+      try {
+        const res = await fetch('/tables/student_profiles');
+        const data = await res.json();
+        const container = document.getElementById('planStudentTabs');
+        
+        container.innerHTML = data.data.map(s => `
+          <button class="stu-tab ${currentStudentId === s.student_id ? 'active' : ''}" 
+                  onclick="selectStudent('${s.student_id}')">${s.name}</button>
+        `).join('');
 
-      if (!currentStudentId && data.data.length > 0) {
-        selectStudent(data.data[0].student_id);
-      }
+        if (!currentStudentId && data.data.length > 0) {
+          selectStudent(data.data[0].student_id);
+        }
+      } catch(e) { console.error('학생 로드 실패'); }
     }
 
     function selectStudent(id) {
       currentStudentId = id;
-      loadStudents(); // 탭 활성화 표시용
+      loadStudents();
       loadPlans();
     }
 
-    // 2. 플랜 데이터 불러오기
     async function loadPlans() {
-      const res = await fetch(`/tables/planner_tasks?search=${currentStudentId}`);
-      const data = await res.json();
-      allTasks = data.data.filter(t => t.student_id === currentStudentId);
-      renderPlanTable();
+      if(!currentStudentId) return;
+      try {
+        const res = await fetch(`/tables/planner_tasks?search=${currentStudentId}&limit=100`);
+        const data = await res.json();
+        allTasks = data.data.filter(t => t.student_id === currentStudentId)
+                           .sort((a,b) => b.task_date.localeCompare(a.task_date));
+        renderPlanTable();
+      } catch(e) { console.error('플랜 로드 실패'); }
     }
 
-    // 3. 테이블 렌더링 (사진 인증 버튼 포함)
     function renderPlanTable() {
       const tbody = document.getElementById('planTbody');
       tbody.innerHTML = allTasks.map(t => `
         <tr>
-          <td>${t.subject}</td>
-          <td>${t.task_content}</td>
+          <td>${t.task_date}</td>
+          <td><strong>${t.subject}</strong></td>
           <td>${t.target_amount || '-'}</td>
-          <td><span class="status-tag status-${t.status === 'done' ? 'done' : 'ing'}">${t.status || '진행중'}</span></td>
+          <td>${t.task_content}</td>
+          <td><span class="status-tag status-${t.status === 'done' ? 'done' : (t.status === 'ing' ? 'ing' : 'todo')}">${t.status === 'done' ? '완료' : (t.status === 'ing' ? '진행중' : '미완료')}</span></td>
           <td>
-            ${t.image_url ? `<button class="photo-verify-btn" onclick="window.open('${t.image_url}')">📷 보기</button>` : '<span style="color:#ccc">미제출</span>'}
+            ${t.image_url ? `<button class="photo-verify-btn" onclick="window.open('${t.image_url}')">📷 확인</button>` : '<span style="color:#ccc">미제출</span>'}
           </td>
-          <td>${t.admin_comment || '-'}</td>
-          <td><button onclick="deletePlan('${t.id}')" style="color:red; border:none; background:none; cursor:pointer;">❌</button></td>
+          <td>
+            <button onclick="deletePlan('${t.id}')" style="color:#ef4444; border:none; background:none; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+          </td>
         </tr>
       `).join('');
 
-      // KPI 업데이트
       const total = allTasks.length;
       const done = allTasks.filter(t => t.status === 'done').length;
       document.getElementById('planKpiTotal').textContent = total;
@@ -194,30 +226,42 @@
       document.getElementById('planKpiRate').textContent = total ? Math.round((done/total)*100) + '%' : '0%';
     }
 
-    // 4. 플랜 저장 (Railway DB 전송)
     async function savePlan() {
+      const date = document.getElementById('piDate').value;
+      const subject = document.getElementById('piSubject').value;
+      const content = document.getElementById('piContent').value;
+
+      if(!date || !subject || !content) {
+        alert('필수 항목(날짜, 과목, 내용)을 입력해주세요.');
+        return;
+      }
+
       const item = {
         student_id: currentStudentId,
-        subject: document.getElementById('piSubject').value,
+        task_date: date,
+        subject: subject,
         target_amount: document.getElementById('piTarget').value,
-        task_content: document.getElementById('piContent').value,
+        task_content: content,
         admin_comment: document.getElementById('piComment').value,
-        task_date: new Date().toISOString().split('T')[0],
-        status: 'todo'
+        status: document.getElementById('piStatus').value,
+        is_done: document.getElementById('piStatus').value === 'done'
       };
 
-      await fetch('/tables/planner_tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item)
-      });
-
-      closeModal();
-      loadPlans();
+      try {
+        const res = await fetch('/tables/planner_tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+        if(res.ok) {
+          closeModal();
+          await loadPlans();
+        } else { alert('저장에 실패했습니다.'); }
+      } catch(e) { alert('서버 통신 오류'); }
     }
 
     async function deletePlan(id) {
-      if(!confirm('정말 삭제하시겠습니까?')) return;
+      if(!confirm('삭제하시겠습니까?')) return;
       await fetch(`/tables/planner_tasks/${id}`, { method: 'DELETE' });
       loadPlans();
     }
