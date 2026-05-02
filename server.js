@@ -18,12 +18,40 @@ const pool = new Pool({
 // 1. 모든 테이블 공통 조회 (GET /tables/:name)
 app.get('/tables/:tableName', async (req, res) => {
   const { tableName } = req.params;
-  const { search } = req.query;
+  const { search, limit } = req.query;
   try {
+    const columnRes = await pool.query(
+      `SELECT column_name
+         FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = $1`,
+      [tableName]
+    );
+
+    if (!columnRes.rows.length) {
+      return res.status(404).json({ success: false, error: `table not found: ${tableName}` });
+    }
+
+    const columns = columnRes.rows.map((r) => r.column_name);
+    const where = [];
+    const params = [];
+
+    if (search) {
+      const searchableColumns = ['student_id', 'name', 'student_name'].filter((c) => columns.includes(c));
+      if (searchableColumns.length) {
+        params.push(`%${search}%`);
+        const p = `$${params.length}`;
+        where.push(`(${searchableColumns.map((c) => `${c}::text ILIKE ${p}`).join(' OR ')})`);
+      }
+    }
+
+    const safeLimit = Math.min(Number(limit) || 500, 2000);
+    params.push(safeLimit);
+
     let sql = `SELECT * FROM ${tableName}`;
-    if (search) sql += ` WHERE student_id LIKE '%${search}%' OR name LIKE '%${search}%'`;
-    sql += ` ORDER BY id DESC LIMIT 500`;
-    const result = await pool.query(sql);
+    if (where.length) sql += ` WHERE ${where.join(' AND ')}`;
+    sql += ` ORDER BY id DESC LIMIT $${params.length}`;
+
+    const result = await pool.query(sql, params);
     res.json({ success: true, data: result.rows });
   } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
