@@ -71,7 +71,7 @@
           <h1 class="page-title">학습 플랜 관리</h1>
           <p class="page-subtitle">학생별 주간 계획 수립 및 사진 인증을 관리합니다.</p>
         </div>
-        <button class="btn-add" onclick="openPlanModal()"><i class="fas fa-plus"></i> 플랜 작성</button>
+        <button class="btn-add" id="writePlanBtn" onclick="openPlanModal()"><i class="fas fa-plus"></i> 플랜 작성</button>
       </div>
 
       <div class="plan-student-tabs" id="planStudentTabs"></div>
@@ -103,6 +103,7 @@
     </div>
   </div>
 
+  <!-- 플랜 항목 추가 모달 -->
   <div class="modal-overlay" id="planItemModal">
     <div class="modal">
       <div class="modal-header"><h3>플랜 항목 추가</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
@@ -210,20 +211,34 @@
       saveBtn.innerText = "저장 중...";
 
       try {
-        // 1. 해당 학생의 유효한 플래너 ID를 먼저 조회 (500 에러 방지)
+        // 1. 해당 학생의 '기본 플래너'가 있는지 확인
         const plannerRes = await fetch(`/tables/exam_planners?search=${currentStudentId}`);
         const plannerData = await plannerRes.json();
         let validPlannerId = (plannerData.data && plannerData.data.length > 0) ? plannerData.data[0].id : null;
 
-        // 2. 만약 등록된 플래너가 없다면, 임시 플래너를 생성하거나 기본값을 사용
+        // 2. 만약 플래너가 없다면, 즉석에서 '기본 플래너'를 생성 (500 에러 근본 해결)
         if (!validPlannerId) {
-          // 플래너가 없을 경우, 에러 방지를 위해 0 또는 null을 보낼 수 있지만
-          // 원장님 DB 설정에 따라 반드시 필요할 수 있으므로 '0'을 시도해봅니다.
-          validPlannerId = 0; 
+            const createPlannerRes = await fetch('/tables/exam_planners', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_id: currentStudentId,
+                    student_name: document.querySelector('.stu-tab.active')?.innerText || '학생',
+                    exam_type: '일반학습',
+                    exam_start_date: date,
+                    exam_end_date: date,
+                    status: '진행중',
+                    year: '2026',
+                    semester: '1학기'
+                })
+            });
+            const newPlanner = await createPlannerRes.json();
+            validPlannerId = newPlanner.id;
         }
 
+        // 3. 이제 유효한 planner_id를 가지고 할 일(Task)을 저장
         const item = {
-          planner_id: validPlannerId,         // 유효한 ID 또는 0 전달
+          planner_id: validPlannerId,
           student_id: currentStudentId,
           task_date: date,
           subject: subject,
@@ -245,9 +260,7 @@
           closeModal();
           await loadPlans();
         } else {
-          const errorMsg = await res.text();
-          alert('저장 실패: ' + res.status + '\n플래너가 등록되지 않은 학생일 수 있습니다.');
-          console.error(errorMsg);
+          alert('저장 실패: ' + res.status);
         }
       } catch(e) { 
         alert('서버 통신 오류'); 
