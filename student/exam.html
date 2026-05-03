@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>시험 플래너 – 다빈치랩</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/student.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/student.css" />
   <style>
-    .planner-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .planner-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 820px; margin: 24px auto; }
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; font-weight: 700; margin-bottom: 8px; color: #163A33; }
     .form-control { width: 100%; padding: 12px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-family: inherit; }
-    .btn-generate { width: 100%; padding: 15px; background: #4f46e5; color: #fff; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; }
-    .btn-generate:hover { background: #4338ca; transform: translateY(-2px); }
+    .btn-generate { width: 100%; padding: 15px; background: #4f46e5; color: #fff; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; }
+    .btn-generate:hover { background: #4338ca; transform: translateY(-1px); }
+    .btn-generate:disabled { opacity: .65; cursor: not-allowed; transform: none; }
   </style>
 </head>
 <body class="student-body">
   <div class="main-content">
     <div class="planner-card">
       <h2 style="text-align:center; margin-bottom:25px;">◈ 시험 맞춤 플래너 생성</h2>
-      
+
       <div class="form-group">
         <label>시험 종류</label>
         <select id="examType" class="form-control">
@@ -31,9 +32,16 @@
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-        <div class="form-group"><label>시험 시작일</label><input type="date" id="startDate" class="form-control" value="2026-07-01"></div>
-        <div class="form-group"><label>시험 종료일</label><input type="date" id="endDate" class="form-control" value="2026-07-04"></div>
+        <div class="form-group">
+          <label>시험 시작일</label>
+          <input type="date" id="startDate" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>시험 종료일</label>
+          <input type="date" id="endDate" class="form-control" />
+        </div>
       </div>
+
       <div class="form-group">
         <label>시험 과목 (쉼표로 구분)</label>
         <input id="subjectsInput" class="form-control" value="국어, 수학, 영어, 과학, 사회" />
@@ -44,19 +52,62 @@
   </div>
 
   <script>
-    const studentId = localStorage.getItem('student_id') || '';
-    const studentName = localStorage.getItem('student_name') || localStorage.getItem('name') || '';
+    // 기본 날짜 세팅
+    (function initDefaultDates() {
+      const today = new Date();
+      const plus14 = new Date(today.getTime() + 14 * 86400000);
+      const plus17 = new Date(today.getTime() + 17 * 86400000);
+
+      const toYmd = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      };
+
+      document.getElementById('startDate').value = toYmd(plus14);
+      document.getElementById('endDate').value = toYmd(plus17);
+    })();
+
+    // 로그인 세션 읽기 (다른 학생 페이지와 동일 패턴)
+    let session = null;
+    try {
+      session = JSON.parse(
+        sessionStorage.getItem('dvl_user') ||
+        sessionStorage.getItem('dvl_session') ||
+        'null'
+      );
+    } catch (e) {
+      session = null;
+    }
+
+    const studentId = (
+      session?.student_id ||
+      session?.id ||
+      session?.username ||
+      localStorage.getItem('student_id') ||
+      ''
+    ).trim();
+
+    const studentName = (
+      session?.name ||
+      localStorage.getItem('student_name') ||
+      localStorage.getItem('name') ||
+      ''
+    ).trim();
 
     function buildAutoTasks({ plannerId, studentId, studentName, startDate, examStartDate, subjects }) {
       const tasks = [];
       const dayMs = 86400000;
-      const start = new Date(startDate); start.setHours(0,0,0,0);
-      const exam  = new Date(examStartDate); exam.setHours(0,0,0,0);
-      const today = new Date();
-      today.setHours(0,0,0,0);
 
-      // 시작일이 오늘 이전이면 오늘부터 배치
+      const start = new Date(startDate); start.setHours(0, 0, 0, 0);
+      const exam = new Date(examStartDate); exam.setHours(0, 0, 0, 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+
+      // 시작일이 과거면 오늘부터 시작
       const from = start < today ? today : start;
+
+      // 시험 시작일 이전 날짜까지만 과제 생성
       if (from >= exam) return tasks;
 
       const phases = [
@@ -68,27 +119,38 @@
 
       const totalDays = Math.ceil((exam - from) / dayMs);
       const phaseDays = phases.map((p) => Math.max(1, Math.round(totalDays * p.ratio)));
-      while (phaseDays.reduce((a,b)=>a+b,0) > totalDays) {
-        const i = phaseDays.findIndex((d) => d > 1);
-        if (i < 0) break;
-        phaseDays[i] -= 1;
-      }
-      while (phaseDays.reduce((a,b)=>a+b,0) < totalDays) phaseDays[phaseDays.length - 1] += 1;
 
-      let phaseBoundaries = [];
+      // 합계 보정
+      while (phaseDays.reduce((a, b) => a + b, 0) > totalDays) {
+        const idx = phaseDays.findIndex((d) => d > 1);
+        if (idx < 0) break;
+        phaseDays[idx] -= 1;
+      }
+      while (phaseDays.reduce((a, b) => a + b, 0) < totalDays) {
+        phaseDays[phaseDays.length - 1] += 1;
+      }
+
+      // phase boundary 계산
+      const boundaries = [];
       let acc = 0;
-      for (const days of phaseDays) { acc += days; phaseBoundaries.push(acc); }
+      for (const d of phaseDays) {
+        acc += d;
+        boundaries.push(acc);
+      }
 
       for (let d = 0; d < totalDays; d++) {
         const cur = new Date(from.getTime() + d * dayMs);
         const dateStr = cur.toISOString().slice(0, 10);
-        let phaseIndex = phaseBoundaries.findIndex((b) => d + 1 <= b);
+
+        let phaseIndex = boundaries.findIndex((b) => d + 1 <= b);
         if (phaseIndex < 0) phaseIndex = phases.length - 1;
         const phase = phases[phaseIndex];
 
+        // 하루에 입력한 과목 수만큼 생성
         for (let s = 0; s < subjects.length; s++) {
           const subject = subjects[(d + s) % subjects.length];
           const action = phase.actions[(d + s) % phase.actions.length];
+
           tasks.push({
             planner_id: plannerId,
             student_id: studentId,
@@ -100,105 +162,113 @@
           });
         }
       }
+
       return tasks;
     }
 
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
-      btn.innerText = "서버 연결 중...";
-
-      if (!studentId) {
-        alert('학생 정보가 없습니다. 다시 로그인해주세요.');
-        btn.disabled = false;
-        btn.innerText = "플래너 자동 생성!";
-        return;
-      }
-
-      const examStart = document.getElementById('startDate').value;
-      const examEnd = document.getElementById('endDate').value;
-      const planStart = new Date().toISOString().slice(0, 10);
-      const year = String(new Date(examStart).getFullYear() || new Date().getFullYear());
-      const month = new Date(examStart).getMonth() + 1;
-      const semester = month <= 6 ? '1학기' : '2학기';
-      const subjects = document.getElementById('subjectsInput').value
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-
-      if (!examStart || !examEnd) {
-        alert('시험 시작일/종료일을 입력해주세요.');
-        btn.disabled = false;
-        btn.innerText = "플래너 자동 생성!";
-        return;
-      }
-      if (new Date(examEnd) < new Date(examStart)) {
-        alert('시험 종료일은 시작일 이후여야 합니다.');
-        btn.disabled = false;
-        btn.innerText = "플래너 자동 생성!";
-        return;
-      }
-      if (!subjects.length) {
-        alert('최소 1개 과목을 입력해주세요.');
-        btn.disabled = false;
-        btn.innerText = "플래너 자동 생성!";
-        return;
-      }
-
-      const plannerData = {
-        student_id: studentId,
-        student_name: studentName,
-        exam_type: document.getElementById('examType').value,
-        exam_start_date: examStart,
-        exam_end_date: examEnd,
-        plan_start_date: planStart,
-        subjects: subjects.join(', '),
-        status: '진행중',
-        year,
-        semester
-      };
+      btn.innerText = '서버 연결 중...';
 
       try {
-        const res = await fetch('/tables/exam_planners', {
+        if (!studentId) {
+          alert('학생 정보가 없습니다. 다시 로그인해주세요.');
+          return;
+        }
+
+        const examStart = document.getElementById('startDate').value;
+        const examEnd = document.getElementById('endDate').value;
+        const planStart = new Date().toISOString().slice(0, 10);
+
+        if (!examStart || !examEnd) {
+          alert('시험 시작일/종료일을 입력해주세요.');
+          return;
+        }
+
+        if (new Date(examEnd) < new Date(examStart)) {
+          alert('시험 종료일은 시작일 이후여야 합니다.');
+          return;
+        }
+
+        const subjects = document.getElementById('subjectsInput').value
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+        if (!subjects.length) {
+          alert('최소 1개 과목을 입력해주세요.');
+          return;
+        }
+
+        const examStartDateObj = new Date(examStart);
+        const year = String(examStartDateObj.getFullYear() || new Date().getFullYear());
+        const month = examStartDateObj.getMonth() + 1;
+        const semester = month <= 6 ? '1학기' : '2학기';
+
+        const plannerData = {
+          student_id: studentId,
+          student_name: studentName,
+          exam_type: document.getElementById('examType').value,
+          exam_start_date: examStart,
+          exam_end_date: examEnd,
+          plan_start_date: planStart,
+          subjects: subjects.join(', '),
+          status: '진행중',
+          year,
+          semester
+        };
+
+        // 1) 플래너 생성
+        const plannerRes = await fetch('/tables/exam_planners', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(plannerData)
         });
 
-        if (res.ok) {
-          const plannerJson = await res.json();
-          const planner = plannerJson?.data || {};
-          const plannerId = planner.id;
-          if (!plannerId) throw new Error('플래너 ID를 받을 수 없습니다.');
+        if (!plannerRes.ok) {
+          const errText = await plannerRes.text();
+          throw new Error(`exam_planners 생성 실패: ${plannerRes.status} ${errText}`);
+        }
 
-          const tasks = buildAutoTasks({
-            plannerId,
-            studentId,
-            studentName,
-            startDate: planStart,
-            examStartDate: examStart,
-            subjects
+        const plannerJson = await plannerRes.json();
+        const plannerId = plannerJson?.data?.id;
+
+        if (!plannerId) {
+          throw new Error('플래너 ID를 받을 수 없습니다.');
+        }
+
+        // 2) 태스크 자동 생성
+        const tasks = buildAutoTasks({
+          plannerId,
+          studentId,
+          studentName,
+          startDate: planStart,
+          examStartDate: examStart,
+          subjects
+        });
+
+        for (const task of tasks) {
+          const taskRes = await fetch('/tables/planner_tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(task)
           });
 
-          for (const task of tasks) {
-            await fetch('/tables/planner_tasks', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(task)
-            });
+          if (!taskRes.ok) {
+            const errText = await taskRes.text();
+            throw new Error(`planner_tasks 생성 실패: ${taskRes.status} ${errText}`);
           }
-
-          alert(`✅ 시험 플래너가 생성되었습니다!\n자동 학습플랜 ${tasks.length}개를 생성했어요.`);
-          location.href = 'plan.html'; // 생성 후 학습 플랜 페이지로 이동
-        } else {
-          alert('❌ 서버 연결 실패: DB 설정을 확인해주세요.');
         }
+
+        alert(`✅ 시험 플래너가 생성되었습니다!\n자동 학습플랜 ${tasks.length}개를 생성했어요.`);
+        location.href = 'plan.html';
       } catch (e) {
         console.error(e);
-        alert('네트워크 오류가 발생했습니다.');
+        alert(`오류가 발생했습니다.\n${e.message || '네트워크 오류'}`);
       } finally {
         btn.disabled = false;
-        btn.innerText = "플래너 자동 생성!";
+        btn.innerText = '플래너 자동 생성!';
       }
     });
   </script>
