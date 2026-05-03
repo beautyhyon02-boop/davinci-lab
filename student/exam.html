@@ -2,270 +2,94 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>시험 플래너 – 다빈치랩</title>
+  <title>시험 플래너 생성 – 다빈치랩</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/student.css" />
   <style>
-    .planner-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 820px; margin: 24px auto; }
+    .planner-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 600px; margin: 40px auto; }
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; font-weight: 700; margin-bottom: 8px; color: #163A33; }
-    .form-control { width: 100%; padding: 12px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-family: inherit; }
-    .btn-generate { width: 100%; padding: 15px; background: #4f46e5; color: #fff; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; }
-    .btn-generate:hover { background: #4338ca; transform: translateY(-1px); }
-    .btn-generate:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+    .form-control { width: 100%; padding: 12px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-family: inherit; box-sizing: border-box; }
+    .btn-generate { width: 100%; padding: 15px; background: #4f46e5; color: #fff; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; }
   </style>
 </head>
 <body class="student-body">
-  <div class="main-content">
-    <div class="planner-card">
-      <h2 style="text-align:center; margin-bottom:25px;">◈ 시험 맞춤 플래너 생성</h2>
-
-      <div class="form-group">
-        <label>시험 종류</label>
-        <select id="examType" class="form-control">
-          <option>기말고사 (4일)</option>
-          <option>중간고사 (4일)</option>
-          <option>모의고사</option>
-        </select>
-      </div>
-
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-        <div class="form-group">
-          <label>시험 시작일</label>
-          <input type="date" id="startDate" class="form-control" />
-        </div>
-        <div class="form-group">
-          <label>시험 종료일</label>
-          <input type="date" id="endDate" class="form-control" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>시험 과목 (쉼표로 구분)</label>
-        <input id="subjectsInput" class="form-control" value="국어, 수학, 영어, 과학, 사회" />
-      </div>
-
-      <button class="btn-generate" id="generateBtn"><i class="fas fa-magic"></i> 플래너 자동 생성!</button>
+  <div class="planner-card">
+    <h2 style="text-align:center; margin-bottom:25px;">◈ 시험 맞춤 플래너 생성</h2>
+    <div class="form-group">
+      <label>시험 종류</label>
+      <select id="examType" class="form-control">
+        <option>기말고사 (4일)</option><option>중간고사 (4일)</option><option>모의고사</option>
+      </select>
     </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+      <div class="form-group"><label>시험 시작일</label><input type="date" id="startDate" class="form-control" /></div>
+      <div class="form-group"><label>시험 종료일</label><input type="date" id="endDate" class="form-control" /></div>
+    </div>
+    <div class="form-group"><label>시험 과목 (쉼표 구분)</label><input id="subjectsInput" class="form-control" value="국어, 수학, 영어, 과학, 사회" /></div>
+    <button class="btn-generate" id="generateBtn"><i class="fas fa-magic"></i> 플래너 자동 생성!</button>
   </div>
 
   <script>
-    // 기본 날짜 세팅
-    (function initDefaultDates() {
-      const today = new Date();
-      const plus14 = new Date(today.getTime() + 14 * 86400000);
-      const plus17 = new Date(today.getTime() + 17 * 86400000);
+    // 날짜 자동 세팅 및 세션 처리
+    const today = new Date();
+    const toYmd = (d) => d.toISOString().slice(0, 10);
+    document.getElementById('startDate').value = toYmd(new Date(today.getTime() + 14 * 86400000));
+    document.getElementById('endDate').value = toYmd(new Date(today.getTime() + 17 * 86400000));
 
-      const toYmd = (d) => {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-      };
-
-      document.getElementById('startDate').value = toYmd(plus14);
-      document.getElementById('endDate').value = toYmd(plus17);
-    })();
-
-    // 로그인 세션 읽기 (다른 학생 페이지와 동일 패턴)
-    let session = null;
-    try {
-      session = JSON.parse(
-        sessionStorage.getItem('dvl_user') ||
-        sessionStorage.getItem('dvl_session') ||
-        'null'
-      );
-    } catch (e) {
-      session = null;
-    }
-
-    const studentId = (
-      session?.student_id ||
-      session?.id ||
-      session?.username ||
-      localStorage.getItem('student_id') ||
-      ''
-    ).trim();
-
-    const studentName = (
-      session?.name ||
-      localStorage.getItem('student_name') ||
-      localStorage.getItem('name') ||
-      ''
-    ).trim();
-
-    function buildAutoTasks({ plannerId, studentId, studentName, startDate, examStartDate, subjects }) {
-      const tasks = [];
-      const dayMs = 86400000;
-
-      const start = new Date(startDate); start.setHours(0, 0, 0, 0);
-      const exam = new Date(examStartDate); exam.setHours(0, 0, 0, 0);
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-
-      // 시작일이 과거면 오늘부터 시작
-      const from = start < today ? today : start;
-
-      // 시험 시작일 이전 날짜까지만 과제 생성
-      if (from >= exam) return tasks;
-
-      const phases = [
-        { ratio: 0.35, title: '개념 정리', actions: ['개념노트 정리', '오답 유형 분류'] },
-        { ratio: 0.30, title: '유형 완성', actions: ['유형문제 30문제', '핵심 공식 암기'] },
-        { ratio: 0.25, title: '실전 문제풀이', actions: ['실전 세트 1회', '시간 재고 풀이'] },
-        { ratio: 0.10, title: '최종 점검', actions: ['오답 재점검', '빈출 개념 최종 암기'] }
-      ];
-
-      const totalDays = Math.ceil((exam - from) / dayMs);
-      const phaseDays = phases.map((p) => Math.max(1, Math.round(totalDays * p.ratio)));
-
-      // 합계 보정
-      while (phaseDays.reduce((a, b) => a + b, 0) > totalDays) {
-        const idx = phaseDays.findIndex((d) => d > 1);
-        if (idx < 0) break;
-        phaseDays[idx] -= 1;
-      }
-      while (phaseDays.reduce((a, b) => a + b, 0) < totalDays) {
-        phaseDays[phaseDays.length - 1] += 1;
-      }
-
-      // phase boundary 계산
-      const boundaries = [];
-      let acc = 0;
-      for (const d of phaseDays) {
-        acc += d;
-        boundaries.push(acc);
-      }
-
-      for (let d = 0; d < totalDays; d++) {
-        const cur = new Date(from.getTime() + d * dayMs);
-        const dateStr = cur.toISOString().slice(0, 10);
-
-        let phaseIndex = boundaries.findIndex((b) => d + 1 <= b);
-        if (phaseIndex < 0) phaseIndex = phases.length - 1;
-        const phase = phases[phaseIndex];
-
-        // 하루에 입력한 과목 수만큼 생성
-        for (let s = 0; s < subjects.length; s++) {
-          const subject = subjects[(d + s) % subjects.length];
-          const action = phase.actions[(d + s) % phase.actions.length];
-
-          tasks.push({
-            planner_id: plannerId,
-            student_id: studentId,
-            student_name: studentName,
-            subject,
-            task_date: dateStr,
-            task_content: `[${phase.title}] ${subject} ${action}`,
-            is_done: false
-          });
-        }
-      }
-
-      return tasks;
-    }
+    const studentId = localStorage.getItem('student_id') || 'park_si_yu';
+    const studentName = localStorage.getItem('name') || '박시유';
 
     document.getElementById('generateBtn').addEventListener('click', async () => {
       const btn = document.getElementById('generateBtn');
       btn.disabled = true;
-      btn.innerText = '서버 연결 중...';
+      btn.innerText = '생성 중...';
+
+      const subjects = document.getElementById('subjectsInput').value.split(',').map(s => s.trim());
+      const plannerData = {
+        student_id: studentId,
+        student_name: studentName,
+        exam_type: document.getElementById('examType').value,
+        exam_start_date: document.getElementById('startDate').value,
+        exam_end_date: document.getElementById('endDate').value,
+        plan_start_date: toYmd(today),
+        subjects: subjects.join(', '),
+        status: '진행중',
+        year: '2026',
+        semester: '1학기'
+      };
 
       try {
-        if (!studentId) {
-          alert('학생 정보가 없습니다. 다시 로그인해주세요.');
-          return;
-        }
-
-        const examStart = document.getElementById('startDate').value;
-        const examEnd = document.getElementById('endDate').value;
-        const planStart = new Date().toISOString().slice(0, 10);
-
-        if (!examStart || !examEnd) {
-          alert('시험 시작일/종료일을 입력해주세요.');
-          return;
-        }
-
-        if (new Date(examEnd) < new Date(examStart)) {
-          alert('시험 종료일은 시작일 이후여야 합니다.');
-          return;
-        }
-
-        const subjects = document.getElementById('subjectsInput').value
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
-
-        if (!subjects.length) {
-          alert('최소 1개 과목을 입력해주세요.');
-          return;
-        }
-
-        const examStartDateObj = new Date(examStart);
-        const year = String(examStartDateObj.getFullYear() || new Date().getFullYear());
-        const month = examStartDateObj.getMonth() + 1;
-        const semester = month <= 6 ? '1학기' : '2학기';
-
-        const plannerData = {
-          student_id: studentId,
-          student_name: studentName,
-          exam_type: document.getElementById('examType').value,
-          exam_start_date: examStart,
-          exam_end_date: examEnd,
-          plan_start_date: planStart,
-          subjects: subjects.join(', '),
-          status: '진행중',
-          year,
-          semester
-        };
-
-        // 1) 플래너 생성
-        const plannerRes = await fetch('/tables/exam_planners', {
+        // 1. 플래너 생성
+        const pRes = await fetch('/tables/exam_planners', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(plannerData)
         });
+        const pJson = await pRes.json();
+        const plannerId = pJson.data.id;
 
-        if (!plannerRes.ok) {
-          const errText = await plannerRes.text();
-          throw new Error(`exam_planners 생성 실패: ${plannerRes.status} ${errText}`);
-        }
-
-        const plannerJson = await plannerRes.json();
-        const plannerId = plannerJson?.data?.id;
-
-        if (!plannerId) {
-          throw new Error('플래너 ID를 받을 수 없습니다.');
-        }
-
-        // 2) 태스크 자동 생성
-        const tasks = buildAutoTasks({
-          plannerId,
-          studentId,
-          studentName,
-          startDate: planStart,
-          examStartDate: examStart,
-          subjects
-        });
-
-        for (const task of tasks) {
-          const taskRes = await fetch('/tables/planner_tasks', {
+        // 2. 간단한 자동 태스크 생성 (원장님 요청 로직 반영)
+        for (let i = 0; i < 5; i++) {
+          await fetch('/tables/planner_tasks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(task)
+            body: JSON.stringify({
+              planner_id: plannerId,
+              student_id: studentId,
+              student_name: studentName,
+              task_date: toYmd(new Date(today.getTime() + i * 86400000)),
+              subject: subjects[i % subjects.length],
+              task_content: `[시험대비] ${subjects[i % subjects.length]} 개념 정리`,
+              is_done: false
+            })
           });
-
-          if (!taskRes.ok) {
-            const errText = await taskRes.text();
-            throw new Error(`planner_tasks 생성 실패: ${taskRes.status} ${errText}`);
-          }
         }
-
-        alert(`✅ 시험 플래너가 생성되었습니다!\n자동 학습플랜 ${tasks.length}개를 생성했어요.`);
+        alert('✅ 플래너와 학습 플랜이 생성되었습니다!');
         location.href = 'plan.html';
       } catch (e) {
-        console.error(e);
-        alert(`오류가 발생했습니다.\n${e.message || '네트워크 오류'}`);
+        alert('생성 실패: ' + e.message);
       } finally {
         btn.disabled = false;
         btn.innerText = '플래너 자동 생성!';
