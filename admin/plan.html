@@ -67,19 +67,34 @@
     document.getElementById('planTbody').innerHTML = tasks.map(t => `<tr><td>${t.task_date}</td><td>${t.subject}</td><td>${t.target_amount}</td><td>${t.task_content}</td><td><button onclick="delPlan(${t.id})" style="border:none; background:none; color:red; cursor:pointer;">❌</button></td></tr>`).join('');
   }
 
-  async function savePlan() {
+ async function savePlan() {
     const item = {
-      student_id: curId, student_name: curName, task_date: document.getElementById('pDate').value,
-      subject: document.getElementById('pSubText').value, target_amount: document.getElementById('pTarget').value,
-      task_content: document.getElementById('pContent').value, planner_id: 0, is_done: false
+      student_id: curId, 
+      student_name: curName, 
+      task_date: document.getElementById('pDate').value,
+      subject: document.getElementById('pSubText').value, 
+      target_amount: document.getElementById('pTarget').value,
+      task_content: document.getElementById('pContent').value, 
+      planner_id: 0, 
+      is_done: false
     };
-    const res = await fetch('/tables/planner_tasks', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(item) });
-    if(res.ok) { alert('✅ 저장 성공!'); closeModal(); loadPlans(); } else { alert('❌ 저장 실패! DB 설정을 확인해주세요.'); }
-  }
 
-  function openModal() { document.getElementById('planModal').style.display = 'flex'; }
-  function closeModal() { document.getElementById('planModal').style.display = 'none'; }
-  async function delPlan(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/tables/planner_tasks/${id}`, {method:'DELETE'}); loadPlans(); } }
-</script>
+    const res = await fetch('/tables/planner_tasks', { 
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'}, 
+        body: JSON.stringify(item) 
+    });
+
+    const result = await res.json(); // 서버에서 보내는 진짜 답변을 읽습니다.
+
+    if(res.ok) { 
+      alert('✅ 저장 성공!'); 
+      closeModal(); 
+      loadPlans(); 
+    } else { 
+      // 💡 여기서 에러의 '진짜 이유'를 팝업으로 띄워줍니다.
+      alert('❌ 저장 실패!\n이유: ' + (result.error || '알 수 없는 에러')); 
+    }
+}
 </body>
 </html>
