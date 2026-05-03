@@ -1,43 +1,193 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8"><title>학습 플랜 관리 – 다빈치랩</title>
-  <link rel="stylesheet" href="../css/admin.css">
+  <meta charset="UTF-8">
+  <title>학습 플랜 관리 – 다빈치랩</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <style>
+    /* 화면 전체 레이아웃 정돈 */
+    body { font-family: 'Pretendard', sans-serif; margin: 0; background: #f8fafc; color: #1e293b; }
+    .admin-container { display: flex; min-height: 100vh; }
+    
+    /* 왼쪽 학생 목록 (크기 적절하게 조절) */
+    .sidebar { width: 220px; background: #163A33; color: white; padding: 20px; flex-shrink: 0; }
+    .sidebar h3 { font-size: 16px; margin-bottom: 20px; opacity: 0.8; }
+    .stu-btn { 
+      width: 100%; padding: 12px 15px; margin-bottom: 8px; border: none; border-radius: 10px;
+      text-align: left; cursor: pointer; background: rgba(255,255,255,0.1); color: white; transition: 0.3s;
+    }
+    .stu-btn.active { background: white; color: #163A33; font-weight: bold; }
+    .stu-btn:hover:not(.active) { background: rgba(255,255,255,0.2); }
+
+    /* 오른쪽 메인 영역 */
+    .main-content { flex-grow: 1; padding: 40px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .header h1 { margin: 0; font-size: 24px; color: #0f172a; }
+    
+    /* 플랜 추가 버튼 */
+    .btn-add { 
+      background: #4f46e5; color: white; border: none; padding: 12px 20px; 
+      border-radius: 10px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;
+    }
+    
+    /* 테이블 디자인 */
+    .plan-table { width: 100%; border-collapse: collapse; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .plan-table th { background: #f1f5f9; padding: 15px; text-align: center; font-size: 14px; border-bottom: 2px solid #e2e8f0; }
+    .plan-table td { padding: 15px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    .btn-del { color: #ef4444; border: none; background: none; cursor: pointer; font-size: 18px; }
+
+    /* 플랜 작성 팝업(모달) */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: white; padding: 30px; border-radius: 20px; width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+    .modal-content h3 { margin-top: 0; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-save { flex: 1; background: #163A33; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+    .btn-cancel { flex: 1; background: #e2e8f0; border: none; padding: 12px; border-radius: 8px; cursor: pointer; }
+  </style>
 </head>
-<body class="admin-body" style="padding:20px;">
-  <h1>학습 플랜 관리</h1>
-  <div id="studentTabs" style="margin: 20px 0; display: flex; gap: 10px;"></div>
-  <table border="1" style="width:100%; border-collapse: collapse;">
-    <thead><tr style="background:#eee;"><th>날짜</th><th>과목</th><th>내용</th><th>삭제</th></tr></thead>
-    <tbody id="planTbody"></tbody>
-  </table>
+<body>
 
-  <script>
-    let curId = null;
-    window.onload = loadStus;
+<div class="admin-container">
+  <!-- 왼쪽 사이드바: 학생 목록 -->
+  <div class="sidebar">
+    <h3>👥 학생 목록</h3>
+    <div id="studentList">
+      <p style="font-size: 12px; opacity: 0.6;">불러오는 중...</p>
+    </div>
+  </div>
 
-    async function loadStus() {
-      const res = await fetch('/tables/student_profiles');
-      const json = await res.json();
-      const container = document.getElementById('studentTabs');
-      container.innerHTML = (json.data || []).map(s => `
-        <button onclick="selStu('${s.student_id}')" style="padding:10px; cursor:pointer; background:${curId===s.student_id?'#163A33':'#fff'}; color:${curId===s.student_id?'#fff':'#000'}">
-          ${s.name}
-        </button>`).join('');
-      if(!curId && json.data.length > 0) selStu(json.data[0].student_id);
+  <!-- 오른쪽: 메인 플랜 관리 -->
+  <div class="main-content">
+    <div class="header">
+      <h1 id="selectedStuName">학생을 선택해주세요</h1>
+      <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> 플랜 작성</button>
+    </div>
+
+    <table class="plan-table">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>과목</th>
+          <th>내용</th>
+          <th>삭제</th>
+        </tr>
+      </thead>
+      <tbody id="planTbody">
+        <tr><td colspan="4" style="padding: 40px; opacity: 0.5;">학생을 선택하면 플랜이 표시됩니다.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 플랜 작성 모달 -->
+<div class="modal" id="planModal">
+  <div class="modal-content">
+    <h3>📝 새 플랜 작성</h3>
+    <div class="form-group"><label>날짜</label><input type="date" id="pDate"></div>
+    <div class="form-group"><label>과목</label><input type="text" id="pSub" placeholder="예: 국어, 영어"></div>
+    <div class="form-group"><label>목표량</label><input type="text" id="pTarget" placeholder="예: 30문제, 2단원"></div>
+    <div class="form-group"><label>학습 내용</label><textarea id="pContent" rows="3" placeholder="구체적인 학습 내용을 적어주세요"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-save" onclick="savePlan()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let curId = null;
+  let curName = "";
+
+  window.onload = () => {
+    document.getElementById('pDate').value = new Date().toISOString().split('T')[0];
+    loadStus();
+  };
+
+  async function loadStus() {
+    const res = await fetch('/tables/student_profiles');
+    const json = await res.json();
+    const students = json.data || [];
+    const container = document.getElementById('studentList');
+    
+    container.innerHTML = students.map(s => `
+      <button class="stu-btn ${curId === s.student_id ? 'active' : ''}" onclick="selStu('${s.student_id}', '${s.name}')">
+        ${s.name} <span style="font-size:11px; opacity:0.6;">(${s.school || ''})</span>
+      </button>`).join('');
+
+    if (!curId && students.length > 0) selStu(students[0].student_id, students[0].name);
+  }
+
+  function selStu(id, name) {
+    curId = id;
+    curName = name;
+    document.getElementById('selectedStuName').innerText = `${name} 학생 학습 플랜`;
+    loadStus(); // 버튼 활성화 상태 업데이트
+    loadPlans();
+  }
+
+  async function loadPlans() {
+    const res = await fetch(`/tables/planner_tasks?search=${curId}`);
+    const json = await res.json();
+    const tasks = (json.data || []).filter(t => t.student_id === curId);
+    
+    const tbody = document.getElementById('planTbody');
+    if(tasks.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="padding:40px; opacity:0.5;">등록된 플랜이 없습니다.</td></tr>`;
+      return;
     }
 
-    function selStu(id) { curId = id; loadStus(); loadPlans(); }
+    tbody.innerHTML = tasks.map(t => `
+      <tr>
+        <td>${t.task_date || '-'}</td>
+        <td style="font-weight:bold; color:#4f46e5;">${t.subject || '-'}</td>
+        <td style="text-align:left;">
+          <strong>[${t.target_amount || '일반'}]</strong> ${t.task_content || ''}
+        </td>
+        <td><button class="btn-del" onclick="delPlan(${t.id})"><i class="fas fa-trash-alt"></i></button></td>
+      </tr>`).join('');
+  }
 
-    async function loadPlans() {
-      const res = await fetch(`/tables/planner_tasks?search=${curId}`);
-      const json = await res.json();
-      document.getElementById('planTbody').innerHTML = (json.data || []).map(t => `
-        <tr><td>${t.task_date}</td><td>${t.subject}</td><td>${t.task_content}</td>
-        <td><button onclick="delPlan(${t.id})">❌</button></td></tr>`).join('');
+  async function savePlan() {
+    if(!curId) return alert('학생을 먼저 선택해주세요.');
+    
+    const item = {
+      student_id: curId,
+      student_name: curName,
+      task_date: document.getElementById('pDate').value,
+      subject: document.getElementById('pSub').value,
+      target_amount: document.getElementById('pTarget').value,
+      task_content: document.getElementById('pContent').value,
+      planner_id: 0,
+      is_done: false
+    };
+
+    const res = await fetch('/tables/planner_tasks', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(item)
+    });
+
+    if (res.ok) { 
+      alert('✅ 플랜이 성공적으로 저장되었습니다!'); 
+      closeModal(); 
+      loadPlans(); 
+    } else { 
+      alert('❌ 저장에 실패했습니다.'); 
     }
+  }
 
-    async function delPlan(id) { if(confirm('삭제?')) { await fetch(`/tables/planner_tasks/${id}`, {method:'DELETE'}); loadPlans(); } }
-  </script>
+  function openModal() { document.getElementById('planModal').style.display = 'flex'; }
+  function closeModal() { document.getElementById('planModal').style.display = 'none'; }
+  async function delPlan(id) { 
+    if(confirm('이 플랜을 삭제하시겠습니까?')) { 
+      await fetch(`/tables/planner_tasks/${id}`, { method: 'DELETE' }); 
+      loadPlans(); 
+    } 
+  }
+</script>
+
 </body>
 </html>
