@@ -1,23 +1,35 @@
-<!-- student/exam.html 전체 복사 -->
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>시험 플래너 생성 – 다빈치랩</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../css/student.css">
+  <style>
+    .planner-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-width: 500px; margin: 50px auto; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-weight: 700; margin-bottom: 8px; color: #163A33; }
+    .form-control { width: 100%; padding: 12px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-family: inherit; box-sizing: border-box; }
+    .btn-generate { width: 100%; padding: 15px; background: #4f46e5; color: #fff; border: none; border-radius: 15px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; }
+  </style>
 </head>
 <body class="student-body">
-  <div style="max-width:500px; margin:50px auto; padding:30px; background:#fff; border-radius:20px; shadow: 0 10px 25px rgba(0,0,0,0.1);">
-    <h2 style="text-align:center;">◈ 시험 플래너 생성</h2>
-    <div style="margin-top:20px;">
-      <label style="display:block; font-weight:bold; margin-bottom:5px;">시험 종류</label>
-      <input type="text" id="examType" value="기말고사" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;">
-      
-      <label style="display:block; font-weight:bold; margin-bottom:5px;">시험 시작일</label>
-      <input type="date" id="startDate" value="2026-07-01" style="width:100%; padding:10px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;">
-      
-      <button id="generateBtn" style="width:100%; padding:15px; background:#4f46e5; color:#fff; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">플래너 자동 생성!</button>
+  <div class="planner-card">
+    <h2 style="text-align:center; margin-bottom:25px;">◈ 시험 맞춤 플래너 생성</h2>
+    <div class="form-group">
+      <label>시험 종류</label>
+      <select id="examType" class="form-control">
+        <option>기말고사</option>
+        <option>중간고사</option>
+        <option>모의고사</option>
+      </select>
     </div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+      <div class="form-group"><label>시험 시작일</label><input type="date" id="startDate" class="form-control" value="2026-07-01"></div>
+      <div class="form-group"><label>시험 종료일</label><input type="date" id="endDate" class="form-control" value="2026-07-04"></div>
+    </div>
+    <button class="btn-generate" id="generateBtn"><i class="fas fa-magic"></i> 플래너 자동 생성!</button>
   </div>
 
   <script>
@@ -26,16 +38,17 @@
       btn.disabled = true;
       btn.innerText = "생성 중...";
 
-      // 💡 서버 로그(14개 항목) 규격에 완벽히 맞춘 데이터 구성
+      const studentId = localStorage.getItem('student_id') || 'park_si_yu';
+
       const plannerData = {
-        student_id: localStorage.getItem('student_id') || 'park_si_yu',
+        student_id: studentId,
         student_name: "박시유",
         exam_type: document.getElementById('examType').value,
         exam_start_date: document.getElementById('startDate').value,
-        exam_end_date: document.getElementById('startDate').value, // 임시 종료일
+        exam_end_date: document.getElementById('endDate').value,
         exam_days: "4",
         plan_start_date: new Date().toISOString().split('T')[0],
-        subjects: JSON.stringify(["국어", "영어", "수학"]), // JSON 형식 에러 방지 처리
+        subjects: JSON.stringify(["국어", "영어", "수학"]),
         schedule: "{}",
         scope: "{}",
         status: "진행중",
@@ -52,14 +65,14 @@
         });
 
         if (res.ok) {
-          alert('✅ 플래너 생성 성공! 이제 학습 플랜 이용이 가능합니다.');
+          alert('✅ 플래너 생성 성공!');
           location.href = 'plan.html';
         } else {
           const errText = await res.text();
           alert('❌ 생성 실패: ' + errText);
         }
       } catch (e) {
-        alert('네트워크 오류');
+        alert('네트워크 오류가 발생했습니다.');
       } finally {
         btn.disabled = false;
         btn.innerText = "플래너 자동 생성!";
