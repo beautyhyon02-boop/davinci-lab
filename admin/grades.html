@@ -297,8 +297,7 @@
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <!-- ⭐ 아래 링크를 dashboard.html로 수정했습니다 (213번 줄 부근) ⭐ -->
-      <a href="dashboard.html" class="sidebar-logo">
+      <a href="../index.html" class="sidebar-logo">
         <span class="sidebar-logo-icon">◈</span>
         <span class="sidebar-logo-text">DaVinci LaB</span>
       </a>
@@ -385,7 +384,7 @@
     </div>
   </aside>
 
-  <!-- ===== MAIN AREA ===== -->
+  <!-- ===== MAIN ===== -->
   <div class="admin-main" id="adminMain">
 
     <header class="admin-topbar">
@@ -407,10 +406,6 @@
         <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
           <i class="fas fa-bell"></i>
         </button>
-        <button class="topbar-icon-btn" title="홈페이지로">
-          <!-- ⭐ 아래 링크를 dashboard.html로 수정했습니다 (283번 줄 부근) ⭐ -->
-          <a href="dashboard.html" style="color:inherit"><i class="fas fa-home"></i></a>
-        </button>
         <div class="topbar-admin-user">
           <div class="topbar-admin-avatar" id="topbarAdminAvatar">박</div>
           <span id="topbarAdminName">박소현 대표</span>
@@ -428,8 +423,9 @@
           </div>
           <div>
             <h2>학생 성적 조회 (관리자)</h2>
-            <p>학생들이 입력한 내신 및 모의고사 성적을 조회합니다. 직접 입력 및 수정도 가능합니다.</p>
+            <p>학생들이 입력한 내신 및 모의고사 성적을 조회합니다. 수정·삭제 권한은 없습니다.</p>
             <span class="hero-badge" style="background:rgba(52,211,153,.15);color:#34d399;"><i class="fas fa-edit"></i> 입력 &amp; 조회</span>
+            <span class="hero-badge"><i class="fas fa-lock"></i> 수정 불가</span>
           </div>
         </div>
       </div>
@@ -473,7 +469,9 @@
 
       <!-- 카드 뷰 -->
       <div id="adminTabCards">
-        <div class="student-grade-grid" id="studentGradeGrid"></div>
+        <div class="student-grade-grid" id="studentGradeGrid">
+          <!-- JS로 렌더링 -->
+        </div>
       </div>
 
       <!-- 테이블 뷰 -->
@@ -498,66 +496,1139 @@
         </div>
       </div>
 
-    </div>
-  </div>
+    </div><!-- /page-content -->
+  </div><!-- /admin-main -->
 
-  <!-- 상세 드로어 및 스크립트 부분은 기존과 동일하므로 유지됩니다 -->
-  <!-- (생략 없이 이전과 동일한 로직 포함) -->
+  <!-- ─── 상세 드로어 ─── -->
   <div class="grade-drawer-overlay" id="drawerOverlay" onclick="closeDrawer(event)">
-    <div class="grade-drawer" id="gradeDrawer">
-        <!-- 기존 드로어 내용... -->
+    <div class="grade-drawer" id="gradeDrawer" style="position:relative">
+      <button class="drawer-close-btn" onclick="closeDrawerDirect()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="drawer-stu-header" id="drawerStuHeader">
+        <div class="drawer-avatar" id="drawerAvatar">김</div>
+        <div>
+          <div class="drawer-stu-name" id="drawerStuName">김다빈</div>
+          <div class="drawer-stu-meta" id="drawerStuMeta">중학교 2학년 · 2단계</div>
+        </div>
+      </div>
+
+      <div id="drawerActionBar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div id="drawerGradeSystemBadge"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-add-grade" onclick="openDrawerAddSchool()" style="display:none" id="btnAddSchool">
+            <i class="fas fa-plus" style="margin-right:5px;"></i>교과 추가
+          </button>
+          <button class="btn-add-grade" onclick="openDrawerAddMock()" style="display:none" id="btnAddMock"
+            style="background:var(--bg-section);color:var(--text-700);">
+            <i class="fas fa-plus" style="margin-right:5px;"></i>모의고사 추가
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-tab-bar">
+        <button class="drawer-tab-btn active" onclick="switchDrawerTab('school', this)">내신</button>
+        <button class="drawer-tab-btn" onclick="switchDrawerTab('mock', this)">모의고사</button>
+        <button class="drawer-tab-btn" onclick="switchDrawerTab('trend', this)">추이</button>
+      </div>
+
+      <!-- 내신 탭 -->
+      <div id="drawerSchool">
+        <!-- 드로어 전용 연도/학기 필터 -->
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+          <select id="drawerYear" onchange="renderDrawerSchool()"
+            style="padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg-card);color:var(--text-700);cursor:pointer;">
+            <option value="">전체 연도</option>
+            <option value="2025">2025년</option>
+            <option value="2024">2024년</option>
+            <option value="2023">2023년</option>
+          </select>
+          <select id="drawerSem" onchange="renderDrawerSchool()"
+            style="padding:5px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--bg-card);color:var(--text-700);cursor:pointer;">
+            <option value="">전체 학기</option>
+            <option value="1">1학기</option>
+            <option value="2">2학기</option>
+          </select>
+          <span id="drawerSchoolCount" style="font-size:12px;color:var(--text-300);margin-left:4px;"></span>
+        </div>
+        <table class="drawer-table" id="drawerSchoolTable">
+          <thead id="drawerSchoolThead"></thead>
+          <tbody id="drawerSchoolTbody"></tbody>
+        </table>
+        <!-- 내신 입력 인라인 폼 -->
+        <div id="drawerSchoolForm" style="display:none;margin-top:14px;background:var(--bg-section);border-radius:12px;padding:16px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-700);"><i class="fas fa-plus-circle" style="color:#34d399;margin-right:6px;"></i>교과 성적 추가</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">연도</label>
+              <input class="modal-input" id="dAddYear" type="number" min="2020" max="2030" placeholder="2025" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">학기</label>
+              <select class="modal-input" id="dAddSem">
+                <option value="1">1학기</option><option value="2">2학기</option>
+              </select></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">교과</label>
+              <input class="modal-input" id="dAddSubjectGroup" placeholder="국어" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">과목명</label>
+              <input class="modal-input" id="dAddSubjectName" placeholder="공통국어1" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">단위수</label>
+              <input class="modal-input" id="dAddCredit" type="number" min="1" max="10" placeholder="4" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">원점수</label>
+              <input class="modal-input" id="dAddScore" type="number" min="0" max="100" placeholder="88" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">과목평균</label>
+              <input class="modal-input" id="dAddAvg" type="number" placeholder="74.2" step="0.1" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">성취도율(%)</label>
+              <input class="modal-input" id="dAddAchieve" type="number" placeholder="34.5" step="0.1" /></div>
+            <div id="dRankWrap" style="display:none"><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">석차등급(1~9)</label>
+              <input class="modal-input" id="dAddRank" type="number" min="1" max="9" placeholder="2" /></div>
+            <div id="dRank5NumWrap" style="display:none"><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">석차등급</label>
+              <input class="modal-input" id="dAddRank5Num" type="number" min="1" max="9" placeholder="2" /></div>
+            <div id="dRank5Wrap" style="display:none"><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">성취등급(A~E)</label>
+              <select class="modal-input" id="dAddRank5">
+                <option value="A">A (90점↑)</option><option value="B">B (80~89)</option>
+                <option value="C">C (70~79)</option><option value="D">D (60~69)</option>
+                <option value="E">E (60미만)</option>
+              </select></div>
+            <div id="dRankMidWrap" style="display:none"><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">성취등급(A~E)</label>
+              <select class="modal-input" id="dAddRankMid">
+                <option value="A">A (90점↑)</option><option value="B">B (80~89)</option>
+                <option value="C">C (70~79)</option><option value="D">D (60~69)</option>
+                <option value="E">E (60미만)</option>
+              </select></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+            <button onclick="closeDrawerSchoolForm()" style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);cursor:pointer;font-size:13px;">취소</button>
+            <button onclick="saveDrawerSchoolGrade()" style="padding:8px 16px;border:none;border-radius:8px;background:#059669;color:#fff;font-weight:700;cursor:pointer;font-size:13px;"><i class="fas fa-save" style="margin-right:5px;"></i>저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 모의고사 탭 -->
+      <div id="drawerMock" style="display:none">
+        <div id="drawerMockList"></div>
+        <!-- 모의고사 입력 폼 -->
+        <div id="drawerMockForm" style="display:none;margin-top:14px;background:var(--bg-section);border-radius:12px;padding:16px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-700);"><i class="fas fa-plus-circle" style="color:#34d399;margin-right:6px;"></i>모의고사 성적 추가</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">시험 구분</label>
+              <select class="modal-input" id="dMockType">
+                <option>3월 전국연합</option><option>6월 전국연합</option>
+                <option>9월 전국연합</option><option>11월 전국연합</option><option>기타</option>
+              </select></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">시험일</label>
+              <input class="modal-input" id="dMockDate" type="date" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">국어</label>
+              <input class="modal-input" id="dMockKor" type="number" min="0" max="100" placeholder="88" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">국어 백분위</label>
+              <input class="modal-input" id="dMockKorPct" type="number" min="0" max="100" placeholder="72" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">수학</label>
+              <input class="modal-input" id="dMockMath" type="number" min="0" max="100" placeholder="92" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">수학 백분위</label>
+              <input class="modal-input" id="dMockMathPct" type="number" min="0" max="100" placeholder="88" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">영어</label>
+              <input class="modal-input" id="dMockEng" type="number" min="0" max="100" placeholder="96" /></div>
+            <div><label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">영어 백분위</label>
+              <input class="modal-input" id="dMockEngPct" type="number" min="0" max="100" placeholder="95" /></div>
+          </div>
+
+          <!-- ═══ 탐구 영역 (학년별 분기) ═══ -->
+          <div id="dMockSciWrap" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-500);margin-bottom:10px;">
+              <i class="fas fa-flask" style="color:#a78bfa;margin-right:5px;"></i>탐구 영역
+              <span id="dMockSciGradeNote" style="font-weight:400;color:#94a3b8;margin-left:6px;font-size:11px;"></span>
+            </div>
+
+            <!-- 고1·고2: 공통사회·공통과학 고정 -->
+            <div id="dMockSciCommon" style="display:none;">
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+                <div style="grid-column:1/3;">
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구① 공통사회</label>
+                  <input class="modal-input" id="dMockSci1" type="number" min="0" max="100" placeholder="점수" />
+                </div>
+                <div style="grid-column:3/5;">
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구① 백분위</label>
+                  <input class="modal-input" id="dMockSci1Pct" type="number" min="0" max="100" placeholder="백분위" />
+                </div>
+                <div style="grid-column:1/3;">
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구② 공통과학</label>
+                  <input class="modal-input" id="dMockSci2" type="number" min="0" max="100" placeholder="점수" />
+                </div>
+                <div style="grid-column:3/5;">
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구② 백분위</label>
+                  <input class="modal-input" id="dMockSci2Pct" type="number" min="0" max="100" placeholder="백분위" />
+                </div>
+              </div>
+            </div>
+
+            <!-- 고3: 선택 과목 자유 입력 -->
+            <div id="dMockSciHigh3" style="display:none;">
+              <div style="background:#ede9fe;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#5b21b6;">
+                <i class="fas fa-info-circle" style="margin-right:5px;"></i>
+                응시한 과목을 선택(또는 직접 입력)하세요.
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <!-- 탐구① -->
+                <div>
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구① 과목</label>
+                  <select class="modal-input" id="dMockSci1Name" onchange="handleSci1NameChange(this)">
+                    <option value="">-- 선택 --</option>
+                    <optgroup label="사회탐구">
+                      <option>생활과 윤리</option><option>윤리와 사상</option>
+                      <option>한국지리</option><option>세계지리</option>
+                      <option>동아시아사</option><option>세계사</option>
+                      <option>경제</option><option>정치와 법</option>
+                      <option>사회·문화</option>
+                    </optgroup>
+                    <optgroup label="과학탐구">
+                      <option>물리학Ⅰ</option><option>물리학Ⅱ</option>
+                      <option>화학Ⅰ</option><option>화학Ⅱ</option>
+                      <option>생명과학Ⅰ</option><option>생명과학Ⅱ</option>
+                      <option>지구과학Ⅰ</option><option>지구과학Ⅱ</option>
+                    </optgroup>
+                    <option value="직접입력">직접 입력...</option>
+                  </select>
+                </div>
+                <div id="dMockSci1NameCustomWrap" style="display:none;">
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">과목명 직접 입력</label>
+                  <input class="modal-input" id="dMockSci1NameCustom" type="text" placeholder="과목명 입력" />
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구① 점수</label>
+                  <input class="modal-input" id="dMockSci1H3" type="number" min="0" max="100" placeholder="점수" />
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구① 백분위</label>
+                  <input class="modal-input" id="dMockSci1PctH3" type="number" min="0" max="100" placeholder="백분위" />
+                </div>
+                <!-- 탐구② -->
+                <div>
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구② 과목</label>
+                  <select class="modal-input" id="dMockSci2Name" onchange="handleSci2NameChange(this)">
+                    <option value="">-- 선택 안 함 --</option>
+                    <optgroup label="사회탐구">
+                      <option>생활과 윤리</option><option>윤리와 사상</option>
+                      <option>한국지리</option><option>세계지리</option>
+                      <option>동아시아사</option><option>세계사</option>
+                      <option>경제</option><option>정치와 법</option>
+                      <option>사회·문화</option>
+                    </optgroup>
+                    <optgroup label="과학탐구">
+                      <option>물리학Ⅰ</option><option>물리학Ⅱ</option>
+                      <option>화학Ⅰ</option><option>화학Ⅱ</option>
+                      <option>생명과학Ⅰ</option><option>생명과학Ⅱ</option>
+                      <option>지구과학Ⅰ</option><option>지구과학Ⅱ</option>
+                    </optgroup>
+                    <option value="직접입력">직접 입력...</option>
+                  </select>
+                </div>
+                <div id="dMockSci2NameCustomWrap" style="display:none;">
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">과목명 직접 입력</label>
+                  <input class="modal-input" id="dMockSci2NameCustom" type="text" placeholder="과목명 입력" />
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구② 점수</label>
+                  <input class="modal-input" id="dMockSci2H3" type="number" min="0" max="100" placeholder="점수" />
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text-500);display:block;margin-bottom:4px;">탐구② 백분위</label>
+                  <input class="modal-input" id="dMockSci2PctH3" type="number" min="0" max="100" placeholder="백분위" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+            <button onclick="closeDrawerMockForm()" style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);cursor:pointer;font-size:13px;">취소</button>
+            <button onclick="saveDrawerMockGrade()" style="padding:8px 16px;border:none;border-radius:8px;background:#059669;color:#fff;font-weight:700;cursor:pointer;font-size:13px;"><i class="fas fa-save" style="margin-right:5px;"></i>저장</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 추이 탭 -->
+      <div id="drawerTrend" style="display:none">
+        <div style="font-size:12.5px;font-weight:700;color:var(--text-500);margin-bottom:6px;">
+          <i class="fas fa-chart-line" style="color:#34d399;margin-right:5px;"></i>내신 등급 추이 (학기별)
+        </div>
+        <div class="drawer-chart-wrap" style="height:200px;">
+          <canvas id="drawerTrendChart"></canvas>
+        </div>
+        <div style="font-size:12.5px;font-weight:700;color:var(--text-500);margin:16px 0 6px;">
+          <i class="fas fa-chart-bar" style="color:#a78bfa;margin-right:5px;"></i>모의고사 점수 추이
+        </div>
+        <div class="drawer-chart-wrap" style="height:200px;">
+          <canvas id="drawerMockChart"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="../js/dvl-session.js?v=20260430"></script>
-  <script src="../js/admin-common.js?v=20260430"></script>
-  <script src="../js/admin.js?v=20260430"></script>
   <script>
-    /* 성적 조회 JS 로직 (v16 기준 유지) */
-    const TABLE_STUDENTS_G = 'student_profiles';
-    const TABLE_GRADES_SCH = 'grades_school';
+    /* ═══════════════════════════════════════
+       관리자 성적 조회 로직 – v16 DB 연동
+    ═══════════════════════════════════════ */
+
+    /* ── DB 테이블 상수 ── */
+    const TABLE_STUDENTS_G  = 'student_profiles';
+    const TABLE_GRADES_SCH  = 'grades_school';
     const TABLE_GRADES_MOCK = 'grades_mock';
 
-    let ALL_STUDENTS = [];
+    // 전역 데이터
+    let ALL_STUDENTS    = [];
     let ALL_SCHOOL_GRADES = [];
-    let ALL_MOCK_GRADES = [];
-    let filteredStudents = [];
+    let ALL_MOCK_GRADES   = [];
+    let filteredStudents  = [];
 
+    /* ── 초기 로드 ── */
     async function initGradesAdmin() {
+      const grid = document.getElementById('studentGradeGrid');
+      if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size:24px;margin-bottom:10px;display:block;"></i>
+        데이터를 불러오는 중...</div>`;
+
       try {
         const [stuRes, schRes, mockRes] = await Promise.all([
           fetch(`/tables/${TABLE_STUDENTS_G}?limit=200`),
           fetch(`/tables/${TABLE_GRADES_SCH}?limit=500`),
           fetch(`/tables/${TABLE_GRADES_MOCK}?limit=300`),
         ]);
-        const stuData = await stuRes.json();
-        const schData = await schRes.json();
+        const stuData  = await stuRes.json();
+        const schData  = await schRes.json();
         const mockData = await mockRes.json();
 
-        ALL_STUDENTS = (stuData.data || []).filter(s => s.status !== 'inactive');
-        ALL_SCHOOL_GRADES = schData.data || [];
-        ALL_MOCK_GRADES = mockData.data || [];
+        ALL_STUDENTS      = (stuData.data  || []).filter(s => s.status !== 'inactive');
+        ALL_SCHOOL_GRADES = schData.data   || [];
+        ALL_MOCK_GRADES   = mockData.data  || [];
 
         filteredStudents = [...ALL_STUDENTS];
         renderCards();
-      } catch (e) { console.error('성적 로드 실패:', e); }
+      } catch (e) {
+        console.error('성적 데이터 로드 실패:', e);
+        if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#ef4444;">
+          <i class="fas fa-exclamation-circle" style="font-size:24px;margin-bottom:10px;display:block;"></i>
+          데이터를 불러오지 못했습니다.</div>`;
+      }
     }
 
-    function renderCards() {
-        // 기존 카드 렌더링 로직...
+    /* ── 학생 내신 성적 조회 (DB) ── */
+    function getStuSchool(studentId, year, sem) {
+      return ALL_SCHOOL_GRADES.filter(g =>
+        g.student_id === studentId &&
+        (!year || String(g.year) === String(year)) &&
+        (!sem  || String(g.semester) === String(sem))
+      );
     }
 
+    /* ── 학생 모의고사 성적 조회 (DB) ── */
+    function getStuMock(studentId) {
+      return ALL_MOCK_GRADES
+        .filter(m => m.student_id === studentId)
+        .sort((a, b) => (b.examDate || '').localeCompare(a.examDate || ''));
+    }
+
+    /* ── 학년별 등급제 헬퍼 (관리자용) ── */
+    function getGradeTypeAdmin(gl) {
+      if (gl === '고3' || gl === '3') return 'grade9';
+      if (['고2','고1','중3','2','1'].includes(String(gl))) return 'grade5';
+      return 'gradeMid'; // 중학교 1~2: 5등급 A~E (90/80/70/60/미만)
+    }
+    const GRADE_META_ADMIN = {
+      grade9:   { label:'9등급제', rankKey:'rank',    col:'석차등급' },
+      grade5:   { label:'5등급(학점제)', rankKey:'rank5', col:'성취등급' },
+      gradeMid: { label:'5등급(A~E)', rankKey:'rankMid', col:'성취등급' },
+    };
+
+    let currentDrawerStudent = null;
+    let drawerTrendObj = null, drawerMockObj = null;
+
+    /* ── 탭 전환 ── */
     function switchAdminTab(tab, btn) {
       document.getElementById('adminTabCards').style.display = tab === 'cards' ? '' : 'none';
       document.getElementById('adminTabTable').style.display = tab === 'table' ? '' : 'none';
       document.querySelectorAll('.ga-tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      if (tab === 'table') renderTableView();
     }
 
+    /* ── 필터 ── */
+    function applyFilter() {
+      const g = document.getElementById('filterGrade').value;
+      const q = document.getElementById('filterSearch').value.trim().toLowerCase();
+      filteredStudents = ALL_STUDENTS.filter(s => {
+        const gradeStr = s.grade ? `${s.grade}학년` : '';
+        return (!g || gradeStr.includes(g) || (s.school || '').includes(g)) &&
+               (!q || (s.name || '').includes(q) || (s.school || '').includes(q));
+      });
+      renderCards();
+      renderTableView();
+    }
+
+    /* ── 카드 렌더링 ── */
+    function renderCards() {
+      const grid = document.getElementById('studentGradeGrid');
+      if (!filteredStudents.length) {
+        grid.innerHTML = `<div class="ga-empty" style="grid-column:1/-1">
+          <i class="fas fa-search"></i><p>검색 결과가 없습니다.</p></div>`;
+        return;
+      }
+      grid.innerHTML = filteredStudents.map(s => {
+        const year = document.getElementById('filterYear').value;
+        const sem  = document.getElementById('filterSem').value;
+        const sgData   = getStuSchool(s.student_id, year, sem);
+        const mockList = getStuMock(s.student_id);
+        const avgRank  = calcAvgRank(sgData);
+        const latest   = mockList[0];
+        const hasData  = sgData.length > 0;
+        const gradeLabel = s.grade ? `${s.grade}학년` : '-';
+        const stageLabel = s.stage || '-';
+        const chips = hasData ? `
+          <div class="sg-rank-chips">
+            ${avgRank ? `<span class="sg-chip">내신<span class="sg-chip-value" style="margin-left:4px">${avgRank}</span></span>` : ''}
+            ${latest ? `<span class="sg-chip">국어 <span class="sg-chip-value">${latest.kor || '-'}점</span></span>
+            <span class="sg-chip">수학 <span class="sg-chip-value">${latest.math || '-'}점</span></span>` : ''}
+          </div>` : `<p class="sg-no-data"><i class="fas fa-clock" style="margin-right:5px"></i>성적 미입력</p>`;
+        return `
+        <div class="sg-card" onclick="openDrawer('${s.student_id}')">
+          <div class="sg-card-header">
+            <div class="sg-avatar">${(s.name||'?')[0]}</div>
+            <div>
+              <div class="sg-name">${s.name || '-'}</div>
+              <div class="sg-meta">${s.school || '-'} · ${gradeLabel} · ${stageLabel}</div>
+            </div>
+          </div>
+          ${chips}
+          <div class="sg-updated" style="margin-top:8px">
+            <i class="fas fa-edit" style="color:#34d399;margin-right:4px"></i>열람 · 직접 입력
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    /* ── 테이블 뷰 ── */
+    function renderTableView() {
+      const tbody = document.getElementById('adminGradesTbody');
+      const year = document.getElementById('filterYear').value;
+      const sem  = document.getElementById('filterSem').value;
+      if (!filteredStudents.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-300)">검색 결과 없음</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = filteredStudents.map(s => {
+        const sg = getStuSchool(s.student_id, year, sem);
+        const mk = getStuMock(s.student_id)[0];
+        const avg = calcAvgRank(sg);
+        return `
+        <tr>
+          <td><strong>${s.name || '-'}</strong></td>
+          <td>${s.grade ? s.grade+'학년' : '-'}</td>
+          <td>${s.stage || '-'}</td>
+          <td style="text-align:center;font-weight:700">${avg || '–'}</td>
+          <td style="text-align:center">${mk ? mk.kor : '–'}</td>
+          <td style="text-align:center">${mk ? mk.math : '–'}</td>
+          <td style="text-align:center">${mk ? mk.eng : '–'}</td>
+          <td style="font-size:12px;color:var(--text-300)">${mk ? mk.examDate : '–'}</td>
+          <td><button class="btn-view-detail" onclick="openDrawer('${s.student_id}')">
+            <i class="fas fa-search"></i>상세
+          </button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ── 드로어 열기 ── */
+    function openDrawer(studentId) {
+      const s = ALL_STUDENTS.find(x => x.student_id === studentId);
+      if (!s) return;
+      currentDrawerStudent = { ...s, id: s.student_id };
+      document.getElementById('drawerAvatar').textContent  = (s.name || '?')[0];
+      document.getElementById('drawerStuName').textContent = s.name || '-';
+      document.getElementById('drawerStuMeta').textContent =
+        `${s.school || '-'} · ${s.grade ? s.grade+'학년' : '-'} · ${s.stage || '-'}`;
+      // 입력 버튼 표시
+      document.getElementById('btnAddSchool').style.display = '';
+      document.getElementById('btnAddMock').style.display   = '';
+      renderDrawerSchool();
+      renderDrawerMock();
+      switchDrawerTab('school', document.querySelector('.drawer-tab-btn'));
+      document.getElementById('drawerOverlay').classList.add('show');
+    }
+    function closeDrawer(e) {
+      if (e.target === document.getElementById('drawerOverlay'))
+        document.getElementById('drawerOverlay').classList.remove('show');
+    }
+    function closeDrawerDirect() {
+      document.getElementById('drawerOverlay').classList.remove('show');
+    }
+
+    function switchDrawerTab(tab, btn) {
+      ['drawerSchool','drawerMock','drawerTrend'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+      });
+      document.querySelectorAll('.drawer-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('drawer' + tab.charAt(0).toUpperCase() + tab.slice(1)).style.display = '';
+      btn.classList.add('active');
+      // 탭에 맞게 추가 버튼 표시/숨김
+      const isSchool = tab === 'school';
+      const isMock   = tab === 'mock';
+      document.getElementById('btnAddSchool').style.display = isSchool ? '' : 'none';
+      document.getElementById('btnAddMock').style.display   = isMock   ? '' : 'none';
+      if (tab === 'trend') renderDrawerCharts();
+    }
+
+    /* ── 내신 추가 폼 ── */
+    function openDrawerAddSchool() {
+      const form = document.getElementById('drawerSchoolForm');
+      form.style.display = form.style.display === 'none' ? '' : 'none';
+      if (form.style.display !== 'none') {
+        // 연도 기본값 설정
+        const yEl = document.getElementById('dAddYear');
+        if (yEl && !yEl.value) yEl.value = new Date().getFullYear();
+        // 등급 타입에 따라 입력 필드 표시
+        const gt = getGradeTypeAdmin(currentDrawerStudent?.grade || '');
+        document.getElementById('dRankWrap').style.display    = gt==='grade9' ? '' : 'none';
+        document.getElementById('dRank5NumWrap').style.display= gt==='grade5' ? '' : 'none';
+        document.getElementById('dRank5Wrap').style.display   = gt==='grade5' ? '' : 'none';
+        document.getElementById('dRankMidWrap').style.display = gt==='gradeMid' ? '' : 'none';
+      }
+    }
+    function closeDrawerSchoolForm() {
+      document.getElementById('drawerSchoolForm').style.display = 'none';
+    }
+    async function saveDrawerSchoolGrade() {
+      if (!currentDrawerStudent) return;
+      const sid   = currentDrawerStudent.student_id || currentDrawerStudent.id;
+      const year  = document.getElementById('dAddYear')?.value    ||
+                    document.getElementById('drawerYear')?.value  ||
+                    document.getElementById('filterYear').value;
+      const sem   = document.getElementById('dAddSem')?.value     ||
+                    document.getElementById('drawerSem')?.value   ||
+                    document.getElementById('filterSem').value;
+      const gl    = currentDrawerStudent.grade ? currentDrawerStudent.grade + '학년' : '고1';
+      const gt    = getGradeTypeAdmin(currentDrawerStudent.grade || '');
+      const rec = {
+        student_id   : sid,
+        year, semester: sem, gradeLevel: gl, gradeType: gt,
+        subjectGroup : document.getElementById('dAddSubjectGroup').value.trim(),
+        subjectName  : document.getElementById('dAddSubjectName').value.trim(),
+        credit       : Number(document.getElementById('dAddCredit').value) || 4,
+        score        : Number(document.getElementById('dAddScore').value)  || 0,
+        avg          : Number(document.getElementById('dAddAvg').value)    || 0,
+        achieveRate  : Number(document.getElementById('dAddAchieve').value)|| 0,
+      };
+      if (!rec.subjectGroup || !rec.subjectName) { alert('교과와 과목명을 입력하세요.'); return; }
+      if (gt==='grade9')  rec.rank    = Number(document.getElementById('dAddRank').value)   || null;
+      if (gt==='grade5')  { rec.rank5Num = Number(document.getElementById('dAddRank5Num').value)||null; rec.rank5=document.getElementById('dAddRank5').value; }
+      if (gt==='gradeMid') rec.rankMid = document.getElementById('dAddRankMid').value;
+
+      const btn = event.target;
+      btn.disabled = true; btn.textContent = '저장 중…';
+      try {
+        const res = await fetch('/tables/grades_school', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(rec)
+        });
+        if (!res.ok) throw new Error();
+        // 전역 캐시 갱신
+        const newRec = await res.json();
+        ALL_SCHOOL_GRADES.push(newRec);
+        closeDrawerSchoolForm();
+        // 폼 초기화
+        ['dAddSubjectGroup','dAddSubjectName','dAddCredit','dAddScore','dAddAvg','dAddAchieve','dAddRank','dAddRank5Num','dAddYear']
+          .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+        renderDrawerSchool();
+        renderCards();
+        renderTableView();
+        showToast('내신 성적이 저장되었습니다.');
+      } catch(e) {
+        alert('저장 실패. 다시 시도해주세요.');
+      } finally {
+        btn.disabled=false; btn.innerHTML='<i class="fas fa-save" style="margin-right:5px;"></i>저장';
+      }
+    }
+
+    /* ── 탐구 과목 직접입력 토글 ── */
+    function handleSci1NameChange(sel) {
+      document.getElementById('dMockSci1NameCustomWrap').style.display =
+        sel.value === '직접입력' ? '' : 'none';
+    }
+    function handleSci2NameChange(sel) {
+      document.getElementById('dMockSci2NameCustomWrap').style.display =
+        sel.value === '직접입력' ? '' : 'none';
+    }
+
+    /* ── 학년별 탐구 UI 전환 ── */
+    function initMockSciUI() {
+      const stu   = currentDrawerStudent;
+      const grade = stu?.grade || '';
+      const note  = document.getElementById('dMockSciGradeNote');
+      const common = document.getElementById('dMockSciCommon');
+      const high3  = document.getElementById('dMockSciHigh3');
+
+      if (grade === '고3') {
+        common.style.display = 'none';
+        high3.style.display  = '';
+        if (note) note.textContent = '(고3: 응시 과목 직접 선택)';
+      } else {
+        common.style.display = '';
+        high3.style.display  = 'none';
+        if (note) note.textContent = grade ? `(${grade}: 공통사회·공통과학 고정)` : '';
+      }
+    }
+
+    /* ── 모의고사 추가 폼 ── */
+    function openDrawerAddMock() {
+      const form = document.getElementById('drawerMockForm');
+      const isOpen = form.style.display !== 'none';
+      form.style.display = isOpen ? 'none' : '';
+      if (!isOpen) initMockSciUI();  // 열 때마다 학년 기반 UI 초기화
+    }
+    function closeDrawerMockForm() {
+      document.getElementById('drawerMockForm').style.display = 'none';
+    }
+
+    async function saveDrawerMockGrade() {
+      if (!currentDrawerStudent) return;
+      const sid   = currentDrawerStudent.student_id || currentDrawerStudent.id;
+      const grade = currentDrawerStudent.grade || '';
+      const isHigh3 = grade === '고3';
+
+      /* ── 탐구 값 수집 ── */
+      let sci1Name = '', sci1 = null, sci1Pct = null;
+      let sci2Name = '', sci2 = null, sci2Pct = null;
+
+      if (isHigh3) {
+        // 고3: 선택 드롭다운 + 직접입력
+        const s1sel = document.getElementById('dMockSci1Name').value;
+        sci1Name = s1sel === '직접입력'
+          ? (document.getElementById('dMockSci1NameCustom').value.trim() || '')
+          : s1sel;
+        sci1    = Number(document.getElementById('dMockSci1H3').value)    || null;
+        sci1Pct = Number(document.getElementById('dMockSci1PctH3').value) || null;
+
+        const s2sel = document.getElementById('dMockSci2Name').value;
+        sci2Name = s2sel === '직접입력'
+          ? (document.getElementById('dMockSci2NameCustom').value.trim() || '')
+          : (s2sel === '' ? '' : s2sel);
+        sci2    = Number(document.getElementById('dMockSci2H3').value)    || null;
+        sci2Pct = Number(document.getElementById('dMockSci2PctH3').value) || null;
+      } else {
+        // 고1·고2: 공통사회·공통과학 고정
+        sci1Name = '공통사회';
+        sci1     = Number(document.getElementById('dMockSci1').value)    || null;
+        sci1Pct  = Number(document.getElementById('dMockSci1Pct').value) || null;
+        sci2Name = '공통과학';
+        sci2     = Number(document.getElementById('dMockSci2').value)    || null;
+        sci2Pct  = Number(document.getElementById('dMockSci2Pct').value) || null;
+      }
+
+      const rec = {
+        student_id : sid,
+        examType   : document.getElementById('dMockType').value,
+        examDate   : document.getElementById('dMockDate').value,
+        kor        : Number(document.getElementById('dMockKor').value)     || null,
+        korPct     : Number(document.getElementById('dMockKorPct').value)  || null,
+        math       : Number(document.getElementById('dMockMath').value)    || null,
+        mathPct    : Number(document.getElementById('dMockMathPct').value) || null,
+        eng        : Number(document.getElementById('dMockEng').value)     || null,
+        engPct     : Number(document.getElementById('dMockEngPct').value)  || null,
+        sci1Name, sci1, sci1Pct,
+        sci2Name, sci2, sci2Pct,
+      };
+      if (!rec.examDate) { alert('시험 날짜를 입력하세요.'); return; }
+
+      const btn = event.target;
+      btn.disabled = true; btn.textContent = '저장 중…';
+      try {
+        const res = await fetch('/tables/grades_mock', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(rec)
+        });
+        if (!res.ok) throw new Error();
+        const newRec = await res.json();
+        ALL_MOCK_GRADES.push(newRec);
+        closeDrawerMockForm();
+        // 폼 초기화
+        ['dMockDate','dMockKor','dMockKorPct','dMockMath','dMockMathPct',
+         'dMockEng','dMockEngPct','dMockSci1','dMockSci1Pct','dMockSci2','dMockSci2Pct',
+         'dMockSci1H3','dMockSci1PctH3','dMockSci2H3','dMockSci2PctH3',
+         'dMockSci1NameCustom','dMockSci2NameCustom']
+          .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+        ['dMockSci1Name','dMockSci2Name'].forEach(id => {
+          const el=document.getElementById(id); if(el) el.selectedIndex=0;
+        });
+        renderDrawerMock();
+        showToast('모의고사 성적이 저장되었습니다.');
+      } catch(e) {
+        alert('저장 실패. 다시 시도해주세요.');
+      } finally {
+        btn.disabled=false; btn.innerHTML='<i class="fas fa-save" style="margin-right:5px;"></i>저장';
+      }
+    }
+
+    /* ── 토스트 알림 ── */
+    function showToast(msg) {
+      let t = document.getElementById('gradeToast');
+      if (!t) {
+        t = document.createElement('div'); t.id='gradeToast';
+        t.style.cssText='position:fixed;bottom:24px;right:24px;background:#059669;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s;';
+        document.body.appendChild(t);
+      }
+      t.textContent=msg; t.style.opacity='1';
+      setTimeout(()=>{ t.style.opacity='0'; }, 2500);
+    }
+
+    function renderDrawerSchool() {
+      if (!currentDrawerStudent) return;
+      const dYear = document.getElementById('drawerYear')?.value  || '';
+      const dSem  = document.getElementById('drawerSem')?.value   || '';
+      const data = getStuSchool(currentDrawerStudent.student_id || currentDrawerStudent.id, dYear, dSem);
+      const tbody = document.getElementById('drawerSchoolTbody');
+      const thead = document.getElementById('drawerSchoolThead');
+
+      // 학년별 등급제 파악
+      const gl = currentDrawerStudent.grade ? currentDrawerStudent.grade + '학년' : '고1';
+      const gt = getGradeTypeAdmin(currentDrawerStudent.grade || 'high');
+      const gmeta = GRADE_META_ADMIN[gt];
+
+      // 배너 업데이트
+      const badge = document.getElementById('drawerGradeSystemBadge');
+      if (badge) {
+        const bClasses = {grade9:'rank-1',grade5:'rank-A5',gradeMid:'rank-Amid'};
+        badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151">
+          <i class="fas fa-graduation-cap"></i>${gl} · ${gmeta.label}
+        </span>`;
+      }
+
+      // 헤더
+      const rankColLabel = gmeta.col;
+      thead.innerHTML = `<tr>
+        <th>교과 / 과목</th>
+        <th style="text-align:center">단위</th>
+        <th style="text-align:center">원점수</th>
+        <th style="text-align:center">평균</th>
+        <th style="text-align:center">성취도율</th>
+        <th style="text-align:center">${rankColLabel}</th>
+        <th style="text-align:center;width:76px">관리</th>
+      </tr>`;
+
+      if (!data.length) {
+        const cntEl = document.getElementById('drawerSchoolCount');
+        if (cntEl) cntEl.textContent = '성적 없음';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-300)">입력된 성적이 없습니다.</td></tr>`;
+        return;
+      }
+      const cntEl = document.getElementById('drawerSchoolCount');
+      if (cntEl) cntEl.textContent = `총 ${data.length}개 과목`;
+
+      tbody.innerHTML = data.map(g => {
+        let rankCell = '';
+        if (gt === 'grade9') {
+          rankCell = `<span class="rank-badge rank-${g.rank}">${g.rank ?? '–'}</span>`;
+        } else if (gt === 'grade5') {
+          rankCell = `<span class="rank-badge rank-${g.rank5}5">${g.rank5 ?? '–'}</span>`;
+        } else {
+          rankCell = `<span class="rank-badge rank-${g.rankMid}mid">${g.rankMid ?? '–'}</span>`;
+        }
+        return `<tr id="gr-row-${g.id}">
+          <td><strong>${g.subjectGroup}</strong> <span style="color:var(--text-500);font-size:12px">${g.subjectName !== g.subjectGroup ? g.subjectName : ''}</span></td>
+          <td style="text-align:center">${g.credit}</td>
+          <td style="text-align:center;font-weight:700">${g.score}</td>
+          <td style="text-align:center;color:var(--text-500)">${g.avg}</td>
+          <td style="text-align:center;color:var(--text-500);font-size:12px">${g.achieveRate != null ? g.achieveRate + '%' : '–'}</td>
+          <td style="text-align:center">${rankCell}</td>
+          <td style="text-align:center;white-space:nowrap;">
+            <button onclick="startEditGrade('${g.id}')"
+              title="수정" style="border:none;background:none;cursor:pointer;color:#059669;font-size:13px;padding:2px 5px;border-radius:5px;"
+              onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='none'">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button onclick="deleteSchoolGrade('${g.id}')"
+              title="삭제" style="border:none;background:none;cursor:pointer;color:#ef4444;font-size:13px;padding:2px 5px;border-radius:5px;"
+              onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderDrawerMock() {
+      if (!currentDrawerStudent) return;
+      const mocks = getStuMock(currentDrawerStudent.student_id || currentDrawerStudent.id);
+      const list  = document.getElementById('drawerMockList');
+      if (!mocks.length) {
+        list.innerHTML = `<p style="text-align:center;padding:24px;color:var(--text-300)">입력된 모의고사 성적이 없습니다.</p>`;
+        return;
+      }
+      list.innerHTML = mocks.map(m => {
+        const sci1Label = m.sci1Name ? `탐구① ${m.sci1Name}` : '탐구①';
+        const sci2Label = m.sci2Name ? `탐구② ${m.sci2Name}` : '탐구②';
+        const subs = [
+          { name:'국어', score:m.kor,  pct:m.korPct  },
+          { name:'수학', score:m.math, pct:m.mathPct },
+          { name:'영어', score:m.eng,  pct:m.engPct  },
+          ...(m.sci1 != null ? [{ name: sci1Label, score:m.sci1, pct:m.sci1Pct }] : []),
+          ...(m.sci2 != null ? [{ name: sci2Label, score:m.sci2, pct:m.sci2Pct }] : []),
+        ];
+        return `<div style="margin-bottom:16px;background:var(--bg-section);border-radius:12px;padding:14px 16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:13.5px;font-weight:700">${m.examType} <span style="color:var(--text-300);font-size:12px;margin-left:6px">${m.examDate}</span></span>
+            <button onclick="deleteMockGrade('${m.id}')"
+              title="삭제" style="border:none;background:none;cursor:pointer;color:#ef4444;font-size:12px;padding:3px 8px;border-radius:6px;"
+              onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+              <i class="fas fa-trash-alt"></i> 삭제
+            </button>
+          </div>
+          ${subs.map(s => `
+          <div class="mock-subject-row">
+            <span class="mock-subject-name">${s.name}</span>
+            <div class="mock-score-wrap">
+              <div>
+                <div class="mock-score">${s.score ?? '–'}</div>
+                <div class="mock-pct">백분위 ${s.pct ?? '–'}</div>
+              </div>
+              <div class="mock-bar"><div class="mock-fill" style="width:${s.score ?? 0}%"></div></div>
+            </div>
+          </div>`).join('')}
+        </div>`;
+      }).join('');
+    }
+
+    function renderDrawerCharts() {
+      if (!currentDrawerStudent) return;
+      const sid = currentDrawerStudent.student_id || currentDrawerStudent.id;
+      const gt  = getGradeTypeAdmin(currentDrawerStudent.grade || '');
+
+      /* ── ① 내신 추이 차트 (실데이터) ── */
+      // 연도-학기별로 그룹핑하여 평균 등급 계산
+      const semMap = {};
+      ALL_SCHOOL_GRADES
+        .filter(g => g.student_id === sid)
+        .forEach(g => {
+          const key = `${g.year||'?'}-${g.semester||'?'}`;
+          if (!semMap[key]) semMap[key] = [];
+          semMap[key].push(g);
+        });
+
+      const semKeys = Object.keys(semMap).sort();
+      const trendLabels = semKeys.map(k => k.replace('-', '학년 '));
+      const trendData   = semKeys.map(k => {
+        const grp = semMap[k];
+        if (!grp.length) return null;
+        // grade9는 수치 평균, 나머지는 A=1 B=2 C=3 D=4 E=5 변환
+        if (gt === 'grade9' || grp[0].rank != null) {
+          const tot = grp.reduce((a,g)=>a+Number(g.credit||1),0);
+          if (!tot) return null;
+          return +(grp.reduce((a,g)=>a+Number(g.rank||5)*Number(g.credit||1),0)/tot).toFixed(2);
+        } else {
+          const scoreMap = {A:1,B:2,C:3,D:4,E:5};
+          const key = gt==='grade5' ? 'rank5' : 'rankMid';
+          const vals = grp.filter(g=>g[key]).map(g=>scoreMap[g[key]]||3);
+          if (!vals.length) return null;
+          return +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2);
+        }
+      });
+
+      const ctx1 = document.getElementById('drawerTrendChart').getContext('2d');
+      if (drawerTrendObj) drawerTrendObj.destroy();
+
+      if (!semKeys.length) {
+        ctx1.clearRect(0,0,ctx1.canvas.width,ctx1.canvas.height);
+        ctx1.fillStyle='#9ca3af'; ctx1.font='14px sans-serif'; ctx1.textAlign='center';
+        ctx1.fillText('내신 데이터가 없습니다.',ctx1.canvas.width/2,ctx1.canvas.height/2);
+      } else {
+        const isLetterGrade = (gt !== 'grade9');
+        const yLabel = isLetterGrade ? '등급 (A=1)' : '석차등급';
+        drawerTrendObj = new Chart(ctx1, {
+          type: 'line',
+          data: {
+            labels: trendLabels,
+            datasets: [{ label:'내신 평균',
+              data: trendData,
+              borderColor:'#34d399', backgroundColor:'rgba(52,211,153,.08)',
+              borderWidth:2.5, pointRadius:5, tension:.35, fill:true, spanGaps:true }]
+          },
+          options: {
+            responsive:true, maintainAspectRatio:false,
+            scales: {
+              y:{ reverse:true, min:1, max: isLetterGrade?5:9,
+                  ticks:{ stepSize:1, color:'#6B7280',
+                    callback: v => isLetterGrade ? (['','A','B','C','D','E'][v]||v) : v+'등급' },
+                  grid:{color:'rgba(0,0,0,.05)'},
+                  title:{display:true, text:yLabel, color:'#6B7280', font:{size:10}} },
+              x:{ ticks:{color:'#6B7280',font:{size:10}}, grid:{display:false} }
+            },
+            plugins:{ legend:{display:false},
+              tooltip:{ callbacks:{ label: c => {
+                if (!c.parsed.y) return '–';
+                return isLetterGrade ? (['','A','B','C','D','E'][Math.round(c.parsed.y)]||c.parsed.y) + '등급 수준' : c.parsed.y + '등급';
+              }}}
+            }
+          }
+        });
+      }
+
+      /* ── ② 모의고사 추이 차트 (실데이터) ── */
+      const mocks = getStuMock(sid).slice().sort((a,b)=>(a.examDate||'').localeCompare(b.examDate||''));
+      const ctx2 = document.getElementById('drawerMockChart').getContext('2d');
+      if (drawerMockObj) drawerMockObj.destroy();
+
+      if (!mocks.length) {
+        ctx2.clearRect(0,0,ctx2.canvas.width,ctx2.canvas.height);
+        ctx2.fillStyle='#9ca3af'; ctx2.font='14px sans-serif'; ctx2.textAlign='center';
+        ctx2.fillText('모의고사 데이터가 없습니다.',ctx2.canvas.width/2,ctx2.canvas.height/2);
+        return;
+      }
+
+      const mockLabels = mocks.map(m=>{
+        const label = (m.examType||'').replace(' 전국연합','').replace('전국연합','');
+        return `${m.examDate ? m.examDate.slice(0,7) : ''} ${label}`.trim();
+      });
+      drawerMockObj = new Chart(ctx2, {
+        type:'line',
+        data: {
+          labels: mockLabels,
+          datasets: [
+            { label:'국어', data:mocks.map(m=>m.kor ||null), borderColor:'#a78bfa', borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:true },
+            { label:'수학', data:mocks.map(m=>m.math||null), borderColor:'#60a5fa', borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:true },
+            { label:'영어', data:mocks.map(m=>m.eng ||null), borderColor:'#34d399', borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:true },
+            ...(mocks.some(m=>m.sci1!=null) ? [{
+              label: mocks.find(m=>m.sci1Name)?.sci1Name ? `탐구① ${mocks.find(m=>m.sci1Name).sci1Name}` : '탐구①',
+              data:mocks.map(m=>m.sci1||null),
+              borderColor:'#fb923c', borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:true
+            }] : []),
+            ...(mocks.some(m=>m.sci2!=null) ? [{
+              label: mocks.find(m=>m.sci2Name)?.sci2Name ? `탐구② ${mocks.find(m=>m.sci2Name).sci2Name}` : '탐구②',
+              data:mocks.map(m=>m.sci2||null),
+              borderColor:'#f472b6', borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:true
+            }] : []),
+          ]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          scales: {
+            y:{ min:0, max:100, ticks:{color:'#6B7280'}, grid:{color:'rgba(0,0,0,.05)'},
+                title:{display:true,text:'원점수',color:'#6B7280',font:{size:10}} },
+            x:{ ticks:{color:'#6B7280',font:{size:10},maxRotation:35}, grid:{display:false} }
+          },
+          plugins:{
+            legend:{ position:'bottom', labels:{font:{size:11},color:'#374151',boxWidth:10} },
+            tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${c.parsed.y??'–'}점` } }
+          }
+        }
+      });
+    }
+
+    /* ── 내신 삭제 ── */
+    async function deleteSchoolGrade(recordId) {
+      if (!recordId || !confirm('이 성적을 삭제하시겠습니까?')) return;
+      try {
+        const res = await fetch(`/tables/grades_school/${recordId}`, { method:'DELETE' });
+        if (res.ok || res.status===204) {
+          ALL_SCHOOL_GRADES = ALL_SCHOOL_GRADES.filter(g => g.id !== recordId);
+          renderDrawerSchool();
+          renderCards();
+          renderTableView();
+          showToast('성적이 삭제되었습니다.');
+        } else { alert('삭제 실패. 다시 시도해주세요.'); }
+      } catch(e) { alert('삭제 중 오류가 발생했습니다.'); }
+    }
+    window.deleteSchoolGrade = deleteSchoolGrade;
+
+    /* ── 모의고사 삭제 ── */
+    async function deleteMockGrade(recordId) {
+      if (!recordId || !confirm('이 모의고사 성적을 삭제하시겠습니까?')) return;
+      try {
+        const res = await fetch(`/tables/grades_mock/${recordId}`, { method:'DELETE' });
+        if (res.ok || res.status===204) {
+          ALL_MOCK_GRADES = ALL_MOCK_GRADES.filter(m => m.id !== recordId);
+          renderDrawerMock();
+          showToast('모의고사 성적이 삭제되었습니다.');
+        } else { alert('삭제 실패. 다시 시도해주세요.'); }
+      } catch(e) { alert('삭제 중 오류가 발생했습니다.'); }
+    }
+    window.deleteMockGrade = deleteMockGrade;
+
+    /* ── 내신 인라인 편집 ── */
+    function startEditGrade(recordId) {
+      const g = ALL_SCHOOL_GRADES.find(x => x.id === recordId);
+      if (!g) return;
+      const row = document.getElementById(`gr-row-${recordId}`);
+      if (!row) return;
+
+      const gt = getGradeTypeAdmin(currentDrawerStudent?.grade || '');
+
+      // 등급 셀 입력 HTML
+      let rankInput = '';
+      if (gt === 'grade9') {
+        rankInput = `<input type="number" min="1" max="9" value="${g.rank||''}" id="ei-rank"
+          style="width:52px;padding:4px 6px;border:1px solid #34d399;border-radius:6px;font-size:12px;text-align:center;">`;
+      } else if (gt === 'grade5') {
+        rankInput = `<input type="number" min="1" max="9" value="${g.rank5Num||''}" id="ei-rank5num"
+          style="width:46px;padding:4px 5px;border:1px solid #34d399;border-radius:6px;font-size:12px;text-align:center;">
+          <select id="ei-rank5" style="padding:4px 5px;border:1px solid #34d399;border-radius:6px;font-size:12px;margin-left:3px;">
+            ${['A','B','C','D','E'].map(v=>`<option value="${v}" ${g.rank5===v?'selected':''}>${v}</option>`).join('')}
+          </select>`;
+      } else {
+        rankInput = `<select id="ei-rankMid" style="padding:4px 8px;border:1px solid #34d399;border-radius:6px;font-size:12px;">
+          ${['A','B','C','D','E'].map(v=>`<option value="${v}" ${g.rankMid===v?'selected':''}>${v}</option>`).join('')}
+        </select>`;
+      }
+
+      row.innerHTML = `
+        <td colspan="2">
+          <input id="ei-group" value="${g.subjectGroup||''}" placeholder="교과"
+            style="width:72px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;margin-right:3px;">
+          <input id="ei-name" value="${g.subjectName||''}" placeholder="과목"
+            style="width:90px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+        </td>
+        <td style="text-align:center">
+          <input type="number" id="ei-credit" value="${g.credit||4}" min="1" max="10"
+            style="width:44px;padding:4px 5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;">
+        </td>
+        <td style="text-align:center">
+          <input type="number" id="ei-score" value="${g.score||''}" min="0" max="100"
+            style="width:52px;padding:4px 5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;">
+        </td>
+        <td style="text-align:center">
+          <input type="number" id="ei-avg" value="${g.avg||''}" step="0.1"
+            style="width:52px;padding:4px 5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;">
+        </td>
+        <td style="text-align:center">
+          <input type="number" id="ei-achieve" value="${g.achieveRate||''}" step="0.1" min="0" max="100"
+            style="width:52px;padding:4px 5px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;">
+        </td>
+        <td style="text-align:center">${rankInput}</td>
+        <td style="text-align:center;white-space:nowrap;">
+          <button onclick="saveEditGrade('${recordId}')"
+            style="border:none;background:#059669;color:#fff;cursor:pointer;padding:4px 9px;border-radius:6px;font-size:12px;font-weight:700;margin-bottom:2px;">
+            <i class="fas fa-save"></i>
+          </button>
+          <button onclick="cancelEditGrade('${recordId}')"
+            style="border:1px solid var(--border);background:var(--bg-card);cursor:pointer;padding:4px 7px;border-radius:6px;font-size:12px;">
+            <i class="fas fa-times"></i>
+          </button>
+        </td>`;
+
+      // 편집 행 강조
+      row.style.background = '#f0fdf4';
+    }
+    window.startEditGrade = startEditGrade;
+
+    function cancelEditGrade(recordId) {
+      renderDrawerSchool();
+    }
+    window.cancelEditGrade = cancelEditGrade;
+
+    async function saveEditGrade(recordId) {
+      const g = ALL_SCHOOL_GRADES.find(x => x.id === recordId);
+      if (!g) return;
+      const gt = getGradeTypeAdmin(currentDrawerStudent?.grade || '');
+
+      const updated = {
+        subjectGroup : document.getElementById('ei-group')?.value.trim()   || g.subjectGroup,
+        subjectName  : document.getElementById('ei-name')?.value.trim()    || g.subjectName,
+        credit       : Number(document.getElementById('ei-credit')?.value) || g.credit,
+        score        : Number(document.getElementById('ei-score')?.value)  ?? g.score,
+        avg          : Number(document.getElementById('ei-avg')?.value)    ?? g.avg,
+        achieveRate  : Number(document.getElementById('ei-achieve')?.value)?? g.achieveRate,
+      };
+      if (gt === 'grade9')   updated.rank    = Number(document.getElementById('ei-rank')?.value)    || g.rank;
+      if (gt === 'grade5')   { updated.rank5Num = Number(document.getElementById('ei-rank5num')?.value)||g.rank5Num; updated.rank5 = document.getElementById('ei-rank5')?.value||g.rank5; }
+      if (gt === 'gradeMid') updated.rankMid = document.getElementById('ei-rankMid')?.value || g.rankMid;
+
+      const row = document.getElementById(`gr-row-${recordId}`);
+      if (row) { row.style.opacity='0.5'; }
+
+      try {
+        const res = await fetch(`/tables/grades_school/${recordId}`, {
+          method : 'PATCH',
+          headers: { 'Content-Type':'application/json' },
+          body   : JSON.stringify(updated),
+        });
+        if (!res.ok) throw new Error();
+        const newRec = await res.json();
+        // 전역 캐시 갱신
+        const idx = ALL_SCHOOL_GRADES.findIndex(x=>x.id===recordId);
+        if (idx!==-1) ALL_SCHOOL_GRADES[idx] = { ...ALL_SCHOOL_GRADES[idx], ...newRec };
+        renderDrawerSchool();
+        renderCards();
+        renderTableView();
+        showToast('성적이 수정되었습니다.');
+      } catch(e) {
+        alert('수정 실패. 다시 시도해주세요.');
+        if (row) { row.style.opacity='1'; }
+        cancelEditGrade(recordId);
+      }
+    }
+    window.saveEditGrade = saveEditGrade;
+
+    /* ── 헬퍼 ── */
+    function getStuSchool_legacy(id, year, sem) {
+      return getStuSchool(id, year, sem);
+    }
+    function calcAvgRank(data) {
+      if (!data.length) return null;
+      if (!data[0]) return null;
+      // grade9만 수치 평균 가능
+      if (data[0].gradeType === 'grade9' || data[0].rank != null) {
+        const total = data.reduce((a,g)=>a+Number(g.credit),0);
+        if (!total) return null;
+        return (data.reduce((a,g)=>a+Number(g.rank||5)*Number(g.credit),0)/total).toFixed(2) + '등급';
+      } else if (data[0].gradeType === 'grade5' || data[0].rank5) {
+        const cnt = {A:0,B:0,C:0,D:0,E:0};
+        data.forEach(g=>{ if(g.rank5) cnt[g.rank5]++; });
+        const best = ['A','B','C','D','E'].find(k=>cnt[k]>0);
+        return best ? best + '(성취)' : '–';
+      } else {
+        const cnt = {A:0,B:0,C:0,D:0,E:0};
+        data.forEach(g=>{ if(g.rankMid) cnt[g.rankMid]++; });
+        const best = ['A','B','C','D','E'].find(k=>cnt[k]>0);
+        return best ? best + '(성취)' : '–';
+      }
+    }
+
+    /* ── 사이드바 토글 ── */
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+    document.getElementById('sidebarClose').addEventListener('click', () => {
+      document.getElementById('sidebar').classList.remove('open');
+    });
+
+    /* ── 관리자 세션 ── */
+    (function() {
+      const u = sessionStorage.getItem('dvl_user');
+      if (u) {
+        try {
+          const user = JSON.parse(u);
+          ['sidebarAdminAvatar','topbarAdminAvatar'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = user.name ? user.name[0] : '관';
+          });
+          const nameEl = document.getElementById('sidebarAdminName');
+          const tNameEl = document.getElementById('topbarAdminName');
+          if (nameEl) nameEl.textContent = user.name;
+          if (tNameEl) tNameEl.textContent = user.name;
+        } catch(e){}
+      }
+    })();
+
+    /* ── 초기 렌더링 (세션은 admin-common.js가 이미 검증) ── */
     document.addEventListener('DOMContentLoaded', () => {
       if (window._dvlAdminSession) initGradesAdmin();
     });
   </script>
+
+  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
+  <nav class="mobile-nav mobile-nav--admin">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="grades.html" class="mobile-nav-item active"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="exam.html" class="mobile-nav-item"><i class="fas fa-calendar-alt"></i><span>플래너</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
 </body>
 </html>

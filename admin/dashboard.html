@@ -3,9 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <title>관리자 대시보드 – 다빈치랩</title>
   <!-- 관리자 PWA -->
   <link rel="manifest" href="../admin-manifest.json" />
@@ -33,8 +30,7 @@
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <!-- ⭐ 아래 링크를 dashboard.html로 수정했습니다 ⭐ -->
-      <a href="dashboard.html" class="sidebar-logo">
+      <a href="../index.html" class="sidebar-logo">
         <span class="sidebar-logo-icon">◈</span>
         <span class="sidebar-logo-text">DaVinci LaB</span>
       </a>
@@ -157,6 +153,7 @@
     <!-- Page Content -->
     <div class="admin-content">
 
+      <!-- Page Title -->
       <div class="page-title-row">
         <div>
           <h1 class="page-title">대시보드</h1>
@@ -217,7 +214,10 @@
         </a>
       </div>
 
+      <!-- Main Grid: Urgent + Activity -->
       <div class="dashboard-grid">
+
+        <!-- LEFT: 긴급 처리 필요 — DB 기반 -->
         <div class="dash-panel">
           <div class="panel-header">
             <h3><i class="fas fa-exclamation-circle"></i> 긴급 처리 필요</h3>
@@ -230,6 +230,8 @@
             </div>
           </div>
         </div>
+
+        <!-- RIGHT: 오늘 활동 피드 — DB 기반 -->
         <div class="dash-panel">
           <div class="panel-header">
             <h3><i class="fas fa-stream"></i> 오늘 활동 피드</h3>
@@ -242,8 +244,10 @@
             </div>
           </div>
         </div>
-      </div>
 
+      </div><!-- /dashboard-grid -->
+
+      <!-- Student Status Table -->
       <div class="dash-panel full-panel" style="margin-top:24px;">
         <div class="panel-header">
           <h3><i class="fas fa-user-graduate"></i> 학생 현황</h3>
@@ -271,13 +275,18 @@
                   <th>액션</th>
                 </tr>
               </thead>
-              <tbody id="studentTbody"></tbody>
+              <tbody id="studentTbody">
+                <!-- JS로 렌더링 -->
+              </tbody>
             </table>
           </div>
         </div>
       </div>
 
+      <!-- Bottom Grid: Upcoming + Attendance Heatmap -->
       <div class="dashboard-grid" style="margin-top:24px;">
+
+        <!-- Upcoming exams/events -->
         <div class="dash-panel">
           <div class="panel-header">
             <h3><i class="fas fa-calendar-week"></i> 이번 주 일정</h3>
@@ -287,6 +296,8 @@
             <div style="text-align:center;padding:24px;color:#aaa;font-size:13px;">일정 로딩 중...</div>
           </div>
         </div>
+
+        <!-- Step distribution + archive summary -->
         <div class="dash-panel">
           <div class="panel-header">
             <h3><i class="fas fa-chart-pie"></i> 수강 구분 현황</h3>
@@ -295,7 +306,9 @@
             <div class="step-bars" id="stepBarsContainer">
               <div style="text-align:center;padding:16px;color:#aaa;font-size:13px;">로딩 중...</div>
             </div>
+
             <div class="divider"></div>
+
             <div class="archive-summary">
               <div class="arc-row">
                 <div class="arc-item">
@@ -324,26 +337,140 @@
             </div>
           </div>
         </div>
-      </div>
 
+      </div><!-- /bottom grid -->
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-main -->
+
+  <!-- ===== SIDEBAR DIM OVERLAY (mobile) ===== -->
+
+  <!-- ===== FEEDBACK MODAL ===== -->
+  <div class="modal-overlay" id="feedbackModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">수행평가 피드백 작성</h3>
+        <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-student-info" id="modalStudentInfo"></div>
+        <div class="form-group">
+          <label>피드백 유형</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="fbType" value="direction" checked /> 준비 방향</label>
+            <label class="radio-item"><input type="radio" name="fbType" value="task" /> 과제 안내</label>
+            <label class="radio-item"><input type="radio" name="fbType" value="caution" /> 주의사항</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>피드백 내용 <span class="required">*</span></label>
+          <textarea id="feedbackText" rows="5" placeholder="수행평가 준비 방향, 필요한 자료, 주의사항 등을 입력하세요..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>첨부 자료 (선택)</label>
+          <div class="file-drop" id="fileDrop">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>파일을 드래그하거나 클릭하여 업로드</span>
+            <input type="file" id="fileInput" style="display:none" multiple />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>긴급도</label>
+          <div class="radio-group">
+            <label class="radio-item"><input type="radio" name="urgency" value="normal" checked /> 일반</label>
+            <label class="radio-item"><input type="radio" name="urgency" value="urgent" /> 긴급</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modalCancel">취소</button>
+        <button class="btn-submit" id="modalSubmit">
+          <i class="fas fa-paper-plane"></i> 피드백 전송
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- 푸터 및 모달 부분은 동일하므로 생략하거나 기존 파일 하단 유지 -->
+  <!-- ===== QUICK ADD MODAL ===== -->
+  <div class="modal-overlay" id="quickAddModal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3>빠른 등록</h3>
+        <button class="modal-close" id="quickAddClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="quick-add-grid">
+          <a href="students.html#new" class="qa-item">
+            <i class="fas fa-user-plus"></i>
+            <span>신규 학생</span>
+          </a>
+          <a href="attendance.html#new" class="qa-item">
+            <i class="fas fa-clipboard-list"></i>
+            <span>출결 등록</span>
+          </a>
+          <a href="assessment.html#new" class="qa-item">
+            <i class="fas fa-clipboard-check"></i>
+            <span>수행평가</span>
+          </a>
+          <a href="notice.html#new" class="qa-item">
+            <i class="fas fa-bullhorn"></i>
+            <span>공지 작성</span>
+          </a>
+          <a href="report.html#new" class="qa-item">
+            <i class="fas fa-file-alt"></i>
+            <span>탐구보고서</span>
+          </a>
+          <a href="exam.html#new" class="qa-item">
+            <i class="fas fa-calendar-plus"></i>
+            <span>시험 일정</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICATION PANEL ===== -->
+  <div class="notif-panel" id="notifPanel">
+    <div class="notif-panel-header">
+      <h4>알림</h4>
+      <button class="notif-read-all">모두 읽음</button>
+    </div>
+    <div class="notif-list" id="notifList">
+      <div style="text-align:center;padding:24px 16px;color:#aaa;font-size:13px;">
+        <i class="fas fa-bell-slash" style="font-size:20px;margin-bottom:8px;display:block;"></i>
+        새로운 알림이 없습니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
+  <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
+    <div class="mobile-nav-inner">
+      <a href="dashboard.html" class="mobile-nav-item active"><i class="fas fa-th-large"></i><span>홈</span></a>
+      <a href="students.html" class="mobile-nav-item"><i class="fas fa-users"></i><span>학생</span></a>
+      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
+      <a href="exam.html" class="mobile-nav-item"><i class="fas fa-calendar-alt"></i><span>플래너</span></a>
+      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
+    </div>
+  </nav>
+  <div class="sidebar-dim" id="sidebarDim"></div>
 
   <script src="../js/dvl-session.js?v=20260430"></script>
   <script src="../js/admin-common.js?v=20260430"></script>
   <script src="../js/admin.js?v=20260430"></script>
   <script>
+    // 대시보드 데이터 로드 (가입 대기 + 학생 현황)
     (async function initDashboard() {
+      // 세션은 dvl-session.js + admin-common.js 가 이미 검증
       if (!window._dvlAdminSession) return;
       try {
-        const res = await fetch('/tables/student_profiles?limit=500');
+        const res  = await fetch('/tables/student_profiles?limit=500');
         const data = await res.json();
-        const all = data.data || [];
+        const all  = data.data || [];
 
+        // ── 가입 대기 배너 ──
         const pendingStudents = all.filter(s => s.status === 'pending');
-        const res2 = await fetch('/tables/parent_profiles?limit=500');
+        const res2  = await fetch('/tables/parent_profiles?limit=500');
         const data2 = await res2.json();
         const pendingParents = (data2.data || []).filter(p => p.status === 'pending');
         const total = pendingStudents.length + pendingParents.length;
@@ -354,36 +481,88 @@
           const parts = [];
           if (pendingStudents.length) parts.push(`학생 ${pendingStudents.length}명`);
           if (pendingParents.length)  parts.push(`학부모 ${pendingParents.length}명`);
-          document.getElementById('pendingBannerText').textContent = parts.join(', ') + '의 가입 신청이 대기 중입니다.';
+          document.getElementById('pendingBannerText').textContent =
+            parts.join(', ') + '의 가입 신청이 대기 중입니다.';
+          /* 모바일 뱃지는 admin-common.js의 loadPendingBadge()가 처리 */
         }
 
+        // ── 학생 현황 탭 카운트 ──
         const active = all.filter(s => s.status !== 'pending' && s.status !== '졸업' && s.status !== '휴원');
         const pending = all.filter(s => s.status === 'pending');
         const graduated = all.filter(s => s.status === '졸업');
         const onBreak = all.filter(s => s.status === '휴원');
-        
+        const s1  = active.filter(s => s.stage === '1단계').length;
+        const s2  = active.filter(s => s.stage === '2단계').length;
+        const s3  = active.filter(s => s.stage === '3단계').length;
+        const s3c = active.filter(s => s.stage === '3단계+컨설팅').length;
         document.getElementById('tabCntAll') && (document.getElementById('tabCntAll').textContent = active.length);
-        document.getElementById('arcGrad') && (document.getElementById('arcGrad').textContent = graduated.length + '명');
-        document.getElementById('arcBreak') && (document.getElementById('arcBreak').textContent = onBreak.length + '명');
-        document.getElementById('arcPending') && (document.getElementById('arcPending').textContent = pending.length + '명');
+        document.getElementById('tabCnt1')   && (document.getElementById('tabCnt1').textContent   = s1);
+        document.getElementById('tabCnt2')   && (document.getElementById('tabCnt2').textContent   = s2);
+        document.getElementById('tabCnt3')   && (document.getElementById('tabCnt3').textContent   = s3);
+        document.getElementById('tabCnt3c')  && (document.getElementById('tabCnt3c').textContent  = s3c);
 
+        // ── 아카이브 요약 카운트 ──
+        const elGrad    = document.getElementById('arcGrad');
+        const elBreak   = document.getElementById('arcBreak');
+        const elPending = document.getElementById('arcPending');
+        if (elGrad)    elGrad.textContent    = graduated.length + '명';
+        if (elBreak)   elBreak.textContent   = onBreak.length + '명';
+        if (elPending) elPending.textContent = pending.length + '명';
+
+        // ── 학생 현황 테이블 ──
         const tbody = document.getElementById('studentTbody');
         if (tbody) {
           if (!active.length) {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-300);">데이터가 없습니다.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-300);">
+              <i class="fas fa-users" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+              등록된 학생이 없습니다. 학생 회원가입 후 승인하면 여기에 표시됩니다.
+            </td></tr>`;
           } else {
             tbody.innerHTML = active.slice(0,10).map(s => `
               <tr>
                 <td><strong>${s.name}</strong></td>
                 <td>${s.school||'-'} / ${s.grade||'-'}</td>
                 <td><span style="background:#e8f5f0;color:#163A33;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;">${s.stage||'1단계'}</span></td>
-                <td>–</td><td>–</td><td>–</td><td>–</td>
-                <td><a href="students.html" style="font-size:12px;color:var(--green-700);font-weight:600;">상세보기</a></td>
-              </tr>`).join('');
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td><span style="color:var(--text-300);font-size:12px;">–</span></td>
+                <td>
+                  <a href="students.html" style="font-size:12px;color:var(--green-700);font-weight:600;">상세보기</a>
+                </td>
+              </tr>
+            `).join('');
           }
         }
-      } catch(e) { console.warn('오류:', e); }
+
+        // ── 긴급 처리 — 실제 수행평가 기반 ──
+        try {
+          const aRes  = await fetch('/tables/assessments?limit=100');
+          const aData = await aRes.json();
+          const urgent = (aData.data || []).filter(a =>
+            a.status === 'pending' && a.is_urgent
+          );
+          document.getElementById('urgentCount').textContent = urgent.length + '건';
+          if (urgent.length > 0) {
+            document.getElementById('urgentList').innerHTML = urgent.slice(0,5).map(a => `
+              <div class="urgent-item urgent-red">
+                <div class="urgent-left">
+                  <span class="urgent-tag tag-red">수행평가</span>
+                  <div>
+                    <div class="urgent-name">${a.student_name||''}</div>
+                    <div class="urgent-desc">${a.subject||''} – ${a.title||''}</div>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+          }
+        } catch(e) { /* 무시 */ }
+
+      } catch(e) {
+        console.warn('대시보드 초기화 오류:', e);
+      }
     })();
+    // 사이드바 토글은 admin.js에서 통합 처리
   </script>
 </body>
 </html>

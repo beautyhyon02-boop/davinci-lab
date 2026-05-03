@@ -1,69 +1,65 @@
-const express = require('express');
-const path = require('path');
-const { Pool } = require('pg');
-const app = express();
+const express  = require('express');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+const path     = require('path');
+
+const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+/* ================================================
+   Genspark DB API 프록시
+   /tables/*  →  genspark.genspark.site/api/code_sandbox_light/preview/{id}/tables/*
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+   ★ 버그 수정: pathRewrite 에서 reqPath 에는 이미
+     '/tables' 이후 부분만 들어오므로 ('/student_profiles?...')
+     앞에 '/tables' 를 한 번만 붙여야 함.
+     (이전 코드: `/tables${reqPath}` → `/tables/tables/...` 이중 경로 발생)
+   ================================================ */
+const GENSPARK_TARGET = 'https://genspark.genspark.site';
+const GENSPARK_PREFIX = '/api/code_sandbox_light/preview/8913df2f-c861-4c8f-b106-521a96c99c0e';
 
-// 1. 공통 조회 API
-app.get('/tables/:tableName', async (req, res) => {
-  const { tableName } = req.params;
-  const { search } = req.query;
-  try {
-    const colRes = await pool.query("SELECT column_name FROM information_schema.columns WHERE table_name = $1", [tableName]);
-    const columns = colRes.rows.map(r => r.column_name);
-    if (columns.length === 0) return res.status(404).json({ success: false, error: 'Table not found' });
-
-    let sql = `SELECT * FROM ${tableName}`;
-    const params = [];
-    if (search) {
-      const searchCol = columns.includes('student_id') ? 'student_id' : (columns.includes('name') ? 'name' : (columns.includes('student_name') ? 'student_name' : null));
-      if (searchCol) {
-        params.push(`%${search}%`);
-        sql += ` WHERE ${searchCol}::text ILIKE $1`;
+app.use('/tables', createProxyMiddleware({
+  target:       GENSPARK_TARGET,
+  changeOrigin: true,
+  /* req.path 예시:  /student_profiles?limit=200
+     최종 목적지:    /api/.../tables/student_profiles?limit=200  */
+  pathRewrite: (_path, req) => {
+    // req.url 에는 /tables 이후 전체 경로+쿼리가 들어 있음
+    // 예: /tables/student_profiles?limit=200  →  req.url = '/student_profiles?limit=200'
+    // 단, app.use('/tables', ...) 이면 req.url 은 이미 '/tables' 제거된 상태
+    const suffix = req.url; // e.g. '/student_profiles?limit=200'
+    const result = `${GENSPARK_PREFIX}/tables${suffix}`;
+    console.log(`[PROXY] ${req.method} /tables${suffix}  →  ${GENSPARK_TARGET}${result}`);
+    return result;
+  },
+  on: {
+    error: (err, req, res) => {
+      console.error('[PROXY ERROR]', err.message);
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Proxy error', message: err.message });
       }
-    }
-    sql += ` ORDER BY id DESC LIMIT 1000`;
-    const result = await pool.query(sql, params);
-    res.json({ success: true, data: result.rows });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+    },
+  },
+}));
+
+/* ================================================
+   정적 파일 서빙 (HTML, CSS, JS, images 등)
+   ================================================ */
+app.use(express.static(path.join(__dirname), {
+  index:      'index.html',
+  extensions: ['html'],
+}));
+
+/* ================================================
+   SPA fallback — 매핑되지 않은 경로 → 해당 HTML or index.html
+   ================================================ */
+app.get('*', (req, res) => {
+  const filePath = path.join(__dirname, req.path);
+  res.sendFile(filePath, (err) => {
+    if (err) res.sendFile(path.join(__dirname, 'index.html'));
+  });
 });
 
-// 2. 공통 저장 API
-app.post('/tables/:tableName', async (req, res) => {
-  const { tableName } = req.params;
-  const fields = Object.keys(req.body);
-  const values = Object.values(req.body);
-  const placeholders = fields.map((_, i) => `$${i + 1}`).join(', ');
-  try {
-    const sql = `INSERT INTO ${tableName} (${fields.join(', ')}) VALUES (${placeholders}) RETURNING *`;
-    const result = await pool.query(sql, values);
-    res.json({ success: true, data: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+app.listen(PORT, () => {
+  console.log(`✅ DaVinci Lab 서버 실행 중: http://localhost:${PORT}`);
+  console.log(`📡 API 프록시: /tables/* → ${GENSPARK_TARGET}${GENSPARK_PREFIX}/tables/*`);
 });
-
-// 3. 공통 삭제 API
-app.delete('/tables/:tableName/:id', async (req, res) => {
-  const { tableName, id } = req.params;
-  try {
-    await pool.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.use(express.static(path.join(__dirname)));
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
-app.listen(PORT, () => console.log(`🚀 다빈치랩 통합 서버 가동 중!`));

@@ -536,36 +536,49 @@ document.getElementById('planItemSubmit')?.addEventListener('click', async () =>
 /* ──────────────────────────────────────────
    Init
 ────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', async () => {
-  /* 세션 검증: dvl-session.js + admin-common.js 가 이미 처리 */
-  if (!window._dvlAdminSession) return;
+// ★ 수정: _dvlAdminSession 은 admin-common.js 로드 후 세팅됨
+//   DOMContentLoaded 시점보다 늦을 수 있으므로 polling 대기
+function _waitAdminSession(cb, timeout = 5000) {
+  const start = Date.now();
+  (function check() {
+    const s = window._dvlAdminSession
+           || JSON.parse(sessionStorage.getItem('dvl_admin_tab_session') || 'null')
+           || JSON.parse(localStorage.getItem('dvl_admin_session') || 'null');
+    if (s && (s.role === 'admin' || s.role === 'master')) { cb(s); return; }
+    if (Date.now() - start > timeout) { cb(null); return; }
+    setTimeout(check, 120);
+  })();
+}
 
-  document.getElementById('weekLabel').textContent = getWeekLabel(currentWeek);
+document.addEventListener('DOMContentLoaded', () => {
+  _waitAdminSession(async () => {
+    document.getElementById('weekLabel').textContent = getWeekLabel(currentWeek);
 
-  const ok = await loadStudentsFromDB();
-  if (!ok || !PLAN_STUDENTS.length) {
-    showToast('⚠️ 승인된 학생이 없거나 데이터를 불러오지 못했습니다.', 'warn');
-  }
+    const ok = await loadStudentsFromDB();
+    if (!ok || !PLAN_STUDENTS.length) {
+      showToast('⚠️ 승인된 학생이 없거나 데이터를 불러오지 못했습니다.', 'warn');
+    }
 
-  // 첫 번째 학생 자동 선택
-  if (PLAN_STUDENTS.length) currentPlanStudent = PLAN_STUDENTS[0].id;
+    // 첫 번째 학생 자동 선택
+    if (PLAN_STUDENTS.length) currentPlanStudent = PLAN_STUDENTS[0].id;
 
-  renderStudentTabs();
-  await loadAndRenderPlan();
-  updatePlanKPIs([]);
-  renderAllPlanOverview();
-  renderDailyGrid();
-
-  /* ── URL ?tab=daily 처리: daily.html에서 리다이렉트 시 일일 기록 탭 자동 활성화 ── */
-  const urlTab = new URLSearchParams(location.search).get('tab');
-  if (urlTab === 'daily') {
-    document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.remove('active'));
-    const dailyTab = document.querySelector('.main-tab[data-main="daily"]');
-    if (dailyTab) dailyTab.classList.add('active');
-    document.getElementById('mainPanel-daily')?.classList.add('active');
-    const btn = document.getElementById('writePlanBtn');
-    if (btn) btn.innerHTML = '<i class="fas fa-plus"></i> 기록 작성';
+    renderStudentTabs();
+    await loadAndRenderPlan();
+    updatePlanKPIs([]);
+    renderAllPlanOverview();
     renderDailyGrid();
-  }
-});
+
+    /* ── URL ?tab=daily 처리 ── */
+    const urlTab = new URLSearchParams(location.search).get('tab');
+    if (urlTab === 'daily') {
+      document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.main-tab-panel').forEach(p => p.classList.remove('active'));
+      const dailyTab = document.querySelector('.main-tab[data-main="daily"]');
+      if (dailyTab) dailyTab.classList.add('active');
+      document.getElementById('mainPanel-daily')?.classList.add('active');
+      const btn = document.getElementById('writePlanBtn');
+      if (btn) btn.innerHTML = '<i class="fas fa-plus"></i> 기록 작성';
+      renderDailyGrid();
+    }
+  }); // _waitAdminSession 끝
+}); // DOMContentLoaded 끝

@@ -1,72 +1,274 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>학습 플랜 관리 – 다빈치랩</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-  <style>
-    body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; height: 100vh; background: #f8fafc; }
-    .sidebar { width: 220px; background: #163A33; color: white; padding: 20px; overflow-y: auto; }
-    .stu-btn { width: 100%; padding: 12px; margin-bottom: 8px; border: none; border-radius: 8px; text-align: left; cursor: pointer; background: rgba(255,255,255,0.1); color: white; }
-    .stu-btn.active { background: white; color: #163A33; font-weight: bold; }
-    .main { flex: 1; padding: 40px; overflow-y: auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .table th, .table td { padding: 15px; border-bottom: 1px solid #f1f5f9; text-align: center; }
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
-    .modal-content { background: white; padding: 30px; border-radius: 15px; width: 400px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; margin-bottom: 5px; font-weight: 600; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>학습 플랜 & 일일 기록 – 다빈치랩</title>
+  <link rel="manifest" href="../admin-manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
+  <link rel="apple-touch-icon" href="../images/icon-180.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/plan.css" />
 </head>
-<body>
-  <div class="sidebar"><h3>👥 학생 목록</h3><div id="studentList"></div></div>
-  <div class="main">
-    <div class="header"><h1 id="stuTitle">학생을 선택해주세요</h1><button onclick="openModal()" style="background:#4f46e5; color:white; padding:12px 24px; border:none; border-radius:8px; cursor:pointer; font-weight:600;">+ 플랜 작성</button></div>
-    <table class="table"><thead><tr style="background:#f9fafb;"><th>날짜</th><th>과목</th><th>목표량</th><th>내용</th><th>관리</th></tr></thead><tbody id="planTbody"></tbody></table>
+<body class="admin-body">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="../index.html" class="sidebar-logo">
+        <span class="sidebar-logo-icon">◈</span>
+        <span class="sidebar-logo-text">DaVinci LaB</span>
+      </a>
+      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <span class="nav-section-label">메인</span>
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>대시보드</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학생 관리</span>
+        <a href="students.html" class="nav-item"><i class="fas fa-user-graduate"></i><span>학생 관리</span><span class="nav-badge nav-badge--alert" id="navBadgeStudents" style="display:none;"></span></a>
+        <a href="attendance.html" class="nav-item"><i class="fas fa-clipboard-list"></i><span>출결 관리</span></a>
+        <a href="plan.html" class="nav-item active"><i class="fas fa-tasks"></i><span>학습 플랜 관리</span></a>
+        <a href="daily.html" class="nav-item" data-page="daily"><i class="fas fa-pen-alt"></i><span>일일 학습 기록</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">컨설팅</span>
+        <a href="assessment.html" class="nav-item"><i class="fas fa-clipboard-check"></i><span>수행평가 관리</span><span class="nav-badge nav-badge--alert">3</span></a>
+        <a href="grades.html" class="nav-item"><i class="fas fa-chart-line"></i><span>성적 조회</span></a>
+        <a href="report.html" class="nav-item" data-page="report"><i class="fas fa-file-alt"></i><span>심화탐구보고서</span></a>
+        <a href="exam.html" class="nav-item" data-page="exam"><i class="fas fa-calendar-alt"></i><span>시험 플래너</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">학부모 / 공지</span>
+        <a href="parents.html" class="nav-item" data-page="parents"><i class="fas fa-users"></i><span>학부모 관리</span></a>
+        <a href="notice.html" class="nav-item" data-page="notice"><i class="fas fa-bullhorn"></i><span>공지 / 알림</span></a>
+        <a href="consult.html" class="nav-item" data-page="consult"><i class="fas fa-comments"></i><span>상담 관리</span></a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-section-label">시스템</span>
+        <a href="archive.html" class="nav-item" data-page="archive"><i class="fas fa-archive"></i><span>졸업생 / 아카이브</span></a>
+        <a href="admins.html" class="nav-item" data-page="admins"><i class="fas fa-user-shield"></i><span>관리자 관리</span></a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar">박</div>
+        <div class="sidebar-user-info">
+          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
+          <span class="sidebar-user-role" id="sidebarAdminRole">총괄 관리자</span>
+        </div>
+        <a href="../login.html" class="sidebar-logout"><i class="fas fa-sign-out-alt"></i></a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <div class="topbar-breadcrumb">
+          <span>다빈치랩</span><i class="fas fa-chevron-right"></i>
+          <span class="active">학습 플랜 & 일일 기록</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-search">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="학생 이름 검색..." id="searchInput" />
+        </div>
+        <button class="topbar-icon-btn" id="notifBtn" title="알림" style="position:relative;">
+          <i class="fas fa-bell"></i>
+        </button>
+        <button class="topbar-icon-btn"><a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a></button>
+      </div>
+    </header>
+
+    <div class="admin-content">
+
+      <div class="page-title-row">
+        <div>
+          <h1 class="page-title">학습 플랜 & 일일 기록</h1>
+          <p class="page-subtitle">학생별 주간 학습 플랜을 작성하고 매일의 학습 진행 현황을 관리합니다</p>
+        </div>
+        <button class="btn-add" id="writePlanBtn"><i class="fas fa-plus"></i> 플랜 작성</button>
+      </div>
+
+      <!-- 메인 탭 (플랜 / 일일 기록) -->
+      <div class="main-page-tabs" id="mainPageTabs">
+        <button class="main-tab active" data-main="plan">
+          <i class="fas fa-tasks"></i> 학습 플랜 관리
+        </button>
+        <button class="main-tab" data-main="daily">
+          <i class="fas fa-pen-alt"></i> 일일 학습 기록
+        </button>
+      </div>
+
+      <!-- ===== 학습 플랜 탭 ===== -->
+      <div class="main-tab-panel active" id="mainPanel-plan">
+
+        <!-- Student selector + week nav -->
+        <div class="plan-control-row">
+          <div class="plan-student-tabs" id="planStudentTabs"></div>
+          <div class="date-nav">
+            <button class="date-nav-btn" id="prevWeek"><i class="fas fa-chevron-left"></i></button>
+            <span class="date-nav-label" id="weekLabel"></span>
+            <button class="date-nav-btn" id="nextWeek"><i class="fas fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Plan summary KPIs -->
+        <div class="plan-kpi-row">
+          <div class="plan-kpi">
+            <span class="plan-kpi-val" id="planKpiTotal">0</span>
+            <span class="plan-kpi-label">전체 과제</span>
+          </div>
+          <div class="plan-kpi plan-kpi-done">
+            <span class="plan-kpi-val" id="planKpiDone">0</span>
+            <span class="plan-kpi-label">완료</span>
+          </div>
+          <div class="plan-kpi plan-kpi-ing">
+            <span class="plan-kpi-val" id="planKpiIng">0</span>
+            <span class="plan-kpi-label">진행 중</span>
+          </div>
+          <div class="plan-kpi plan-kpi-todo">
+            <span class="plan-kpi-val" id="planKpiTodo">0</span>
+            <span class="plan-kpi-label">미완료</span>
+          </div>
+          <div class="plan-kpi plan-kpi-rate">
+            <span class="plan-kpi-val" id="planKpiRate">0%</span>
+            <span class="plan-kpi-label">완료율</span>
+          </div>
+        </div>
+
+        <!-- Plan table -->
+        <div class="dash-panel full-panel">
+          <div class="panel-header">
+            <h3 id="planTableTitle"><i class="fas fa-tasks"></i> 이번 주 학습 플랜</h3>
+            <button class="btn-sm-green" id="addPlanItemBtn"><i class="fas fa-plus"></i> 항목 추가</button>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <table class="admin-table" id="planTable">
+              <thead>
+                <tr>
+                  <th>과목</th>
+                  <th>학습 내용</th>
+                  <th>목표량</th>
+                  <th>진행 상태</th>
+                  <th>학생 메모</th>
+                  <th>관리자 코멘트</th>
+                  <th>수정</th>
+                </tr>
+              </thead>
+              <tbody id="planTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All students plan overview -->
+        <div class="dash-panel full-panel" style="margin-top:20px;">
+          <div class="panel-header">
+            <h3><i class="fas fa-list-ul"></i> 전체 학생 플랜 현황</h3>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <table class="admin-table" id="allPlanTable">
+              <thead>
+                <tr>
+                  <th>학생</th>
+                  <th>단계</th>
+                  <th>플랜 항목 수</th>
+                  <th>완료율</th>
+                  <th>최근 업데이트</th>
+                  <th>관리자 코멘트</th>
+                  <th>바로가기</th>
+                </tr>
+              </thead>
+              <tbody id="allPlanTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /plan panel -->
+
+      <!-- ===== 일일 기록 탭 ===== -->
+      <div class="main-tab-panel" id="mainPanel-daily">
+
+        <div class="plan-control-row">
+          <div class="date-nav" style="margin-left:0;">
+            <button class="date-nav-btn" id="prevDayPlan"><i class="fas fa-chevron-left"></i></button>
+            <span class="date-nav-label" id="dailyDateLabel"></span>
+            <button class="date-nav-btn" id="nextDayPlan"><i class="fas fa-chevron-right"></i></button>
+            <button class="btn-add" id="dailyTodayBtn" style="padding:8px 16px;font-size:13px;">오늘</button>
+          </div>
+        </div>
+
+        <!-- Daily records list -->
+        <div class="daily-grid" id="dailyGrid"></div>
+
+      </div><!-- /daily panel -->
+
+    </div>
   </div>
 
-  <div class="modal" id="pModal"><div class="modal-content">
-      <h3>📝 새 학습 플랜</h3>
-      <div class="form-group"><label>날짜</label><input type="date" id="pDate"></div>
-      <div class="form-group"><label>과목</label><input type="text" id="pSub" placeholder="국어, 수학 등"></div>
-      <div class="form-group"><label>목표량</label><input type="text" id="pTarget" placeholder="예: 30문제"></div>
-      <div class="form-group"><label>상세 내용</label><textarea id="pContent" rows="3"></textarea></div>
-      <button onclick="savePlan()" style="width:100%; padding:12px; background:#163A33; color:white; border:none; border-radius:8px; cursor:pointer;">저장하기</button>
-      <button onclick="closeModal()" style="width:100%; margin-top:10px; background:none; border:none; cursor:pointer; color:#64748b;">취소</button>
-  </div></div>
+  <div class="sidebar-dim" id="sidebarDim"></div>
 
-  <script>
-    let curId = null, curName = "";
-    window.onload = () => { document.getElementById('pDate').value = new Date().toISOString().slice(0,10); loadStus(); };
+  <!-- ===== 플랜 항목 추가/수정 모달 ===== -->
+  <div class="modal-overlay" id="planItemModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="planItemModalTitle">플랜 항목 추가</h3>
+        <button class="modal-close" id="planItemClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="add-form-grid">
+          <div class="form-group">
+            <label>과목 <span class="required">*</span></label>
+            <select id="piSubject">
+              <option value="">선택</option>
+              <option>수학</option><option>영어</option><option>국어</option>
+              <option>물리학</option><option>화학</option><option>생명과학</option>
+              <option>지구과학</option><option>사회</option><option>한국사</option><option>기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>목표량</label>
+            <input type="text" id="piTarget" placeholder="예: 30문항, 3단원, 1회독" />
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>학습 내용 <span class="required">*</span></label>
+            <textarea id="piContent" rows="3" placeholder="예: 수1 삼각함수 오답노트 정리 + 유사문제 5문항 풀기"></textarea>
+          </div>
+          <div class="form-group">
+            <label>진행 상태</label>
+            <select id="piStatus">
+              <option value="todo">미완료</option>
+              <option value="ing">진행 중</option>
+              <option value="done">완료</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>관리자 코멘트</label>
+            <input type="text" id="piComment" placeholder="학생에게 전달할 코멘트" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="planItemCancel">취소</button>
+        <button class="btn-submit" id="planItemSubmit"><i class="fas fa-save"></i> 저장</button>
+      </div>
+    </div>
+  </div>
 
-    async function loadStus() {
-      const res = await fetch('/tables/student_profiles');
-      const json = await res.json();
-      const list = document.getElementById('studentList');
-      list.innerHTML = (json.data || []).map(s => `<button class="stu-btn ${curId===s.student_id?'active':''}" onclick="selStu('${s.student_id}','${s.name}')">${s.name}</button>`).join('');
-      if(!curId && json.data.length > 0) selStu(json.data[0].student_id, json.data[0].name);
-    }
-
-    function selStu(id, name) { curId = id; curName = name; document.getElementById('stuTitle').innerText = name + " 학생 플랜"; loadStus(); loadPlans(); }
-
-    async function loadPlans() {
-      const res = await fetch(`/tables/planner_tasks?search=${curId}`);
-      const json = await res.json();
-      const tasks = (json.data || []).filter(t => t.student_id === curId);
-      document.getElementById('planTbody').innerHTML = tasks.length ? tasks.map(t => `<tr><td>${t.task_date}</td><td>${t.subject}</td><td>${t.target_amount}</td><td>${t.task_content}</td><td><button onclick="delPlan(${t.id})" style="color:red; border:none; background:none; cursor:pointer;">삭제</button></td></tr>`).join('') : '<tr><td colspan="5">등록된 플랜이 없습니다.</td></tr>';
-    }
-
-    async function savePlan() {
-      const data = { student_id: curId, student_name: curName, task_date: document.getElementById('pDate').value, subject: document.getElementById('pSub').value, target_amount: document.getElementById('pTarget').value, task_content: document.getElementById('pContent').value, is_done: false };
-      const res = await fetch('/tables/planner_tasks', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
-      if(res.ok) { closeModal(); loadPlans(); } else { const err = await res.json(); alert("실패 원인: " + err.error); }
-    }
-
-    function openModal() { document.getElementById('pModal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('pModal').style.display = 'none'; }
-    async function delPlan(id) { if(confirm('삭제하시겠습니까?')) { await fetch(`/tables/planner_tasks/${id}`, {method:'DELETE'}); loadPlans(); } }
-  </script>
+  <script src="../js/dvl-session.js?v=20260430"></script>
+  <script src="../js/admin-common.js?v=20260430"></script>
+  <script src="../js/plan.js?v=20260430"></script>
 </body>
 </html>

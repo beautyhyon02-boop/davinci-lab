@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB 테이블 초기화 – 다빈치랩</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; min-height: 100vh; }
+    h1 { font-size: 22px; font-weight: 800; color: #38bdf8; margin-bottom: 6px; }
+    .sub { color: #94a3b8; font-size: 13px; margin-bottom: 24px; }
+    .card { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #334155; }
+    .card h2 { font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 12px; }
+    .table-list { display: flex; flex-direction: column; gap: 8px; }
+    .table-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+      background: #0f172a; border-radius: 8px; border: 1px solid #334155; }
+    .table-name { font-weight: 700; font-size: 14px; color: #7dd3fc; flex: 1; }
+    .table-desc { font-size: 12px; color: #64748b; flex: 2; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #334155; flex-shrink: 0; }
+    .status-dot.ok  { background: #4ade80; }
+    .status-dot.err { background: #f87171; }
+    .status-dot.checking { background: #fbbf24; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .status-text { font-size: 12px; color: #64748b; min-width: 80px; text-align: right; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;
+      font-weight: 700; font-size: 14px; font-family: inherit; transition: all .2s; }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-warn { background: #d97706; color: white; }
+    .btn-warn:hover { background: #b45309; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    #logBox { background: #020617; border-radius: 8px; padding: 16px; font-family: monospace;
+      font-size: 12px; line-height: 1.7; max-height: 400px; overflow-y: auto;
+      border: 1px solid #1e293b; margin-top: 16px; }
+    .log-ok   { color: #4ade80; }
+    .log-err  { color: #f87171; }
+    .log-warn { color: #fbbf24; }
+    .log-info { color: #7dd3fc; }
+    .log-gray { color: #475569; }
+    .progress { height: 6px; background: #1e293b; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .progress-fill { height: 100%; background: #3b82f6; border-radius: 999px; transition: width .3s; }
+    .tip { background: #172554; border: 1px solid #1e40af; border-radius: 8px; padding: 12px 16px;
+      font-size: 13px; color: #93c5fd; margin-top: 12px; line-height: 1.6; }
+    .tip strong { color: #60a5fa; }
+  </style>
+</head>
+<body>
+
+<h1>🗄️ DB 테이블 초기화 도구</h1>
+<p class="sub">Railway 배포 후 "테이블을 찾을 수 없음" 오류 발생 시 이 페이지에서 초기화하세요.</p>
+
+<div class="card">
+  <h2>📋 필요한 테이블 현황</h2>
+  <div class="table-list" id="tableList">
+    <!-- JS로 채워짐 -->
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-primary" onclick="checkAllTables()">🔍 전체 상태 확인</button>
+    <button class="btn btn-success" onclick="createMissingTables()">✅ 없는 테이블 생성</button>
+  </div>
+  <div class="progress" id="progressBar" style="display:none">
+    <div class="progress-fill" id="progressFill" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>📝 실행 로그</h2>
+  <div id="logBox"><span class="log-gray">버튼을 눌러 상태를 확인하세요...</span></div>
+</div>
+
+<div class="tip">
+  <strong>💡 사용 방법</strong><br>
+  1. <strong>"전체 상태 확인"</strong> 클릭 → 각 테이블 존재 여부 확인<br>
+  2. 빨간 ❌ 항목이 있으면 <strong>"없는 테이블 생성"</strong> 클릭<br>
+  3. 완료 후 시험플래너, 학습플랜 페이지 새로고침
+</div>
+
+<script>
+/* ─── 필요한 테이블 목록 및 초기 데이터 ─── */
+const TABLES = [
+  {
+    name: 'student_profiles',
+    desc: '학생 계정 정보',
+    checkField: 'student_id',
+    sample: { student_id: 'test001', name: '테스트학생', school: '테스트중학교',
+              grade: '중1', grade_num: 1, class_num: 1, student_num: 1,
+              stage: '1단계', consulting: false, status: '재원',
+              password: 'dvl2024!', memo: '' }
+  },
+  {
+    name: 'exam_planners',
+    desc: '시험 플래너 (시험 일정 및 과목)',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'planner_tasks',
+    desc: '플래너 할 일 (날짜별 학습 항목)',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'exam_schedules',
+    desc: '시험 일정 상세',
+    checkField: 'planner_id',
+    sample: null
+  },
+  {
+    name: 'admin_accounts',
+    desc: '관리자 계정',
+    checkField: 'admin_id',
+    sample: null
+  },
+  {
+    name: 'parent_profiles',
+    desc: '학부모 계정',
+    checkField: 'parent_id',
+    sample: null
+  },
+  {
+    name: 'attendance',
+    desc: '출결 기록',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'assessments',
+    desc: '수행평가',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'planner_tasks',
+    desc: '플래너 학습 항목',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'student_logs',
+    desc: '학생 학습 로그 (타이머, 플랜완료 등)',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'notices',
+    desc: '공지사항',
+    checkField: 'title',
+    sample: null
+  },
+  {
+    name: 'consult_requests',
+    desc: '상담 신청',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'consultations',
+    desc: '상담 기록',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'grades_school',
+    desc: '학교 성적',
+    checkField: 'student_id',
+    sample: null
+  },
+  {
+    name: 'grades_mock',
+    desc: '모의고사 성적',
+    checkField: 'student_id',
+    sample: null
+  },
+];
+
+// 중복 제거
+const UNIQUE_TABLES = TABLES.filter((t, i, arr) => arr.findIndex(x => x.name === t.name) === i);
+
+/* ─── 상태 저장 ─── */
+const tableStatus = {}; // name → 'unknown' | 'ok' | 'err' | 'checking'
+
+/* ─── 초기 렌더 ─── */
+function renderTableList() {
+  const container = document.getElementById('tableList');
+  container.innerHTML = UNIQUE_TABLES.map(t => {
+    const s = tableStatus[t.name] || 'unknown';
+    const dotCls = s === 'ok' ? 'ok' : s === 'err' ? 'err' : s === 'checking' ? 'checking' : '';
+    const statusTxt = s === 'ok' ? '✅ 존재' : s === 'err' ? '❌ 없음' : s === 'checking' ? '⏳ 확인 중' : '–';
+    return `
+      <div class="table-row" id="row_${t.name}">
+        <div class="status-dot ${dotCls}" id="dot_${t.name}"></div>
+        <div class="table-name">${t.name}</div>
+        <div class="table-desc">${t.desc}</div>
+        <div class="status-text" id="txt_${t.name}">${statusTxt}</div>
+      </div>`;
+  }).join('');
+}
+
+function updateRow(name, status) {
+  tableStatus[name] = status;
+  const dot = document.getElementById(`dot_${name}`);
+  const txt = document.getElementById(`txt_${name}`);
+  if (!dot || !txt) return;
+  dot.className = 'status-dot ' + (status === 'ok' ? 'ok' : status === 'err' ? 'err' : status === 'checking' ? 'checking' : '');
+  txt.textContent = status === 'ok' ? '✅ 존재' : status === 'err' ? '❌ 없음' : status === 'checking' ? '⏳...' : '–';
+}
+
+/* ─── 로그 ─── */
+function log(msg, type = 'info') {
+  const box = document.getElementById('logBox');
+  const cls = { ok:'log-ok', err:'log-err', warn:'log-warn', info:'log-info', gray:'log-gray' }[type] || 'log-info';
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = `[${new Date().toLocaleTimeString('ko-KR')}] ${msg}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog() {
+  document.getElementById('logBox').innerHTML = '';
+}
+
+/* ─── 테이블 존재 확인 (GET /tables/{name}?limit=1) ─── */
+async function checkTable(name) {
+  updateRow(name, 'checking');
+  try {
+    const res = await fetch(`/tables/${name}?limit=1`);
+    if (res.ok) {
+      const data = await res.json();
+      // data.data 배열이 있으면 테이블 존재
+      if (Array.isArray(data.data)) {
+        updateRow(name, 'ok');
+        return true;
+      }
+    }
+    updateRow(name, 'err');
+    return false;
+  } catch(e) {
+    updateRow(name, 'err');
+    return false;
+  }
+}
+
+/* ─── 전체 확인 ─── */
+async function checkAllTables() {
+  clearLog();
+  log('🔍 전체 테이블 상태 확인 시작...', 'info');
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  bar.style.display = 'block';
+
+  let done = 0;
+  for (const t of UNIQUE_TABLES) {
+    const ok = await checkTable(t.name);
+    log(`${ok ? '✅' : '❌'} ${t.name} – ${t.desc}`, ok ? 'ok' : 'err');
+    done++;
+    fill.style.width = Math.round(done / UNIQUE_TABLES.length * 100) + '%';
+    await sleep(120);
+  }
+
+  const missing = UNIQUE_TABLES.filter(t => tableStatus[t.name] === 'err');
+  if (missing.length === 0) {
+    log('🎉 모든 테이블이 정상입니다!', 'ok');
+  } else {
+    log(`⚠️ ${missing.length}개 테이블이 없습니다: ${missing.map(t=>t.name).join(', ')}`, 'warn');
+    log('→ "없는 테이블 생성" 버튼을 클릭하세요.', 'warn');
+  }
+  bar.style.display = 'none';
+}
+
+/* ─── 없는 테이블 생성 ─── */
+async function createMissingTables() {
+  clearLog();
+  log('✅ 없는 테이블 생성 시작...', 'info');
+
+  const missing = UNIQUE_TABLES.filter(t => tableStatus[t.name] !== 'ok');
+  if (missing.length === 0) {
+    log('모든 테이블이 이미 존재합니다!', 'ok');
+    return;
+  }
+
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  bar.style.display = 'block';
+
+  let done = 0;
+  for (const t of missing) {
+    log(`⏳ ${t.name} 생성 중...`, 'info');
+    // 더미 레코드를 POST해서 테이블 생성 → 바로 상태 확인
+    try {
+      const dummyPayload = t.sample || { _init: true, table_name: t.name };
+      const res = await fetch(`/tables/${t.name}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dummyPayload)
+      });
+      if (res.ok || res.status === 201) {
+        const created = await res.json();
+        log(`✅ ${t.name} 생성 완료 (id: ${created.id || '?'})`, 'ok');
+        // sample이 없는 테이블은 더미 레코드 바로 삭제
+        if (!t.sample && created.id) {
+          await fetch(`/tables/${t.name}/${created.id}`, { method: 'DELETE' });
+          log(`   └ 더미 레코드 삭제 완료`, 'gray');
+        }
+        updateRow(t.name, 'ok');
+      } else {
+        const errText = await res.text();
+        log(`❌ ${t.name} 생성 실패 (HTTP ${res.status}): ${errText.slice(0, 100)}`, 'err');
+        updateRow(t.name, 'err');
+      }
+    } catch(e) {
+      log(`❌ ${t.name} 오류: ${e.message}`, 'err');
+      updateRow(t.name, 'err');
+    }
+    done++;
+    fill.style.width = Math.round(done / missing.length * 100) + '%';
+    await sleep(300);
+  }
+
+  log('─────────────────────────────────', 'gray');
+  const stillMissing = UNIQUE_TABLES.filter(t => tableStatus[t.name] !== 'ok');
+  if (stillMissing.length === 0) {
+    log('🎉 모든 테이블 생성 완료! 시험플래너, 학습플랜 페이지를 새로고침하세요.', 'ok');
+  } else {
+    log(`⚠️ 아직 생성되지 않은 테이블: ${stillMissing.map(t=>t.name).join(', ')}`, 'warn');
+    log('→ 다시 한 번 시도해보세요.', 'warn');
+  }
+  bar.style.display = 'none';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ─── 초기 실행 ─── */
+renderTableList();
+</script>
+</body>
+</html>
