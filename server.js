@@ -11,53 +11,35 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-/* ================================================
-   다빈치랩 통합 REST API (기존 프론트엔드와 완벽 호환)
-   ================================================ */
-
-// 1. 모든 테이블 공통 조회 (GET /tables/:name)
+// 모든 테이블 공통 조회 (Codex의 검색 필터링 및 데이터 제한 기능 통합)
 app.get('/tables/:tableName', async (req, res) => {
   const { tableName } = req.params;
   const { search, limit } = req.query;
 
   try {
-    // 테이블/컬럼 존재 확인
-    const columnRes = await pool.query(
-      `SELECT column_name
-         FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = $1`,
+    const colRes = await pool.query(
+      "SELECT column_name FROM information_schema.columns WHERE table_name = $1",
       [tableName]
     );
+    const columns = colRes.rows.map(r => r.column_name);
 
-    if (!columnRes.rows.length) {
-      return res.status(404).json({
-        success: false,
-        error: `table not found: ${tableName}`
-      });
-    }
+    if (columns.length === 0) return res.status(404).json({ success: false, error: 'Table not found' });
 
-    const columns = columnRes.rows.map((r) => r.column_name);
+    let sql = `SELECT * FROM ${tableName}`;
     const params = [];
-    const where = [];
 
-    // search가 있을 때, 실제 존재하는 컬럼만 검색 대상으로 사용
+    // 검색 로직: student_id 또는 name 컬럼이 있을 때만 안전하게 검색
     if (search) {
-      const searchableColumns = ['student_id', 'name', 'student_name']
-        .filter((c) => columns.includes(c));
-
-      if (searchableColumns.length) {
+      const searchCol = columns.includes('student_id') ? 'student_id' : (columns.includes('name') ? 'name' : null);
+      if (searchCol) {
         params.push(`%${search}%`);
-        const p = `$${params.length}`;
-        where.push(`(${searchableColumns.map((c) => `${c}::text ILIKE ${p}`).join(' OR ')})`);
+        sql += ` WHERE ${searchCol}::text ILIKE $1`;
       }
     }
 
-    const safeLimit = Math.max(1, Math.min(Number(limit) || 500, 2000));
-    params.push(safeLimit);
-
-    let sql = `SELECT * FROM ${tableName}`;
-    if (where.length) sql += ` WHERE ${where.join(' AND ')}`;
-    sql += ` ORDER BY id DESC LIMIT $${params.length}`;
+    // 데이터 호출 제한 (안전벨트 기능)
+    const safeLimit = Math.max(1, Math.min(parseInt(limit) || 500, 2000));
+    sql += ` ORDER BY id DESC LIMIT ${safeLimit}`;
 
     const result = await pool.query(sql, params);
     res.json({ success: true, data: result.rows });
@@ -66,7 +48,7 @@ app.get('/tables/:tableName', async (req, res) => {
   }
 });
 
-// 2. 모든 테이블 공통 저장 (POST /tables/:name)
+// 모든 테이블 공통 저장
 app.post('/tables/:tableName', async (req, res) => {
   const { tableName } = req.params;
   const fields = Object.keys(req.body);
@@ -82,28 +64,8 @@ app.post('/tables/:tableName', async (req, res) => {
   }
 });
 
-// 3. [특별기능] 3회독 시험 플랜 자동 생성기 (현재 템플릿)
-app.post('/api/generate-plan', async (req, res) => {
-  const { student_id, exam_date, subjects } = req.body;
-  // 필요시 서버 기반 자동 플랜 생성 로직 구현
-  res.json({ success: true, message: "플랜이 생성되었습니다." });
-});
+// 정적 파일 서빙 및 SPA 라우팅
+app.use(express.static(path.join(__dirname)));
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-/* ================================================
-   기존 다빈치랩 정적 파일 서빙
-   ================================================ */
-app.use(express.static(path.join(__dirname), {
-  index: 'index.html',
-  extensions: ['html']
-}));
-
-app.get('*', (req, res) => {
-  const filePath = path.join(__dirname, req.path);
-  res.sendFile(filePath, (err) => {
-    if (err) res.sendFile(path.join(__dirname, 'index.html'));
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 다빈치랩 오리지널 복구 서버 가동 중! (PORT: ${PORT})`);
-});
+app.listen(PORT, () => console.log(`🚀 다빈치랩 통합 복구 서버 가동 중! (Port: ${PORT})`));
