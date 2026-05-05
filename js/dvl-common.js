@@ -1,12 +1,13 @@
 /* ================================================================
    DaVinci Lab – 공통 유틸리티 (dvl-common.js)
+   v2.0 - Supabase 연동 (2026-05-06)
    모든 학생/관리자/학부모 페이지에서 공통으로 사용
    ================================================================ */
 
 /* ──────────────────────────────────────────────────────────────
    ★ API Base URL
    /tables/ (절대경로) — 어느 폴더 깊이에서도 항상 루트 기준으로 동작
-   Vercel의 vercel.json rewrites → Genspark API로 프록시
+   Railway 서버의 server.js → Supabase 직접 호출
 ────────────────────────────────────────────────────────────── */
 (function () {
   window.DVL_API = function (tableName) {
@@ -15,7 +16,7 @@
   window.DVL_API_RECORD = function (tableName, id) {
     return '/tables/' + tableName + '/' + id;
   };
-  console.log('[DVL] API Base: /tables/ (절대경로)');
+  console.log('[DVL] API Base: /tables/ → Supabase (v2.0)');
 })();
 
 /* ──────────────────────────────────────────────────────────────
