@@ -1,5 +1,5 @@
 /* =============================================
-   다빈치랩 학생 대시보드 JS – v16 DB 연동
+   다빈치랩 학생 대시보드 JS – v17 DB 연동 (kpiCards 버그 수정)
    ============================================= */
 
 /* ★ Genspark DB API — Vercel 배포 환경 포함 */
@@ -475,6 +475,7 @@ let attendMap   = {}; // YYYY-MM-DD → status
 
   /* ═══════════════════════════════════════════
      6. 시험 플래너 태스크 로드 & 학습플랜 렌더
+     ⭐ kpiCards 변수를 함수 시작 부분으로 이동 (버그 수정)
   ═══════════════════════════════════════════ */
   async function loadPlannerTasks() {
     try {
@@ -497,12 +498,14 @@ let attendMap   = {}; // YYYY-MM-DD → status
       const total = weekTasks.length;
       const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
 
+      /* ⭐ kpiCards를 함수 상단으로 이동 (이 함수 전체에서 사용 가능) */
+      const kpiCards = document.querySelectorAll('.kpi-card');
+
       const kpiPlanRateEl = document.getElementById('kpiPlanRate');
       const kpiPlanSubEl  = document.getElementById('kpiPlanSub');
       if (kpiPlanRateEl) {
         kpiPlanRateEl.innerHTML = (total > 0 ? pct : '–') + '<span class="kpi-unit">%</span>';
       } else {
-        const kpiCards = document.querySelectorAll('.kpi-card');
         if (kpiCards[1]) {
           kpiCards[1].querySelector('.kpi-value').innerHTML =
             (total > 0 ? pct : '–') + '<span class="kpi-unit">%</span>';
@@ -511,7 +514,6 @@ let attendMap   = {}; // YYYY-MM-DD → status
       if (kpiPlanSubEl) {
         kpiPlanSubEl.textContent = total > 0 ? `이번 주 ${done}/${total} 완료` : '이번 주 플랜 없음';
       } else {
-        const kpiCards = document.querySelectorAll('.kpi-card');
         if (kpiCards[1]) kpiCards[1].querySelector('.kpi-sub').textContent =
           total > 0 ? `이번 주 ${done}/${total} 완료` : '이번 주 플랜 없음';
       }
