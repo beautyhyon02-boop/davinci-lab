@@ -673,20 +673,153 @@ function renderTimeSlots(dateStr, slots) {
     const isCompleted = slot.completed;
     const slotKey = `${dateStr}_${idx}`;
     let actionBtn = '';
+    let slotTextHtml = '';
+    
     if (slot.type === 'study') {
+      // 학습 슬롯: 코넬노트 버튼
       const written = slot.cornell_written ? 'written' : '';
       const label = slot.cornell_written ? '✓ 작성' : '📝 작성';
       actionBtn = `<button class="cornell-btn ${written}" onclick="openCornellModal('${dateStr}', ${idx})">${label}</button>`;
+      slotTextHtml = `<span class="slot-text">${slot.task_text}</span>`;
+    } else if (slot.type === 'vocab') {
+      // 영어 단어 슬롯
+      slotTextHtml = `<span class="slot-text">${slot.task_text}</span>`;
+    } else if (slot.type === 'free') {
+      // 🆓 자유 입력 슬롯 - 학생이 입력 가능!
+      const userText = slot.user_text || '';
+      const isEdited = !!userText;
+      
+      if (isEdited) {
+        // 이미 입력한 내용 표시 (클릭 시 다시 편집 가능)
+        slotTextHtml = `
+          <span class="slot-text free-input-text" 
+                onclick="editFreeSlot('${dateStr}', ${idx})" 
+                title="클릭해서 수정">
+            ✍️ ${escapeHtml(userText)}
+          </span>
+          <button class="free-clear-btn" 
+                  onclick="clearFreeSlot('${dateStr}', ${idx})" 
+                  title="삭제">🗑️</button>
+        `;
+      } else {
+        // 빈 슬롯: 클릭하면 입력 박스로 변환
+        slotTextHtml = `
+          <span class="slot-text free-input-placeholder" 
+                onclick="editFreeSlot('${dateStr}', ${idx})">
+            ➕ 자유 입력 (클릭해서 작성하기)
+          </span>
+        `;
+      }
     }
+    
     return `
-      <div class="time-slot ${isCompleted ? 'completed' : ''}" data-slot-key="${slotKey}">
-        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleSlot('${dateStr}', ${idx}, this.checked)">
+      <div class="time-slot ${isCompleted ? 'completed' : ''} ${slot.type === 'free' ? 'free-slot' : ''}" 
+           data-slot-key="${slotKey}">
+        <input type="checkbox" ${isCompleted ? 'checked' : ''} 
+               onchange="toggleSlot('${dateStr}', ${idx}, this.checked)">
         <span class="slot-time">${slot.time}</span>
-        <span class="slot-text">${slot.task_text}</span>
+        ${slotTextHtml}
         ${actionBtn}
       </div>
     `;
   }).join('');
+}
+
+/* 🆓 자유 입력 슬롯 - 편집 모드 진입 */
+function editFreeSlot(dateStr, slotIdx) {
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  if (!dayTask) return;
+  const slot = dayTask.slots[slotIdx];
+  if (!slot) return;
+  
+  const currentText = slot.user_text || '';
+  
+  // DOM 직접 조작 - 해당 슬롯을 입력 모드로 변경
+  const slotEl = document.querySelector(`[data-slot-key="${dateStr}_${slotIdx}"]`);
+  if (!slotEl) return;
+  
+  const textEl = slotEl.querySelector('.slot-text');
+  if (!textEl) return;
+  
+  // 입력 박스로 교체
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'free-input-edit';
+  input.value = currentText;
+  input.placeholder = '예: 국어 작품 분석, 수학 오답 정리, 영어 듣기 등';
+  input.maxLength = 100;
+  
+  textEl.replaceWith(input);
+  input.focus();
+  input.select();
+  
+  // Enter 키 또는 포커스 잃을 때 저장
+  const saveAndExit = async () => {
+    const newText = input.value.trim();
+    slot.user_text = newText;
+    
+    // task_text도 함께 업데이트 (저장된 데이터 일관성)
+    if (newText) {
+      slot.task_text = `✍️ ${newText}`;
+    } else {
+      slot.task_text = '➕ 자유 입력 (학생이 작성)';
+    }
+    
+    await savePlannerData();
+    renderDayGrid();
+    
+    if (newText) {
+      showToast('✍️ 저장되었습니다!', 'success');
+    }
+  };
+  
+  input.addEventListener('blur', saveAndExit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      input.blur(); // blur 이벤트가 저장 처리
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      input.value = currentText; // 원복
+      input.blur();
+    }
+  });
+}
+
+/* 🗑️ 자유 입력 슬롯 - 내용 삭제 */
+async function clearFreeSlot(dateStr, slotIdx) {
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  if (!dayTask) return;
+  const slot = dayTask.slots[slotIdx];
+  if (!slot) return;
+  
+  if (!confirm('이 슬롯의 내용을 지울까요?')) return;
+  
+  slot.user_text = '';
+  slot.task_text = '➕ 자유 입력 (학생이 작성)';
+  slot.completed = false;
+  
+  // 완료 목록에서도 제거
+  if (dayTask.completed_slots) {
+    const idx = dayTask.completed_slots.indexOf(slotIdx);
+    if (idx >= 0) dayTask.completed_slots.splice(idx, 1);
+  }
+  
+  await savePlannerData();
+  renderDayGrid();
+  updateStats();
+  showToast('🗑️ 삭제되었습니다', 'success');
+}
+
+/* HTML 이스케이프 (XSS 방지) */
+function escapeHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function renderVocabSection(dateStr, dayTask) {
