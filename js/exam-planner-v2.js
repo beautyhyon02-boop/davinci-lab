@@ -1,6 +1,7 @@
 /* ════════════════════════════════════════════════════════
-   🎯 다빈치랩 시험 플래너 v2 - JavaScript (안정 버전)
+   🎯 다빈치랩 시험 플래너 v3 - 80분 단위 + 슬롯 수정
    작성일: 2026-05-12
+   특징: 70분 학습 + 10분 휴식, 저녁 18:30~19:30 제외
    ════════════════════════════════════════════════════════ */
 
 const API_BASE = '/tables';
@@ -21,6 +22,8 @@ let selectedSubjects = [];
 let selectedVocabCount = 20;
 let activeWeekTab = 'pre';
 let currentCornellSlot = null;
+let currentCornellNoteId = null;
+let currentEditingSlot = null;  // 슬롯 편집용
 let activeHighlightColor = null;
 
 const STAGES = [
@@ -39,7 +42,16 @@ const WEEK_DEFS = [
   { id: 'w4', cls: 'w4', emoji: '🔥', name: '4주차', subtitle: '최종 점검 & 시험' }
 ];
 
-/* ════════ 초기화 ════════ */
+// 다빈치랩 시간 정책
+const STUDY_MIN = 70;        // 학습 70분
+const REST_MIN = 10;         // 휴식 10분
+const SESSION_MIN = STUDY_MIN + REST_MIN;  // 한 세션 80분
+const MEAL_START = 1110;     // 18:30 (분 단위)
+const MEAL_END = 1170;       // 19:30
+const WEEKDAY_DEFAULT_START = 960;  // 주중 16:00
+const WEEKEND_DEFAULT_START = 480;  // 주말 08:00
+const DAY_END = 1480;        // 24:40 (24*60+40)
+
 document.addEventListener('DOMContentLoaded', async () => {
   showLoading('학생 정보를 불러오는 중...');
   if (!checkSession()) { hideLoading(); return; }
@@ -49,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   hideLoading();
 });
 
-/* ════════ 세션 확인 ════════ */
+/* ════════ 세션 ════════ */
 function checkSession() {
   const SESSION_KEYS = ['dvl_user', 'dvSession', 'dvl_student_session', 'dvl_session'];
   let userStr = null;
@@ -58,35 +70,26 @@ function checkSession() {
   for (const key of SESSION_KEYS) {
     const val = sessionStorage.getItem(key);
     if (val && val !== 'null' && val !== 'undefined' && val.includes('{')) {
-      userStr = val;
-      foundKey = `sessionStorage.${key}`;
-      break;
+      userStr = val; foundKey = `sessionStorage.${key}`; break;
     }
   }
-  
   if (!userStr) {
     for (const key of SESSION_KEYS) {
       const val = localStorage.getItem(key);
       if (val && val !== 'null' && val !== 'undefined' && val.includes('{')) {
-        userStr = val;
-        foundKey = `localStorage.${key}`;
-        break;
+        userStr = val; foundKey = `localStorage.${key}`; break;
       }
     }
   }
-  
-  console.log('🔍 세션 검색:', foundKey || '❌ 없음');
+  console.log('🔍 세션:', foundKey || '❌');
   
   if (!userStr) {
     showToast('로그인이 필요합니다', 'error');
     setTimeout(() => location.href = '../login.html', 1500);
     return false;
   }
-  
   try {
     const userData = JSON.parse(userStr);
-    console.log('✅ 학생 정보:', userData);
-    
     currentStudent = {
       student_id: userData.id || userData.student_id || 'seeyou',
       name: userData.name || '학생',
@@ -96,19 +99,15 @@ function checkSession() {
       grade_num: userData.gradeNum || userData.grade_num || null,
       stage: userData.stage || '1단계'
     };
-    
-    console.log('📌 매핑된 학생:', currentStudent);
-    
-    const name = currentStudent.name;
+    console.log('📌 학생:', currentStudent);
     const avatarEl = document.getElementById('studentAvatar');
     const nameEl = document.getElementById('studentNameText');
-    if (avatarEl) avatarEl.textContent = name.charAt(0);
-    if (nameEl) nameEl.textContent = name;
-    
+    if (avatarEl) avatarEl.textContent = currentStudent.name.charAt(0);
+    if (nameEl) nameEl.textContent = currentStudent.name;
     return true;
   } catch (e) {
-    console.error('❌ 세션 파싱 오류:', e);
-    showToast('세션 정보가 잘못되었어요', 'error');
+    console.error('세션 오류:', e);
+    showToast('세션 정보 오류', 'error');
     setTimeout(() => location.href = '../login.html', 1500);
     return false;
   }
@@ -119,18 +118,15 @@ async function loadSubjects() {
   try {
     const grade = (currentStudent.grade || '').toString();
     const schoolType = grade.includes('중') ? '중학교' : '고등학교';
-    
     const res = await fetch(`${API_BASE}/${TBL.subjects}?limit=100`);
     if (!res.ok) throw new Error('과목 로드 실패');
-    
     const data = await res.json();
     const all = data.data || data.records || data || [];
     allSubjects = all.filter(s => s.school_type === schoolType && s.is_active !== false);
-    
     renderSubjectChips();
+    populateSlotEditSubjects();
   } catch (e) {
-    console.error('과목 로드 오류:', e);
-    showToast('과목 정보를 불러오지 못했어요', 'error');
+    console.error('과목 로드:', e);
     allSubjects = [
       { subject_name: '국어', emoji: '📚' },
       { subject_name: '영어', emoji: '🔤' },
@@ -139,6 +135,7 @@ async function loadSubjects() {
       { subject_name: '사회', emoji: '🌏' }
     ];
     renderSubjectChips();
+    populateSlotEditSubjects();
   }
 }
 
@@ -156,6 +153,18 @@ function renderSubjectChips() {
   });
 }
 
+function populateSlotEditSubjects() {
+  const select = document.getElementById('slotEditSubject');
+  if (!select) return;
+  select.innerHTML = '<option value="">선택 안함</option>';
+  allSubjects.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.subject_name;
+    opt.textContent = `${s.emoji || '📖'} ${s.subject_name}`;
+    select.appendChild(opt);
+  });
+}
+
 function toggleSubject(chip) {
   chip.classList.toggle('selected');
   const name = chip.dataset.name;
@@ -164,15 +173,13 @@ function toggleSubject(chip) {
   else selectedSubjects.push(name);
 }
 
-/* ════════ 이벤트 리스너 (한 번에 정리) ════════ */
+/* ════════ 이벤트 리스너 ════════ */
 function setupEventListeners() {
-  // D-day 자동 계산
   const startEl = document.getElementById('examStartDate');
   const endEl = document.getElementById('examEndDate');
   if (startEl) startEl.addEventListener('change', updateDdayPreview);
   if (endEl) endEl.addEventListener('change', updateDdayPreview);
   
-  // 단어 갯수 라디오
   document.querySelectorAll('.vocab-radio').forEach(radio => {
     radio.addEventListener('click', () => {
       document.querySelectorAll('.vocab-radio').forEach(r => r.classList.remove('selected'));
@@ -181,12 +188,9 @@ function setupEventListeners() {
     });
   });
   
-  // 🖍️ 형광펜 버튼 - 진짜 형광펜처럼!
   document.querySelectorAll('.hl-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const color = btn.dataset.color;
-      
-      // 같은 색 다시 클릭 → 비활성화
       if (btn.classList.contains('active')) {
         btn.classList.remove('active');
         activeHighlightColor = null;
@@ -194,44 +198,35 @@ function setupEventListeners() {
         updateHighlighterInfo(null);
         return;
       }
-      
       document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeHighlightColor = color;
       document.body.classList.add('highlighter-active');
-      
       updateHighlighterInfo(color);
-      showToast(`🖍️ ${getColorMeaning(color)} 형광펜 - 텍스트를 드래그하세요!`, 'success');
+      showToast(`🖍️ ${getColorMeaning(color)} - 텍스트를 드래그하세요!`, 'success');
     });
   });
   
-  // 코넬노트 영역에서 텍스트 선택 시 자동 형광펜
   document.addEventListener('mouseup', (e) => {
     if (!activeHighlightColor) return;
-    if (e.target.closest('.cornell-editable')) {
+    if (e.target.closest && e.target.closest('.cornell-editable')) {
       handleTextSelection();
     }
   });
 }
 
-/* 🖍️ 텍스트 선택 → 형광펜 적용 */
 function handleTextSelection() {
   if (!activeHighlightColor) return;
-  
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed) return;
-  
   const range = selection.getRangeAt(0);
   const selectedText = range.toString();
   if (!selectedText.trim()) return;
-  
   let parent = range.commonAncestorContainer;
   if (parent.nodeType === 3) parent = parent.parentNode;
   const editable = parent.closest && parent.closest('.cornell-editable');
   if (!editable) return;
-  
   try {
-    // 이미 형광펜 칠해진 부분이면 제거
     if (parent.tagName === 'MARK' || (parent.closest && parent.closest('mark'))) {
       const mark = parent.tagName === 'MARK' ? parent : parent.closest('mark');
       const text = document.createTextNode(mark.textContent);
@@ -239,30 +234,17 @@ function handleTextSelection() {
       selection.removeAllRanges();
       return;
     }
-    
-    // 새 형광펜
     const mark = document.createElement('mark');
     mark.className = 'hl-' + activeHighlightColor;
     mark.textContent = selectedText;
-    
     range.deleteContents();
     range.insertNode(mark);
     selection.removeAllRanges();
-  } catch (e) {
-    console.warn('형광펜 적용 실패:', e);
-  }
+  } catch (e) { console.warn('형광펜 실패:', e); }
 }
 
 function getColorMeaning(color) {
-  const meanings = {
-    yellow: '🟡 노랑 (중요)',
-    green: '🟢 초록 (자주 나오는 유형)',
-    blue: '🔵 파랑 (공식)',
-    purple: '🟣 보라 (헷갈리는)',
-    red: '🔴 빨강 (실수)',
-    orange: '🟠 주황 (복습 필요)'
-  };
-  return meanings[color] || color;
+  return { yellow:'🟡 노랑 (중요)', green:'🟢 초록 (자주 출제)', blue:'🔵 파랑 (공식)', purple:'🟣 보라 (헷갈림)', red:'🔴 빨강 (실수)', orange:'🟠 주황 (복습)' }[color] || color;
 }
 
 function updateHighlighterInfo(color) {
@@ -272,42 +254,34 @@ function updateHighlighterInfo(color) {
     info.id = 'highlighterInfo';
     info.className = 'highlighter-info';
     const bar = document.querySelector('.highlighter-bar');
-    if (bar && bar.parentNode) {
-      bar.parentNode.insertBefore(info, bar.nextSibling);
-    }
+    if (bar && bar.parentNode) bar.parentNode.insertBefore(info, bar.nextSibling);
   }
   if (color) {
-    info.innerHTML = `🖍️ <strong>${getColorMeaning(color)}</strong> 형광펜 활성화 · 텍스트를 마우스로 <strong>드래그</strong>하면 그 부분만 칠해집니다!`;
+    info.innerHTML = `🖍️ <strong>${getColorMeaning(color)}</strong> 활성화 · 텍스트 드래그로 색칠`;
     info.style.display = 'block';
-  } else {
-    info.style.display = 'none';
-  }
+  } else { info.style.display = 'none'; }
 }
 
-/* ════════ D-day 미리보기 ════════ */
 function updateDdayPreview() {
   const startDate = document.getElementById('examStartDate').value;
   const endDate = document.getElementById('examEndDate').value;
   if (!startDate) return;
-  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const examDate = new Date(startDate);
   const diffDays = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
-  
   const preview = document.getElementById('ddayPreview');
   const count = document.getElementById('ddayCount');
   const label = document.getElementById('ddayLabel');
-  
   if (diffDays > 0) {
     count.textContent = `D-${diffDays}`;
-    label.textContent = `🎯 시험일: ${startDate}${endDate ? ' ~ ' + endDate : ''} · 오늘부터 ${diffDays}일 남았어요!`;
+    label.textContent = `🎯 시험일: ${startDate}${endDate ? ' ~ ' + endDate : ''} · ${diffDays}일 남았어요!`;
   } else if (diffDays === 0) {
     count.textContent = 'D-DAY';
-    label.textContent = '🔥 오늘이 시험일입니다!';
+    label.textContent = '🔥 오늘이 시험일!';
   } else {
     count.textContent = `D+${Math.abs(diffDays)}`;
-    label.textContent = '시험이 이미 지났어요. 회고를 작성해보세요.';
+    label.textContent = '시험이 지났어요';
   }
   preview.classList.add('show');
 }
@@ -323,15 +297,12 @@ async function createPlanner() {
   if (!examStartDate) { showToast('시험 시작일을 입력해주세요!', 'error'); return; }
   if (selectedSubjects.length === 0) { showToast('시험 과목을 1개 이상 선택해주세요!', 'error'); return; }
   
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0,0,0,0);
   const examDate = new Date(examStartDate);
-  const ddayTotal = Math.ceil((examDate - today) / (1000 * 60 * 60 * 24));
-  
+  const ddayTotal = Math.ceil((examDate - today) / 86400000);
   if (ddayTotal < 1) { showToast('시험일은 내일 이후로 설정해주세요!', 'error'); return; }
   
   showLoading('플래너를 생성하는 중... ✨');
-  
   try {
     const weeksData = distributeWeeks(today, examDate, ddayTotal);
     const dailyTasks = generateDailyTasks(weeksData);
@@ -364,32 +335,25 @@ async function createPlanner() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(plannerData)
     });
-    
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || '플래너 저장 실패');
     }
-    
     const saved = await res.json();
     currentPlanner = saved.data || saved;
     
     showToast('🎉 플래너가 생성되었습니다!', 'success');
-    
     document.getElementById('inputCard').style.display = 'none';
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('plannerContent').style.display = 'block';
-    
     renderWeekTabs();
     renderDayGrid();
     updateStats();
-    
     window.scrollTo({ top: document.querySelector('.main').offsetTop - 80, behavior: 'smooth' });
   } catch (e) {
-    console.error('플래너 생성 오류:', e);
-    showToast('플래너 생성 실패: ' + e.message, 'error');
-  } finally {
-    hideLoading();
-  }
+    console.error('플래너 생성:', e);
+    showToast('실패: ' + e.message, 'error');
+  } finally { hideLoading(); }
 }
 
 /* ════════ 5주차 분배 ════════ */
@@ -397,19 +361,14 @@ function distributeWeeks(startDate, examDate, totalDays) {
   let weekConfigs;
   if (totalDays >= 35) {
     weekConfigs = [
-      { ...WEEK_DEFS[0], days: 7 },
-      { ...WEEK_DEFS[1], days: 7 },
-      { ...WEEK_DEFS[2], days: 7 },
-      { ...WEEK_DEFS[3], days: 7 },
+      { ...WEEK_DEFS[0], days: 7 }, { ...WEEK_DEFS[1], days: 7 },
+      { ...WEEK_DEFS[2], days: 7 }, { ...WEEK_DEFS[3], days: 7 },
       { ...WEEK_DEFS[4], days: totalDays - 28 }
     ];
   } else if (totalDays >= 28) {
     weekConfigs = [
-      { ...WEEK_DEFS[0], days: totalDays - 28 },
-      { ...WEEK_DEFS[1], days: 7 },
-      { ...WEEK_DEFS[2], days: 7 },
-      { ...WEEK_DEFS[3], days: 7 },
-      { ...WEEK_DEFS[4], days: 7 }
+      { ...WEEK_DEFS[0], days: totalDays - 28 }, { ...WEEK_DEFS[1], days: 7 },
+      { ...WEEK_DEFS[2], days: 7 }, { ...WEEK_DEFS[3], days: 7 }, { ...WEEK_DEFS[4], days: 7 }
     ];
     if (weekConfigs[0].days <= 0) weekConfigs.shift();
   } else if (totalDays >= 21) {
@@ -431,10 +390,7 @@ function distributeWeeks(startDate, examDate, totalDays) {
     ];
   } else if (totalDays >= 7) {
     const per = Math.floor(totalDays / 2);
-    weekConfigs = [
-      { ...WEEK_DEFS[3], days: per },
-      { ...WEEK_DEFS[4], days: totalDays - per }
-    ];
+    weekConfigs = [{ ...WEEK_DEFS[3], days: per }, { ...WEEK_DEFS[4], days: totalDays - per }];
   } else {
     weekConfigs = [{ ...WEEK_DEFS[4], days: totalDays }];
   }
@@ -448,25 +404,17 @@ function distributeWeeks(startDate, examDate, totalDays) {
       dayDates.push(formatDate(currentDate));
       currentDate.setDate(currentDate.getDate() + 1);
     }
-    const weekEnd = new Date(currentDate);
-    weekEnd.setDate(weekEnd.getDate() - 1);
-    
+    const weekEnd = new Date(currentDate); weekEnd.setDate(weekEnd.getDate() - 1);
     weeks.push({
-      id: wc.id,
-      cls: wc.cls,
-      emoji: wc.emoji,
-      name: wc.name,
-      subtitle: wc.subtitle,
-      start_date: formatDate(weekStart),
-      end_date: formatDate(weekEnd),
-      day_count: wc.days,
-      day_dates: dayDates
+      id: wc.id, cls: wc.cls, emoji: wc.emoji, name: wc.name, subtitle: wc.subtitle,
+      start_date: formatDate(weekStart), end_date: formatDate(weekEnd),
+      day_count: wc.days, day_dates: dayDates
     });
   });
   return weeks;
 }
 
-/* ════════ 일별 시간표 생성 ════════ */
+/* ════════ 일별 시간표 생성 (80분 단위) ════════ */
 function generateDailyTasks(weeksData) {
   const tasks = {};
   weeksData.forEach((week, weekIdx) => {
@@ -474,109 +422,150 @@ function generateDailyTasks(weeksData) {
       const date = new Date(dateStr);
       const dayOfWeek = date.getDay();
       const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-      const slots = generateTimeSlots(isWeekend);
-      const subjectAssignments = assignSubjectsToSlots(slots, week.id, weekIdx, dayIdx, isWeekend);
-      
+      const defaultStart = isWeekend ? WEEKEND_DEFAULT_START : WEEKDAY_DEFAULT_START;
+      const slots = buildDaySchedule(defaultStart, week.id, weekIdx, dayIdx, isWeekend);
       tasks[dateStr] = {
         date: dateStr,
         day_of_week: ['일','월','화','수','목','금','토'][dayOfWeek],
         is_weekend: isWeekend,
+        start_minutes: defaultStart,
         week_id: week.id,
-        slots: subjectAssignments,
+        slots: slots,
         completed_slots: [],
-        memo: '',
-        mood: '',
-        vocab_done: 0,
-        vocab_total: selectedVocabCount
+        memo: '', mood: '',
+        vocab_done: 0, vocab_total: selectedVocabCount
       };
     });
   });
   return tasks;
 }
 
-function generateTimeSlots(isWeekend) {
+/* 🎯 핵심 알고리즘: 80분 슬롯 자동 생성 + 식사 시간 제외 + 휴식 삽입 */
+function buildDaySchedule(startMinutes, weekId, weekIdx, dayIdx, isWeekend) {
   const slots = [];
-  const startHour = isWeekend ? 8 : 16;
-  const endHour = 24;
-  const endMin = 40;
-  
-  let h = startHour;
-  let m = 0;
-  
-  while (h < endHour || (h === endHour && m <= endMin)) {
-    const endH = m === 30 ? h + 1 : h;
-    const endM = m === 30 ? 0 : 30;
-    
-    if (endH > endHour || (endH === endHour && endM > endMin)) {
-      slots.push({
-        time: `${pad(h)}:${pad(m)}~${pad(endHour)}:${pad(endMin)}`,
-        start: `${pad(h)}:${pad(m)}`,
-        end: `${pad(endHour)}:${pad(endMin)}`
-      });
-      break;
-    }
-    slots.push({
-      time: `${pad(h)}:${pad(m)}~${pad(endH)}:${pad(endM)}`,
-      start: `${pad(h)}:${pad(m)}`,
-      end: `${pad(endH)}:${pad(endM)}`
-    });
-    if (m === 0) { m = 30; } else { m = 0; h++; }
-  }
-  return slots;
-}
-
-function pad(n) { return n.toString().padStart(2, '0'); }
-
-function assignSubjectsToSlots(slots, weekId, weekIdx, dayIdx, isWeekend) {
   const stageRange = getStageRangeForWeek(weekId);
-  const assignedSlots = [];
-  const studySlotCount = isWeekend ? 8 : 4;
   const todaySubjects = selectSubjectsForDay(dayIdx);
   
-  let slotIdx = 0;
+  let cursor = startMinutes;
+  let studyCounter = 0;  // 학습 슬롯 인덱스
   let subjIdx = 0;
   
-  for (let i = 0; i < studySlotCount && slotIdx < slots.length; i++) {
-    const subj = todaySubjects[subjIdx % todaySubjects.length];
-    const stage = stageRange[i % stageRange.length];
-    const subjData = allSubjects.find(s => s.subject_name === subj) || { emoji: '📖' };
+  // 학습 횟수 결정 (주중: 4세션, 주말: 8세션)
+  const targetStudySessions = isWeekend ? 8 : 4;
+  let studySessionsCreated = 0;
+  
+  while (cursor + STUDY_MIN <= DAY_END && studySessionsCreated < targetStudySessions * 2) {
+    // 1) 식사 시간(18:30~19:30) 자동 스킵
+    if (cursor < MEAL_END && (cursor + STUDY_MIN) > MEAL_START) {
+      // 학습이 식사 시간과 겹침 → 식사 슬롯 삽입
+      if (cursor < MEAL_START) {
+        // 식사 전 짧은 시간이 남은 경우 → 식사 시간까지 점프
+        slots.push({
+          type: 'meal',
+          start_min: MEAL_START,
+          end_min: MEAL_END,
+          time: `${minToTime(MEAL_START)}~${minToTime(MEAL_END)}`,
+          task_text: '🍱 저녁 식사 (자습 제외)',
+          completed: false,
+          editable: false
+        });
+        cursor = MEAL_END;
+        continue;
+      } else {
+        // 식사 중간이거나 식사 종료 시간으로 점프
+        cursor = MEAL_END;
+        continue;
+      }
+    }
     
-    assignedSlots.push({
-      ...slots[slotIdx],
-      subject: subj,
-      subject_emoji: subjData.emoji || '📖',
-      stage: stage.name,
-      stage_id: stage.id,
-      stage_emoji: stage.emoji,
-      task_text: `${subjData.emoji} ${subj} · ${stage.emoji} ${stage.name} + 코넬노트`,
-      type: 'study',
-      completed: false,
-      cornell_written: false
-    });
-    slotIdx++;
-    subjIdx++;
+    // 2) 70분 학습 슬롯
+    const studyStart = cursor;
+    const studyEnd = cursor + STUDY_MIN;
+    if (studyEnd > DAY_END) break;
+    
+    // 학습/단어/자유 결정
+    let slotType, taskText, subject, stage, subjectEmoji, stageEmoji;
+    
+    if (studyCounter < targetStudySessions) {
+      // 정규 학습 슬롯
+      const subj = todaySubjects[subjIdx % todaySubjects.length];
+      const stageDef = stageRange[studyCounter % stageRange.length];
+      const subjData = allSubjects.find(s => s.subject_name === subj) || { emoji: '📖' };
+      
+      slotType = 'study';
+      subject = subj;
+      subjectEmoji = subjData.emoji || '📖';
+      stage = stageDef.name;
+      stageEmoji = stageDef.emoji;
+      taskText = `${subjectEmoji} ${subj} · ${stageEmoji} ${stage} + 코넬노트`;
+      
+      slots.push({
+        type: slotType,
+        start_min: studyStart,
+        end_min: studyEnd,
+        time: `${minToTime(studyStart)}~${minToTime(studyEnd)}`,
+        subject: subject,
+        subject_emoji: subjectEmoji,
+        stage: stage,
+        stage_id: stageDef.id,
+        stage_emoji: stageEmoji,
+        task_text: taskText,
+        completed: false,
+        cornell_written: false,
+        editable: true
+      });
+      
+      subjIdx++;
+    } else {
+      // 정규 학습 끝 → 영어단어 1번 + 자유 입력으로 나머지 채움
+      if (studyCounter === targetStudySessions) {
+        slots.push({
+          type: 'vocab',
+          start_min: studyStart,
+          end_min: studyEnd,
+          time: `${minToTime(studyStart)}~${minToTime(studyEnd)}`,
+          task_text: `🔤 영어 단어 ${selectedVocabCount}개 + 1/3/7일 복습`,
+          completed: false,
+          editable: true
+        });
+      } else {
+        slots.push({
+          type: 'free',
+          start_min: studyStart,
+          end_min: studyEnd,
+          time: `${minToTime(studyStart)}~${minToTime(studyEnd)}`,
+          task_text: '➕ 자유 입력 (학생이 작성)',
+          user_text: '',
+          completed: false,
+          editable: true
+        });
+      }
+    }
+    
+    studyCounter++;
+    studySessionsCreated++;
+    cursor = studyEnd;
+    
+    // 3) 10분 휴식 추가 (다음 슬롯이 식사가 아닌 경우만)
+    if (cursor + REST_MIN <= DAY_END && cursor + REST_MIN + STUDY_MIN <= DAY_END) {
+      const restEnd = cursor + REST_MIN;
+      // 휴식 종료가 식사 시작과 겹치지 않으면 추가
+      if (!(cursor < MEAL_START && restEnd > MEAL_START)) {
+        slots.push({
+          type: 'rest',
+          start_min: cursor,
+          end_min: restEnd,
+          time: `${minToTime(cursor)}~${minToTime(restEnd)}`,
+          task_text: '☕ 휴식 (10분)',
+          completed: false,
+          editable: false
+        });
+        cursor = restEnd;
+      }
+    }
   }
   
-  if (slotIdx < slots.length) {
-    assignedSlots.push({
-      ...slots[slotIdx],
-      task_text: `🔤 영어 단어 ${selectedVocabCount}개 + 1/3/7일 복습`,
-      type: 'vocab',
-      completed: false
-    });
-    slotIdx++;
-  }
-  
-  while (slotIdx < slots.length) {
-    assignedSlots.push({
-      ...slots[slotIdx],
-      task_text: '➕ 자유 입력 (학생이 작성)',
-      type: 'free',
-      completed: false
-    });
-    slotIdx++;
-  }
-  return assignedSlots;
+  return slots;
 }
 
 function getStageRangeForWeek(weekId) {
@@ -598,16 +587,28 @@ function selectSubjectsForDay(dayIdx) {
   return [selectedSubjects[start], selectedSubjects[(start + 1) % n]];
 }
 
+function minToTime(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${pad(h)}:${pad(m)}`;
+}
+
+function timeToMin(timeStr) {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function pad(n) { return n.toString().padStart(2, '0'); }
+
 /* ════════ 렌더링 ════════ */
 function renderWeekTabs() {
   if (!currentPlanner || !currentPlanner.weeks_data) return;
   const container = document.getElementById('weekTabs');
   container.innerHTML = '';
-  
   currentPlanner.weeks_data.forEach((week, idx) => {
     const tab = document.createElement('div');
     tab.className = `week-tab ${idx === 0 ? 'active ' + week.cls : ''}`;
-    tab.dataset.weekId = week.id;
     tab.innerHTML = `
       <span class="emoji">${week.emoji}</span>
       <div class="name">${week.name}</div>
@@ -615,9 +616,7 @@ function renderWeekTabs() {
     `;
     tab.onclick = () => {
       activeWeekTab = week.id;
-      document.querySelectorAll('.week-tab').forEach(t => {
-        t.classList.remove('active', 'pre', 'w1', 'w2', 'w3', 'w4');
-      });
+      document.querySelectorAll('.week-tab').forEach(t => t.classList.remove('active','pre','w1','w2','w3','w4'));
       tab.classList.add('active', week.cls);
       renderDayGrid();
     };
@@ -630,24 +629,25 @@ function renderDayGrid() {
   if (!currentPlanner || !currentPlanner.daily_tasks) return;
   const grid = document.getElementById('dayGrid');
   grid.innerHTML = '';
-  
   const currentWeek = currentPlanner.weeks_data.find(w => w.id === activeWeekTab);
   if (!currentWeek) return;
   const todayStr = formatDate(new Date());
   
-  currentWeek.day_dates.forEach((dateStr, dayIdx) => {
+  currentWeek.day_dates.forEach((dateStr) => {
     const dayTask = currentPlanner.daily_tasks[dateStr];
     if (!dayTask) return;
-    
     const isToday = dateStr === todayStr;
     const ddayLabel = calcDdayFromDate(dateStr);
     const card = document.createElement('div');
     card.className = `day-card ${currentWeek.cls} ${isToday ? 'today-card' : ''}`;
-    card.dataset.date = dateStr;
     
     const completedCount = (dayTask.completed_slots || []).length;
-    const totalCount = dayTask.slots.length;
+    // 휴식/식사는 통계 제외
+    const countableSlots = dayTask.slots.filter(s => s.type !== 'rest' && s.type !== 'meal');
+    const totalCount = countableSlots.length;
     const pct = totalCount > 0 ? Math.round(completedCount / totalCount * 100) : 0;
+    
+    const startMin = dayTask.start_minutes || (dayTask.is_weekend ? WEEKEND_DEFAULT_START : WEEKDAY_DEFAULT_START);
     
     card.innerHTML = `
       <div class="day-header">
@@ -659,6 +659,14 @@ function renderDayGrid() {
       </div>
       <div class="day-progress-bar"><div class="fill" style="width:${pct}%"></div></div>
       <div class="day-body">
+        <div class="day-start-time">
+          <label>🕐 시작 시간:</label>
+          <input type="time" value="${minToTime(startMin)}" 
+                 onchange="changeDayStartTime('${dateStr}', this.value)">
+          <button class="regen-btn" onclick="regenerateDaySchedule('${dateStr}')" title="새 시작시간으로 시간표 다시 생성">
+            🔄 재생성
+          </button>
+        </div>
         ${renderTimeSlots(dateStr, dayTask.slots)}
         ${renderVocabSection(dateStr, dayTask)}
         ${renderDayMemo(dateStr, dayTask)}
@@ -671,155 +679,72 @@ function renderDayGrid() {
 function renderTimeSlots(dateStr, slots) {
   return slots.map((slot, idx) => {
     const isCompleted = slot.completed;
-    const slotKey = `${dateStr}_${idx}`;
-    let actionBtn = '';
-    let slotTextHtml = '';
+    let slotClass = 'time-slot';
+    let slotInner = '';
+    let actions = '';
     
-    if (slot.type === 'study') {
-      // 학습 슬롯: 코넬노트 버튼
-      const written = slot.cornell_written ? 'written' : '';
-      const label = slot.cornell_written ? '✓ 작성' : '📝 작성';
-      actionBtn = `<button class="cornell-btn ${written}" onclick="openCornellModal('${dateStr}', ${idx})">${label}</button>`;
-      slotTextHtml = `<span class="slot-text">${slot.task_text}</span>`;
-    } else if (slot.type === 'vocab') {
-      // 영어 단어 슬롯
-      slotTextHtml = `<span class="slot-text">${slot.task_text}</span>`;
+    if (slot.type === 'rest') {
+      slotClass += ' rest-slot';
+      slotInner = `
+        <span class="slot-time">${slot.time}</span>
+        <span class="slot-text">☕ 휴식 (10분)</span>
+      `;
+    } else if (slot.type === 'meal') {
+      slotClass += ' meal-slot';
+      slotInner = `
+        <span class="slot-time">${slot.time}</span>
+        <span class="slot-text">🍱 저녁 식사</span>
+      `;
     } else if (slot.type === 'free') {
-      // 🆓 자유 입력 슬롯 - 학생이 입력 가능!
+      slotClass += ' free-slot';
+      if (isCompleted) slotClass += ' completed';
       const userText = slot.user_text || '';
-      const isEdited = !!userText;
-      
-      if (isEdited) {
-        // 이미 입력한 내용 표시 (클릭 시 다시 편집 가능)
-        slotTextHtml = `
-          <span class="slot-text free-input-text" 
-                onclick="editFreeSlot('${dateStr}', ${idx})" 
-                title="클릭해서 수정">
-            ✍️ ${escapeHtml(userText)}
-          </span>
-          <button class="free-clear-btn" 
-                  onclick="clearFreeSlot('${dateStr}', ${idx})" 
-                  title="삭제">🗑️</button>
-        `;
-      } else {
-        // 빈 슬롯: 클릭하면 입력 박스로 변환
-        slotTextHtml = `
-          <span class="slot-text free-input-placeholder" 
-                onclick="editFreeSlot('${dateStr}', ${idx})">
-            ➕ 자유 입력 (클릭해서 작성하기)
-          </span>
-        `;
-      }
-    }
-    
-    return `
-      <div class="time-slot ${isCompleted ? 'completed' : ''} ${slot.type === 'free' ? 'free-slot' : ''}" 
-           data-slot-key="${slotKey}">
+      const displayText = userText ? `✍️ ${escapeHtml(userText)}` : '➕ 자유 입력 (수정 버튼 클릭)';
+      slotInner = `
         <input type="checkbox" ${isCompleted ? 'checked' : ''} 
                onchange="toggleSlot('${dateStr}', ${idx}, this.checked)">
         <span class="slot-time">${slot.time}</span>
-        ${slotTextHtml}
-        ${actionBtn}
-      </div>
-    `;
-  }).join('');
-}
-
-/* 🆓 자유 입력 슬롯 - 편집 모드 진입 */
-function editFreeSlot(dateStr, slotIdx) {
-  const dayTask = currentPlanner.daily_tasks[dateStr];
-  if (!dayTask) return;
-  const slot = dayTask.slots[slotIdx];
-  if (!slot) return;
-  
-  const currentText = slot.user_text || '';
-  
-  // DOM 직접 조작 - 해당 슬롯을 입력 모드로 변경
-  const slotEl = document.querySelector(`[data-slot-key="${dateStr}_${slotIdx}"]`);
-  if (!slotEl) return;
-  
-  const textEl = slotEl.querySelector('.slot-text');
-  if (!textEl) return;
-  
-  // 입력 박스로 교체
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'free-input-edit';
-  input.value = currentText;
-  input.placeholder = '예: 국어 작품 분석, 수학 오답 정리, 영어 듣기 등';
-  input.maxLength = 100;
-  
-  textEl.replaceWith(input);
-  input.focus();
-  input.select();
-  
-  // Enter 키 또는 포커스 잃을 때 저장
-  const saveAndExit = async () => {
-    const newText = input.value.trim();
-    slot.user_text = newText;
-    
-    // task_text도 함께 업데이트 (저장된 데이터 일관성)
-    if (newText) {
-      slot.task_text = `✍️ ${newText}`;
+        <span class="slot-text ${userText ? '' : 'free-input-placeholder'}">${displayText}</span>
+      `;
+      actions = `
+        <div class="slot-actions">
+          <button class="slot-edit-btn" onclick="openSlotEditModal('${dateStr}', ${idx})">✏️ 수정</button>
+        </div>
+      `;
+    } else if (slot.type === 'vocab') {
+      if (isCompleted) slotClass += ' completed';
+      slotInner = `
+        <input type="checkbox" ${isCompleted ? 'checked' : ''} 
+               onchange="toggleSlot('${dateStr}', ${idx}, this.checked)">
+        <span class="slot-time">${slot.time}</span>
+        <span class="slot-text">${slot.task_text}</span>
+      `;
+      actions = `
+        <div class="slot-actions">
+          <button class="slot-edit-btn" onclick="openSlotEditModal('${dateStr}', ${idx})">✏️ 수정</button>
+        </div>
+      `;
     } else {
-      slot.task_text = '➕ 자유 입력 (학생이 작성)';
+      // study
+      if (isCompleted) slotClass += ' completed';
+      const written = slot.cornell_written ? 'written' : '';
+      const cornellLabel = slot.cornell_written ? '✓ 노트' : '📝 노트';
+      slotInner = `
+        <input type="checkbox" ${isCompleted ? 'checked' : ''} 
+               onchange="toggleSlot('${dateStr}', ${idx}, this.checked)">
+        <span class="slot-time">${slot.time}</span>
+        <span class="slot-text">${slot.task_text}</span>
+      `;
+      actions = `
+        <div class="slot-actions">
+          <button class="slot-cornell-btn ${written}" onclick="openCornellModal('${dateStr}', ${idx})">${cornellLabel}</button>
+          <button class="slot-edit-btn" onclick="openSlotEditModal('${dateStr}', ${idx})">✏️</button>
+        </div>
+      `;
     }
     
-    await savePlannerData();
-    renderDayGrid();
-    
-    if (newText) {
-      showToast('✍️ 저장되었습니다!', 'success');
-    }
-  };
-  
-  input.addEventListener('blur', saveAndExit);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      input.blur(); // blur 이벤트가 저장 처리
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      input.value = currentText; // 원복
-      input.blur();
-    }
-  });
-}
-
-/* 🗑️ 자유 입력 슬롯 - 내용 삭제 */
-async function clearFreeSlot(dateStr, slotIdx) {
-  const dayTask = currentPlanner.daily_tasks[dateStr];
-  if (!dayTask) return;
-  const slot = dayTask.slots[slotIdx];
-  if (!slot) return;
-  
-  if (!confirm('이 슬롯의 내용을 지울까요?')) return;
-  
-  slot.user_text = '';
-  slot.task_text = '➕ 자유 입력 (학생이 작성)';
-  slot.completed = false;
-  
-  // 완료 목록에서도 제거
-  if (dayTask.completed_slots) {
-    const idx = dayTask.completed_slots.indexOf(slotIdx);
-    if (idx >= 0) dayTask.completed_slots.splice(idx, 1);
-  }
-  
-  await savePlannerData();
-  renderDayGrid();
-  updateStats();
-  showToast('🗑️ 삭제되었습니다', 'success');
-}
-
-/* HTML 이스케이프 (XSS 방지) */
-function escapeHtml(str) {
-  if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    return `<div class="${slotClass}" data-slot-key="${dateStr}_${idx}">${slotInner}${actions}</div>`;
+  }).join('');
 }
 
 function renderVocabSection(dateStr, dayTask) {
@@ -832,7 +757,7 @@ function renderVocabSection(dateStr, dayTask) {
         <div class="count">${done} / ${total}</div>
       </div>
       <div class="vocab-review-info">
-        ♻️ 어제 ${total}개 · 3일전 ${total}개 · 7일전 ${total}개 누적 복습 (Ebbinghaus 시스템)
+        ♻️ 어제 ${total}개 · 3일전 ${total}개 · 7일전 ${total}개 누적 (Ebbinghaus)
       </div>
     </div>
   `;
@@ -841,30 +766,67 @@ function renderVocabSection(dateStr, dayTask) {
 function renderDayMemo(dateStr, dayTask) {
   const memo = dayTask.memo || '';
   const mood = dayTask.mood || '';
-  const moods = ['😊', '🥲', '💪', '😴', '🔥', '😅'];
+  const moods = ['😊','🥲','💪','😴','🔥','😅'];
   return `
     <div class="day-memo">
       <textarea placeholder="오늘의 메모를 적어주세요..." onchange="saveDayMemo('${dateStr}', this.value)">${memo}</textarea>
       <div class="mood-emoji-row">
-        ${moods.map(m => `
-          <span class="mood-emoji ${mood === m ? 'selected' : ''}" onclick="setDayMood('${dateStr}', '${m}', this)">${m}</span>
-        `).join('')}
+        ${moods.map(m => `<span class="mood-emoji ${mood === m ? 'selected' : ''}" onclick="setDayMood('${dateStr}', '${m}', this)">${m}</span>`).join('')}
       </div>
     </div>
   `;
 }
 
-/* ════════ 슬롯/메모/기분 저장 ════════ */
+/* ════════ 시작 시간 변경 / 재생성 ════════ */
+async function changeDayStartTime(dateStr, newTime) {
+  if (!currentPlanner || !currentPlanner.daily_tasks[dateStr]) return;
+  currentPlanner.daily_tasks[dateStr].start_minutes = timeToMin(newTime);
+  await savePlannerData();
+  showToast(`⏰ 시작 시간이 ${newTime}으로 변경되었어요! 재생성 버튼을 눌러 시간표를 새로 만드세요.`, 'success');
+}
+
+async function regenerateDaySchedule(dateStr) {
+  if (!currentPlanner || !currentPlanner.daily_tasks[dateStr]) return;
+  if (!confirm('이 날의 시간표를 새로 생성하시겠어요?\n(체크 표시와 메모는 유지됩니다)')) return;
+  
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  const week = currentPlanner.weeks_data.find(w => w.id === dayTask.week_id);
+  const dayIdx = week ? week.day_dates.indexOf(dateStr) : 0;
+  const weekIdx = currentPlanner.weeks_data.findIndex(w => w.id === dayTask.week_id);
+  
+  const oldMemo = dayTask.memo;
+  const oldMood = dayTask.mood;
+  const oldVocabDone = dayTask.vocab_done;
+  
+  const newSlots = buildDaySchedule(
+    dayTask.start_minutes,
+    dayTask.week_id,
+    weekIdx,
+    dayIdx,
+    dayTask.is_weekend
+  );
+  
+  dayTask.slots = newSlots;
+  dayTask.completed_slots = [];
+  dayTask.memo = oldMemo;
+  dayTask.mood = oldMood;
+  dayTask.vocab_done = oldVocabDone;
+  
+  await savePlannerData();
+  renderDayGrid();
+  updateStats();
+  showToast('🔄 시간표가 새로 생성되었습니다!', 'success');
+}
+
+/* ════════ 체크박스 / 메모 / 기분 ════════ */
 async function toggleSlot(dateStr, slotIdx, checked) {
   if (!currentPlanner || !currentPlanner.daily_tasks[dateStr]) return;
   const dayTask = currentPlanner.daily_tasks[dateStr];
   dayTask.slots[slotIdx].completed = checked;
-  
   if (!dayTask.completed_slots) dayTask.completed_slots = [];
   const idx = dayTask.completed_slots.indexOf(slotIdx);
   if (checked && idx < 0) dayTask.completed_slots.push(slotIdx);
   if (!checked && idx >= 0) dayTask.completed_slots.splice(idx, 1);
-  
   await savePlannerData();
   renderDayGrid();
   updateStats();
@@ -896,62 +858,208 @@ async function savePlannerData() {
       })
     });
     if (!res.ok) throw new Error('저장 실패');
-  } catch (e) {
-    console.error('저장 오류:', e);
-    showToast('저장 중 오류가 발생했어요', 'error');
+  } catch (e) { console.error('저장:', e); showToast('저장 오류', 'error'); }
+}
+
+/* ════════ 슬롯 편집 모달 ════════ */
+function openSlotEditModal(dateStr, slotIdx) {
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  if (!dayTask) return;
+  const slot = dayTask.slots[slotIdx];
+  if (!slot || !slot.editable) {
+    showToast('이 슬롯은 수정할 수 없어요', 'error');
+    return;
   }
+  
+  currentEditingSlot = { dateStr, slotIdx };
+  
+  document.getElementById('slotEditStartTime').value = minToTime(slot.start_min);
+  document.getElementById('slotEditEndTime').value = minToTime(slot.end_min);
+  document.getElementById('slotEditSubject').value = slot.subject || '';
+  document.getElementById('slotEditStage').value = slot.stage || '';
+  document.getElementById('slotEditCustomText').value = slot.user_text || '';
+  
+  document.getElementById('slotEditModal').classList.add('show');
+}
+
+function closeSlotEditModal() {
+  document.getElementById('slotEditModal').classList.remove('show');
+  currentEditingSlot = null;
+}
+
+async function saveSlotEdit() {
+  if (!currentEditingSlot) return;
+  const { dateStr, slotIdx } = currentEditingSlot;
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  const slot = dayTask.slots[slotIdx];
+  if (!slot) return;
+  
+  const startTime = document.getElementById('slotEditStartTime').value;
+  const endTime = document.getElementById('slotEditEndTime').value;
+  const subject = document.getElementById('slotEditSubject').value;
+  const stage = document.getElementById('slotEditStage').value;
+  const customText = document.getElementById('slotEditCustomText').value.trim();
+  
+  if (!startTime || !endTime) {
+    showToast('시간을 입력해주세요!', 'error');
+    return;
+  }
+  
+  const startMin = timeToMin(startTime);
+  const endMin = timeToMin(endTime);
+  
+  if (endMin <= startMin) {
+    showToast('종료 시간이 시작 시간보다 빠를 수 없어요', 'error');
+    return;
+  }
+  
+  // 식사 시간(18:30~19:30) 겹침 경고
+  if (startMin < MEAL_END && endMin > MEAL_START) {
+    if (!confirm('⚠️ 저녁 식사 시간(18:30~19:30)과 겹쳐요!\n그래도 저장할까요?')) return;
+  }
+  
+  slot.start_min = startMin;
+  slot.end_min = endMin;
+  slot.time = `${minToTime(startMin)}~${minToTime(endMin)}`;
+  
+  // 과목/단계 업데이트
+  if (subject) {
+    const subjData = allSubjects.find(s => s.subject_name === subject) || { emoji: '📖' };
+    slot.subject = subject;
+    slot.subject_emoji = subjData.emoji || '📖';
+  }
+  if (stage) {
+    const stageMap = {
+      '개념이해':'💡','개념완성':'📖','인강듣기':'🎬','문제풀이':'📝',
+      '유형문제':'📝','심화문제':'🔥','최종문제':'🎯','오답정리':'✍️','암기':'🧠','자유학습':'📖'
+    };
+    slot.stage = stage;
+    slot.stage_emoji = stageMap[stage] || '📖';
+  }
+  
+  // task_text 자동 조합
+  if (customText) {
+    slot.user_text = customText;
+    slot.task_text = `✍️ ${customText}`;
+    if (slot.type === 'free' && customText) {
+      // free 슬롯에 내용이 들어가면 일반 학습처럼 보이게
+    }
+  } else if (slot.subject && slot.stage) {
+    slot.task_text = `${slot.subject_emoji} ${slot.subject} · ${slot.stage_emoji} ${slot.stage}`;
+    slot.user_text = '';
+  } else if (slot.subject) {
+    slot.task_text = `${slot.subject_emoji} ${slot.subject}`;
+    slot.user_text = '';
+  }
+  
+  await savePlannerData();
+  closeSlotEditModal();
+  renderDayGrid();
+  showToast('✅ 슬롯이 수정되었습니다!', 'success');
+}
+
+async function deleteSlot() {
+  if (!currentEditingSlot) return;
+  if (!confirm('정말 이 슬롯을 삭제하시겠어요?')) return;
+  
+  const { dateStr, slotIdx } = currentEditingSlot;
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  dayTask.slots.splice(slotIdx, 1);
+  
+  // 완료 리스트도 정리
+  if (dayTask.completed_slots) {
+    dayTask.completed_slots = dayTask.completed_slots
+      .filter(i => i !== slotIdx)
+      .map(i => i > slotIdx ? i - 1 : i);
+  }
+  
+  await savePlannerData();
+  closeSlotEditModal();
+  renderDayGrid();
+  updateStats();
+  showToast('🗑️ 슬롯이 삭제되었습니다', 'success');
 }
 
 /* ════════ 코넬노트 모달 ════════ */
 function openCornellModal(dateStr, slotIdx) {
   currentCornellSlot = { dateStr, slotIdx };
   const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
-  
   document.getElementById('cornellInfo').innerHTML = `
-    <strong>📅 ${dateStr}</strong> · ${slot.subject_emoji} ${slot.subject} · ${slot.stage_emoji} ${slot.stage}
+    <strong>📅 ${dateStr}</strong> · ${slot.subject_emoji || '📖'} ${slot.subject || ''} · ${slot.stage_emoji || ''} ${slot.stage || ''}
   `;
-  
+  const headerTitle = document.querySelector('.modal-header h3');
+  if (headerTitle) headerTitle.innerHTML = '✏️ 코넬노트 작성';
   loadExistingNote(dateStr, slotIdx, slot);
   document.getElementById('cornellModal').classList.add('show');
 }
 
 async function loadExistingNote(dateStr, slotIdx, slot) {
-  // contenteditable 또는 textarea 모두 지원
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (el.tagName === 'TEXTAREA') el.value = val;
     else el.innerHTML = val;
   };
-  
   setVal('cornellKeywords', '');
   setVal('cornellContent', '');
   setVal('cornellSummary', '');
+  currentCornellNoteId = null;
+  updateSaveButtonLabel(false);
+  document.getElementById('cornellDeleteBtn').style.display = 'none';
   
   try {
-    const url = `${API_BASE}/${TBL.notes}?student_id=${currentStudent.student_id}&subject=${encodeURIComponent(slot.subject)}&stage=${encodeURIComponent(slot.stage)}&limit=1`;
+    const url = `${API_BASE}/${TBL.notes}?student_id=${currentStudent.student_id}&subject=${encodeURIComponent(slot.subject || '')}&stage=${encodeURIComponent(slot.stage || '')}&planner_id=${currentPlanner.id}&limit=10`;
     const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
     const notes = data.data || data.records || data || [];
     if (notes.length > 0) {
-      const n = notes[0];
+      const n = notes[notes.length - 1];
       setVal('cornellKeywords', n.keywords || '');
       setVal('cornellContent', n.content || '');
       setVal('cornellSummary', n.summary || '');
+      currentCornellNoteId = n.id;
+      updateSaveButtonLabel(true);
+      document.getElementById('cornellDeleteBtn').style.display = 'inline-block';
+      console.log('📝 노트 로드:', n.id);
     }
-  } catch (e) {
-    console.warn('기존 노트 로드 실패:', e);
+  } catch (e) { console.warn('노트 로드:', e); }
+}
+
+function updateSaveButtonLabel(isEditMode) {
+  const btn = document.querySelector('.modal-actions .btn-save');
+  if (!btn) return;
+  if (isEditMode) {
+    btn.innerHTML = '✏️ 수정 저장';
+    btn.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
+  } else {
+    btn.innerHTML = '💾 코넬노트 저장';
+    btn.style.background = 'linear-gradient(135deg, #4F46E5, #7C3AED)';
+  }
+  const headerTitle = document.querySelector('.modal-header h3');
+  if (headerTitle) headerTitle.innerHTML = isEditMode ? '✏️ 코넬노트 수정' : '✏️ 코넬노트 작성';
+  const info = document.getElementById('cornellInfo');
+  if (info && isEditMode && !info.innerHTML.includes('수정 모드')) {
+    info.innerHTML += ' <span style="background:#FEF3C7;color:#D97706;padding:2px 8px;border-radius:6px;font-weight:700;margin-left:8px;">✏️ 수정 모드</span>';
   }
 }
 
 function closeCornellModal() {
   document.getElementById('cornellModal').classList.remove('show');
   currentCornellSlot = null;
+  currentCornellNoteId = null;
   document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
   activeHighlightColor = null;
   document.body.classList.remove('highlighter-active');
   updateHighlighterInfo(null);
+  const headerTitle = document.querySelector('.modal-header h3');
+  if (headerTitle) headerTitle.innerHTML = '✏️ 코넬노트 작성';
+  const btn = document.querySelector('.modal-actions .btn-save');
+  if (btn) {
+    btn.innerHTML = '💾 코넬노트 저장';
+    btn.style.background = 'linear-gradient(135deg, #4F46E5, #7C3AED)';
+  }
+  document.getElementById('cornellDeleteBtn').style.display = 'none';
 }
 
 async function saveCornellNote() {
@@ -959,7 +1067,6 @@ async function saveCornellNote() {
   const { dateStr, slotIdx } = currentCornellSlot;
   const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
   
-  // contenteditable 또는 textarea 모두 지원
   const getVal = (id) => {
     const el = document.getElementById(id);
     if (!el) return '';
@@ -980,67 +1087,112 @@ async function saveCornellNote() {
     return;
   }
   
-  showLoading('코넬노트를 저장하는 중...');
+  const isEditMode = !!currentCornellNoteId;
+  showLoading(isEditMode ? '수정 중...' : '저장 중...');
   
   try {
-    const today = new Date();
-    const d1 = new Date(today); d1.setDate(d1.getDate() + 1);
-    const d3 = new Date(today); d3.setDate(d3.getDate() + 3);
-    const d7 = new Date(today); d7.setDate(d7.getDate() + 7);
+    const hasHL = keywords.includes('<mark') || content.includes('<mark') || summary.includes('<mark');
     
-    const noteData = {
-      student_id: currentStudent.student_id,
-      planner_id: currentPlanner.id,
-      subject: slot.subject,
-      unit: '',
-      stage: slot.stage,
-      note_type: 'study',
-      keywords: keywords,
-      content: content,
-      summary: summary,
-      highlights: { has_highlighter: keywords.includes('<mark') || content.includes('<mark') || summary.includes('<mark') },
-      image_urls: [],
-      review_date_1: formatDate(d1),
-      review_date_3: formatDate(d3),
-      review_date_7: formatDate(d7),
-      reviewed_1: false,
-      reviewed_3: false,
-      reviewed_7: false,
-      is_mastered: false
-    };
-    
-    const res = await fetch(`${API_BASE}/${TBL.notes}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(noteData)
-    });
-    
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || '코넬노트 저장 실패');
+    if (isEditMode) {
+      const res = await fetch(`${API_BASE}/${TBL.notes}/${currentCornellNoteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords, content, summary,
+          highlights: { has_highlighter: hasHL },
+          updated_at: new Date().toISOString()
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || '수정 실패');
+      }
+      showToast('✏️ 코넬노트가 수정되었습니다!', 'success');
+    } else {
+      const today = new Date();
+      const d1 = new Date(today); d1.setDate(d1.getDate() + 1);
+      const d3 = new Date(today); d3.setDate(d3.getDate() + 3);
+      const d7 = new Date(today); d7.setDate(d7.getDate() + 7);
+      
+      const noteData = {
+        student_id: currentStudent.student_id,
+        planner_id: currentPlanner.id,
+        subject: slot.subject || '',
+        unit: '',
+        stage: slot.stage || '',
+        note_type: 'study',
+        keywords, content, summary,
+        highlights: { has_highlighter: hasHL },
+        image_urls: [],
+        review_date_1: formatDate(d1),
+        review_date_3: formatDate(d3),
+        review_date_7: formatDate(d7),
+        reviewed_1: false, reviewed_3: false, reviewed_7: false,
+        is_mastered: false
+      };
+      const res = await fetch(`${API_BASE}/${TBL.notes}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(noteData)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || '저장 실패');
+      }
+      const saved = await res.json();
+      currentCornellNoteId = saved.id || (saved.data && saved.data.id);
+      showToast('💾 코넬노트가 저장되었습니다!', 'success');
     }
     
     slot.cornell_written = true;
     await savePlannerData();
-    
-    showToast('✏️ 코넬노트가 저장되었습니다!', 'success');
     closeCornellModal();
     renderDayGrid();
   } catch (e) {
-    console.error('코넬노트 저장 오류:', e);
-    showToast('저장 실패: ' + e.message, 'error');
-  } finally {
-    hideLoading();
-  }
+    console.error('코넬노트:', e);
+    showToast('실패: ' + e.message, 'error');
+  } finally { hideLoading(); }
 }
 
-/* ════════ 통계 ════════ */
+async function deleteCornellNote() {
+  if (!currentCornellNoteId) return;
+  if (!confirm('정말 이 코넬노트를 삭제하시겠어요?\n(복습 일정도 함께 사라집니다)')) return;
+  
+  showLoading('삭제 중...');
+  try {
+    const res = await fetch(`${API_BASE}/${TBL.notes}/${currentCornellNoteId}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || '삭제 실패');
+    }
+    
+    // 슬롯의 cornell_written 플래그 해제
+    if (currentCornellSlot) {
+      const { dateStr, slotIdx } = currentCornellSlot;
+      currentPlanner.daily_tasks[dateStr].slots[slotIdx].cornell_written = false;
+      await savePlannerData();
+    }
+    
+    showToast('🗑️ 코넬노트가 삭제되었습니다', 'success');
+    closeCornellModal();
+    renderDayGrid();
+  } catch (e) {
+    console.error('삭제:', e);
+    showToast('삭제 실패: ' + e.message, 'error');
+  } finally { hideLoading(); }
+}
+
+/* ════════ 통계 / 기존 플래너 ════════ */
 function updateStats() {
   if (!currentPlanner || !currentPlanner.daily_tasks) return;
   let total = 0, done = 0;
   Object.values(currentPlanner.daily_tasks).forEach(day => {
-    total += day.slots.length;
-    done += (day.completed_slots || []).length;
+    const countable = day.slots.filter(s => s.type !== 'rest' && s.type !== 'meal');
+    total += countable.length;
+    done += (day.completed_slots || []).filter(idx => {
+      const slot = day.slots[idx];
+      return slot && slot.type !== 'rest' && slot.type !== 'meal';
+    }).length;
   });
   const pct = total > 0 ? Math.round(done / total * 100) : 0;
   document.getElementById('statTotal').textContent = total;
@@ -1050,7 +1202,6 @@ function updateStats() {
   document.getElementById('overallFill').style.width = pct + '%';
 }
 
-/* ════════ 기존 플래너 로드 ════════ */
 async function loadExistingPlanner() {
   try {
     const url = `${API_BASE}/${TBL.planners}?student_id=${currentStudent.student_id}&status=active&limit=10`;
@@ -1058,14 +1209,12 @@ async function loadExistingPlanner() {
     if (!res.ok) return;
     const data = await res.json();
     const planners = data.data || data.records || data || [];
-    
     if (planners.length > 0) {
       const p = planners[planners.length - 1];
       if (typeof p.weeks_data === 'string') p.weeks_data = JSON.parse(p.weeks_data);
       if (typeof p.daily_tasks === 'string') p.daily_tasks = JSON.parse(p.daily_tasks);
       if (typeof p.subjects === 'string') p.subjects = JSON.parse(p.subjects);
       currentPlanner = p;
-      
       const examEnd = new Date(p.exam_end_date);
       const today = new Date();
       if (examEnd >= today) {
@@ -1077,59 +1226,51 @@ async function loadExistingPlanner() {
         updateStats();
       }
     }
-  } catch (e) {
-    console.warn('기존 플래너 로드 실패:', e);
-  }
+  } catch (e) { console.warn('기존 플래너 로드:', e); }
 }
 
 /* ════════ 헬퍼 ════════ */
 function formatDate(d) {
   if (typeof d === 'string') return d.split('T')[0];
-  const yyyy = d.getFullYear();
-  const mm = pad(d.getMonth() + 1);
-  const dd = pad(d.getDate());
-  return `${yyyy}-${mm}-${dd}`;
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
-
 function formatShortDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  return `${d.getMonth() + 1}/${d.getDate()}`;
+  return `${d.getMonth()+1}/${d.getDate()}`;
 }
-
 function formatLongDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  const days = ['일','월','화','수','목','금','토'];
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${['일','월','화','수','목','금','토'][d.getDay()]})`;
 }
-
 function calcDdayFromDate(dateStr) {
   if (!currentPlanner) return '';
   const examDate = new Date(currentPlanner.exam_start_date);
   const target = new Date(dateStr);
-  const diff = Math.ceil((examDate - target) / (1000 * 60 * 60 * 24));
+  const diff = Math.ceil((examDate - target) / 86400000);
   if (diff > 0) return `D-${diff}`;
   if (diff === 0) return 'D-DAY';
   return `D+${Math.abs(diff)}`;
 }
-
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
 function showLoading(text) {
-  const overlay = document.getElementById('loadingOverlay');
-  const txt = document.getElementById('loadingText');
-  if (txt) txt.textContent = text || '로딩 중...';
-  if (overlay) overlay.classList.add('show');
+  const o = document.getElementById('loadingOverlay');
+  const t = document.getElementById('loadingText');
+  if (t) t.textContent = text || '로딩 중...';
+  if (o) o.classList.add('show');
 }
-
 function hideLoading() {
-  const overlay = document.getElementById('loadingOverlay');
-  if (overlay) overlay.classList.remove('show');
+  const o = document.getElementById('loadingOverlay');
+  if (o) o.classList.remove('show');
 }
-
 function showToast(msg, type = '') {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
-  toast.textContent = msg;
-  toast.className = `toast show ${type}`;
-  setTimeout(() => toast.classList.remove('show'), 2500);
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
