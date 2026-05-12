@@ -984,14 +984,25 @@ async function saveCornellNote() {
   const { dateStr, slotIdx } = currentCornellSlot;
   const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
   
-  const keywords = document.getElementById('cornellKeywords').value.trim();
-  const content = document.getElementById('cornellContent').value.trim();
-  const summary = document.getElementById('cornellSummary').value.trim();
+   // contenteditable div는 innerHTML로 읽기 (형광펜 마크 포함)
+  const keywordsEl = document.getElementById('cornellKeywords');
+  const contentEl = document.getElementById('cornellContent');
+  const summaryEl = document.getElementById('cornellSummary');
   
-  if (!keywords && !content) {
+  const keywords = keywordsEl.innerHTML.trim();
+  const content = contentEl.innerHTML.trim();
+  const summary = summaryEl.innerHTML.trim();
+  
+  // 빈 div는 빈 문자열로
+  const keywordsText = keywordsEl.textContent.trim();
+  const contentText = contentEl.textContent.trim();
+
+  
+   if (!keywordsText && !contentText) {
     showToast('키워드나 학습 내용 중 하나는 입력해주세요!', 'error');
     return;
   }
+
   
   showLoading('코넬노트를 저장하는 중...');
   
