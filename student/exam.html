@@ -507,11 +507,41 @@
     background: var(--primary-light);
     border-color: var(--primary-mid);
   }
-  .time-slot.completed {
+   .time-slot.completed {
     background: #ECFDF5;
     border-color: #A7F3D0;
   }
-  .time-slot.completed .slot-text { text-decoration: line-through; color: #6B7280; }
+  .time-slot.completed .slot-text,
+  .time-slot.completed .slot-time,
+  .time-slot.completed .stage-badge { 
+    text-decoration: line-through; 
+    color: #9CA3AF; 
+    opacity: 0.7;
+  }
+
+  /* ═══ 형광펜 미리보기 ═══ */
+  .cornell-section textarea {
+    transition: background 0.2s;
+  }
+  .cornell-section textarea.hl-yellow { background: linear-gradient(transparent 60%, var(--hl-yellow) 60%) !important; }
+  .cornell-section textarea.hl-green { background: linear-gradient(transparent 60%, var(--hl-green) 60%) !important; }
+  .cornell-section textarea.hl-blue { background: linear-gradient(transparent 60%, var(--hl-blue) 60%) !important; }
+  .cornell-section textarea.hl-purple { background: linear-gradient(transparent 60%, var(--hl-purple) 60%) !important; }
+  .cornell-section textarea.hl-red { background: linear-gradient(transparent 60%, var(--hl-red) 60%) !important; }
+  .cornell-section textarea.hl-orange { background: linear-gradient(transparent 60%, var(--hl-orange) 60%) !important; }
+  
+  /* 형광펜 정보 표시 영역 */
+  .highlighter-info {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-light);
+    border: 1px dashed var(--border);
+  }
+  .highlighter-info strong { color: var(--text); }
+
   .time-slot input[type="checkbox"] {
     width: 18px; height: 18px;
     accent-color: var(--primary);
