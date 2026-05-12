@@ -943,9 +943,9 @@ function openCornellModal(dateStr, slotIdx) {
 }
 
 async function loadExistingNote(dateStr, slotIdx, slot) {
-  document.getElementById('cornellKeywords').value = '';
-  document.getElementById('cornellContent').value = '';
-  document.getElementById('cornellSummary').value = '';
+   document.getElementById('cornellKeywords').innerHTML = '';
+  document.getElementById('cornellContent').innerHTML = '';
+  document.getElementById('cornellSummary').innerHTML = '';
   
   try {
     const url = `${API_BASE}/${TBL.notes}?student_id=${currentStudent.student_id}&subject=${encodeURIComponent(slot.subject)}&stage=${encodeURIComponent(slot.stage)}&limit=1`;
@@ -957,9 +957,10 @@ async function loadExistingNote(dateStr, slotIdx, slot) {
     
     if (notes.length > 0) {
       const n = notes[0];
-      document.getElementById('cornellKeywords').value = n.keywords || '';
-      document.getElementById('cornellContent').value = n.content || '';
-      document.getElementById('cornellSummary').value = n.summary || '';
+      // innerHTML로 저장된 형광펜 마크 그대로 표시
+      document.getElementById('cornellKeywords').innerHTML = n.keywords || '';
+      document.getElementById('cornellContent').innerHTML = n.content || '';
+      document.getElementById('cornellSummary').innerHTML = n.summary || '';
     }
   } catch (e) {
     console.warn('기존 노트 로드 실패:', e);
