@@ -225,47 +225,83 @@ function setupEventListeners() {
     });
   });
   
-  // 형광펜 버튼 - 텍스트박스에 실제로 색 입히기
+   // 🖍️ 진짜 형광펜 - 드래그한 부분만 칠하기
   document.querySelectorAll('.hl-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const color = btn.dataset.color;
       
-      // 이미 선택된 색 다시 클릭하면 해제
+      // 같은 색 다시 클릭 → 비활성화
       if (btn.classList.contains('active')) {
         btn.classList.remove('active');
         activeHighlightColor = null;
-        applyHighlightToCornell(null);
+        document.body.classList.remove('highlighter-active');
         updateHighlighterInfo(null);
         return;
       }
       
+      // 다른 색 선택
       document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeHighlightColor = color;
+      document.body.classList.add('highlighter-active');
       
-      // 코넬노트의 모든 textarea에 형광펜 색 적용
-      applyHighlightToCornell(color);
       updateHighlighterInfo(color);
-      
-      showToast(`🎨 ${getColorMeaning(color)} 형광펜 활성화`, 'success');
+      showToast(`🖍️ ${getColorMeaning(color)} 형광펜 - 텍스트를 드래그하세요!`, 'success');
     });
   });
+  
+  // 코넬노트 영역에서 텍스트 선택 시 자동으로 형광펜 적용
+  setTimeout(() => {
+    document.querySelectorAll('.cornell-editable').forEach(area => {
+      area.addEventListener('mouseup', handleTextSelection);
+      area.addEventListener('keyup', (e) => {
+        // Shift+화살표로 선택 시에도 동작
+        if (e.shiftKey) handleTextSelection();
+      });
+    });
+  }, 100);
 }
 
-/* 형광펜 색을 textarea에 적용 */
-function applyHighlightToCornell(color) {
-  const textareas = [
-    document.getElementById('cornellKeywords'),
-    document.getElementById('cornellContent'),
-    document.getElementById('cornellSummary')
-  ];
-  textareas.forEach(ta => {
-    if (!ta) return;
-    // 기존 형광펜 클래스 제거
-    ta.classList.remove('hl-yellow', 'hl-green', 'hl-blue', 'hl-purple', 'hl-red', 'hl-orange');
-    // 새 색 적용
-    if (color) ta.classList.add('hl-' + color);
-  });
+/* 🖍️ 텍스트 선택 → 형광펜 적용 (핵심 로직!) */
+function handleTextSelection() {
+  if (!activeHighlightColor) return; // 형광펜 미선택 시 무시
+  
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed) return; // 선택된 텍스트 없음
+  
+  const range = selection.getRangeAt(0);
+  const selectedText = range.toString();
+  if (!selectedText.trim()) return;
+  
+  // 선택된 영역이 cornell-editable 안에 있는지 확인
+  let parent = range.commonAncestorContainer;
+  if (parent.nodeType === 3) parent = parent.parentNode; // 텍스트노드면 부모로
+  const editable = parent.closest('.cornell-editable');
+  if (!editable) return;
+  
+  try {
+    // 이미 형광펜이 칠해진 부분인지 확인 (다시 클릭 시 제거)
+    if (parent.tagName === 'MARK' || parent.closest('mark')) {
+      const mark = parent.tagName === 'MARK' ? parent : parent.closest('mark');
+      const text = document.createTextNode(mark.textContent);
+      mark.parentNode.replaceChild(text, mark);
+      selection.removeAllRanges();
+      return;
+    }
+    
+    // 새로 형광펜 칠하기
+    const mark = document.createElement('mark');
+    mark.className = 'hl-' + activeHighlightColor;
+    mark.textContent = selectedText;
+    
+    range.deleteContents();
+    range.insertNode(mark);
+    
+    // 선택 해제
+    selection.removeAllRanges();
+  } catch (e) {
+    console.warn('형광펜 적용 실패:', e);
+  }
 }
 
 /* 형광펜 의미 설명 */
@@ -281,7 +317,7 @@ function getColorMeaning(color) {
   return meanings[color] || color;
 }
 
-/* 형광펜 정보 표시 영역 업데이트 */
+/* 형광펜 정보 영역 업데이트 */
 function updateHighlighterInfo(color) {
   let info = document.getElementById('highlighterInfo');
   if (!info) {
@@ -293,6 +329,14 @@ function updateHighlighterInfo(color) {
       bar.parentNode.insertBefore(info, bar.nextSibling);
     }
   }
+  if (color) {
+    info.innerHTML = `🖍️ <strong>${getColorMeaning(color)}</strong> 형광펜 활성화 · 텍스트를 마우스로 <strong>드래그</strong>하면 그 부분만 칠해집니다!`;
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
   if (color) {
     info.innerHTML = `현재 형광펜: <strong>${getColorMeaning(color)}</strong> · 텍스트박스 배경에 색이 표시됩니다`;
     info.style.display = 'block';
