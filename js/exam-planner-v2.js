@@ -925,7 +925,14 @@ async function loadExistingNote(dateStr, slotIdx, slot) {
 function closeCornellModal() {
   document.getElementById('cornellModal').classList.remove('show');
   currentCornellSlot = null;
+  
+  // 형광펜 초기화
+  document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
+  activeHighlightColor = null;
+  applyHighlightToCornell(null);
+  updateHighlighterInfo(null);
 }
+
 
 async function saveCornellNote() {
   if (!currentCornellSlot) return;
