@@ -225,15 +225,82 @@ function setupEventListeners() {
     });
   });
   
-  // 형광펜 버튼
+  // 형광펜 버튼 - 텍스트박스에 실제로 색 입히기
   document.querySelectorAll('.hl-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      const color = btn.dataset.color;
+      
+      // 이미 선택된 색 다시 클릭하면 해제
+      if (btn.classList.contains('active')) {
+        btn.classList.remove('active');
+        activeHighlightColor = null;
+        applyHighlightToCornell(null);
+        updateHighlighterInfo(null);
+        return;
+      }
+      
       document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      activeHighlightColor = btn.dataset.color;
+      activeHighlightColor = color;
+      
+      // 코넬노트의 모든 textarea에 형광펜 색 적용
+      applyHighlightToCornell(color);
+      updateHighlighterInfo(color);
+      
+      showToast(`🎨 ${getColorMeaning(color)} 형광펜 활성화`, 'success');
     });
   });
 }
+
+/* 형광펜 색을 textarea에 적용 */
+function applyHighlightToCornell(color) {
+  const textareas = [
+    document.getElementById('cornellKeywords'),
+    document.getElementById('cornellContent'),
+    document.getElementById('cornellSummary')
+  ];
+  textareas.forEach(ta => {
+    if (!ta) return;
+    // 기존 형광펜 클래스 제거
+    ta.classList.remove('hl-yellow', 'hl-green', 'hl-blue', 'hl-purple', 'hl-red', 'hl-orange');
+    // 새 색 적용
+    if (color) ta.classList.add('hl-' + color);
+  });
+}
+
+/* 형광펜 의미 설명 */
+function getColorMeaning(color) {
+  const meanings = {
+    yellow: '🟡 노랑 (중요)',
+    green: '🟢 초록 (자주 나오는 유형)',
+    blue: '🔵 파랑 (공식)',
+    purple: '🟣 보라 (헷갈리는)',
+    red: '🔴 빨강 (실수)',
+    orange: '🟠 주황 (복습 필요)'
+  };
+  return meanings[color] || color;
+}
+
+/* 형광펜 정보 표시 영역 업데이트 */
+function updateHighlighterInfo(color) {
+  let info = document.getElementById('highlighterInfo');
+  if (!info) {
+    info = document.createElement('div');
+    info.id = 'highlighterInfo';
+    info.className = 'highlighter-info';
+    const bar = document.querySelector('.highlighter-bar');
+    if (bar && bar.parentNode) {
+      bar.parentNode.insertBefore(info, bar.nextSibling);
+    }
+  }
+  if (color) {
+    info.innerHTML = `현재 형광펜: <strong>${getColorMeaning(color)}</strong> · 텍스트박스 배경에 색이 표시됩니다`;
+    info.style.display = 'block';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
 
 function updateDdayPreview() {
   const startDate = document.getElementById('examStartDate').value;
