@@ -62,7 +62,10 @@
   .subject-section { background: var(--bg); border-radius: 16px; padding: 16px; margin-top: 8px; }
   .subject-section .label { font-size: 13px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
   .subject-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .subject-chip { padding: 8px 14px; border: 2px solid var(--border); border-radius: 20px; background: white; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+   .subject-chip { padding: 8px 14px; border: 2px solid var(--border); border-radius: 20px; background: white; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
+  .subject-chip .emoji { font-size: 15px; }
+  .subject-chip span:not(.emoji) { color: var(--text); }
+
   .subject-chip:hover { border-color: var(--primary); }
   .subject-chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
   
