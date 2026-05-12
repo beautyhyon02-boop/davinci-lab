@@ -968,7 +968,13 @@ async function saveCornellNote() {
       keywords: keywords,
       content: content,
       summary: summary,
-      highlights: {},
+            highlights: { 
+        active_color: activeHighlightColor || null,
+        keywords_color: document.getElementById('cornellKeywords').classList.contains('hl-' + activeHighlightColor) ? activeHighlightColor : null,
+        content_color: document.getElementById('cornellContent').classList.contains('hl-' + activeHighlightColor) ? activeHighlightColor : null,
+        summary_color: document.getElementById('cornellSummary').classList.contains('hl-' + activeHighlightColor) ? activeHighlightColor : null
+      },
+
       image_urls: [],
       review_date_1: formatDate(d1),
       review_date_3: formatDate(d3),
