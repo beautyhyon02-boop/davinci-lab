@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>📅 다빈치랩 시험 플래너 v2</title>
+<title>📅 다빈치랩 시험 플래너 v3</title>
 <link rel="icon" href="../favicon.ico">
 <style>
   :root {
@@ -38,14 +38,12 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
   
-  /* 상단 네비게이션 */
   .topnav { background: white; padding: 12px 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
   .topnav .back-btn { background: var(--primary-light); color: var(--primary); border: none; border-radius: 10px; padding: 8px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
   .topnav .back-btn:hover { background: var(--primary-mid); }
   .topnav .student-name { font-size: 15px; font-weight: 700; margin-left: auto; display: flex; align-items: center; gap: 6px; }
   .topnav .student-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #EC4899); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
   
-  /* HERO */
   .hero { background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #EC4899 100%); color: white; padding: 40px 24px 56px; text-align: center; position: relative; overflow: hidden; }
   .hero::before { content: ''; position: absolute; top: -60px; right: -60px; width: 240px; height: 240px; background: rgba(255,255,255,0.07); border-radius: 50%; }
   .hero::after { content: ''; position: absolute; bottom: -80px; left: -40px; width: 320px; height: 320px; background: rgba(255,255,255,0.05); border-radius: 50%; }
@@ -53,7 +51,6 @@
   .hero h1 { font-size: clamp(22px, 5vw, 36px); font-weight: 800; line-height: 1.3; margin-bottom: 10px; position: relative; z-index: 1; }
   .hero p { font-size: 15px; opacity: 0.9; margin-bottom: 32px; position: relative; z-index: 1; }
   
-  /* 입력 카드 */
   .input-card { background: white; border-radius: 24px; padding: 32px; max-width: 720px; margin: 0 auto; box-shadow: 0 16px 48px rgba(0,0,0,0.18); position: relative; z-index: 2; }
   .input-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
@@ -68,7 +65,6 @@
   .subject-chip { padding: 8px 14px; border: 2px solid var(--border); border-radius: 20px; background: white; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 6px; }
   .subject-chip:hover { border-color: var(--primary); }
   .subject-chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
-  .subject-chip .emoji { font-size: 15px; }
   
   .vocab-radio-group { display: flex; gap: 8px; }
   .vocab-radio { flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; font-weight: 700; font-size: 14px; background: white; }
@@ -83,10 +79,8 @@
   .dday-preview .d-count { font-size: 32px; font-weight: 900; color: var(--primary); line-height: 1; }
   .dday-preview .d-label { font-size: 14px; color: var(--text-light); margin-top: 4px; }
   
-  /* 메인 */
   .main { max-width: 1200px; margin: -20px auto 0; padding: 32px 16px 64px; position: relative; z-index: 1; }
   
-  /* 통계 바 */
   .stats-bar { background: white; border-radius: 20px; padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 24px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
   .stat-item { text-align: center; flex: 1; min-width: 80px; }
   .stat-item .val { font-size: 26px; font-weight: 800; color: var(--primary); line-height: 1; }
@@ -97,7 +91,6 @@
   .overall-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
   .overall-bar .fill { height: 100%; background: linear-gradient(90deg, #4F46E5, #7C3AED, #EC4899); border-radius: 5px; transition: width .6s; }
   
-  /* 주차 탭 */
   .week-tabs { display: flex; gap: 8px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
   .week-tab { flex: 1; min-width: 120px; padding: 14px 16px; border-radius: 16px; background: white; border: 2px solid var(--border); cursor: pointer; text-align: center; font-weight: 700; }
   .week-tab:hover { transform: translateY(-2px); }
@@ -111,8 +104,7 @@
   .week-tab .date-range { font-size: 11px; color: var(--text-light); margin-top: 2px; }
   .week-tab.active .date-range { color: rgba(255,255,255,0.85); }
   
-  /* 일별 카드 */
-  .day-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .day-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
   .day-card { background: white; border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; position: relative; }
   .day-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
   .day-card.today-card { box-shadow: 0 0 0 3px #F59E0B, var(--shadow-lg); }
@@ -136,34 +128,135 @@
   .day-progress-bar .fill { height: 100%; width: 0%; transition: width .4s; }
   .day-body { padding: 14px 16px 16px; }
   
-  /* 시간 슬롯 */
-  .time-slot { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; margin-bottom: 4px; background: var(--bg); border: 1px solid transparent; }
+  /* ═══ 시작 시간 설정 영역 ═══ */
+  .day-start-time {
+    background: linear-gradient(135deg, #EEF2FF, #F5F3FF);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .day-start-time label { font-weight: 700; color: var(--primary); }
+  .day-start-time input[type="time"] {
+    padding: 4px 8px;
+    border: 1.5px solid var(--primary-mid);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    background: white;
+    outline: none;
+    font-family: 'Courier New', monospace;
+  }
+  .day-start-time .regen-btn {
+    margin-left: auto;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .day-start-time .regen-btn:hover { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+  
+  /* ═══ 80분 학습 슬롯 ═══ */
+  .time-slot { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    padding: 10px 12px; 
+    border-radius: 10px; 
+    margin-bottom: 4px; 
+    background: var(--bg); 
+    border: 1px solid transparent; 
+    transition: all .15s;
+  }
   .time-slot:hover { background: var(--primary-light); border-color: var(--primary-mid); }
   .time-slot.completed { background: #ECFDF5; border-color: #A7F3D0; }
   .time-slot.completed .slot-text,
   .time-slot.completed .slot-time,
   .time-slot.completed .stage-badge { text-decoration: line-through; color: #9CA3AF; opacity: 0.7; }
   .time-slot input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
-  .time-slot .slot-time { font-size: 11px; font-weight: 700; color: var(--text-light); font-family: 'Courier New', monospace; flex-shrink: 0; min-width: 78px; }
+  .time-slot .slot-time { font-size: 11px; font-weight: 700; color: var(--text-light); font-family: 'Courier New', monospace; flex-shrink: 0; min-width: 100px; }
   .time-slot .slot-text { flex: 1; font-size: 13px; line-height: 1.4; }
   
-  /* 코넬노트 작성 버튼 */
-  .time-slot .cornell-btn { background: none; border: 1.5px dashed var(--primary-mid); color: var(--primary); border-radius: 8px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .time-slot .cornell-btn:hover { background: var(--primary); color: white; border-style: solid; }
-  .time-slot .cornell-btn.written { background: #D1FAE5; border-color: #10B981; color: #065F46; border-style: solid; }
+  /* 슬롯 액션 버튼 (수정/삭제) */
+  .slot-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .slot-edit-btn, .slot-delete-btn, .slot-cornell-btn {
+    background: none;
+    border: 1.5px dashed var(--primary-mid);
+    color: var(--primary);
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .slot-edit-btn:hover, .slot-cornell-btn:hover { 
+    background: var(--primary); 
+    color: white; 
+    border-style: solid; 
+  }
+  .slot-cornell-btn.written {
+    background: #D1FAE5;
+    border-color: #10B981;
+    color: #065F46;
+    border-style: solid;
+  }
+  .slot-delete-btn {
+    border-color: #FCA5A5;
+    color: #EF4444;
+  }
+  .slot-delete-btn:hover {
+    background: #EF4444;
+    color: white;
+    border-style: solid;
+  }
   
-  /* 🆓 자유 입력 슬롯 */
+  /* 휴식 시간 슬롯 */
+  .time-slot.rest-slot {
+    background: #FEF3C7;
+    border: 1px dashed #FBBF24;
+    opacity: 0.85;
+    padding: 6px 12px;
+  }
+  .time-slot.rest-slot:hover { background: #FDE68A; }
+  .time-slot.rest-slot .slot-text { color: #92400E; font-weight: 600; font-style: italic; }
+  
+  /* 식사 시간 슬롯 */
+  .time-slot.meal-slot {
+    background: linear-gradient(135deg, #FFEDD5, #FED7AA);
+    border: 1px solid #FB923C;
+    padding: 10px 12px;
+  }
+  .time-slot.meal-slot .slot-text { color: #9A3412; font-weight: 700; }
+  
+  /* 자유 입력 슬롯 */
   .time-slot.free-slot { background: #FFF7ED; border: 1px dashed #FDBA74; }
   .time-slot.free-slot:hover { background: #FFEDD5; border-color: #F97316; border-style: solid; }
   .time-slot.free-slot.completed { background: #ECFDF5; border-color: #A7F3D0; border-style: solid; }
   .slot-text.free-input-placeholder { color: #F97316; font-weight: 600; cursor: text; user-select: none; }
   .slot-text.free-input-placeholder:hover { color: #EA580C; text-decoration: underline; }
-  .slot-text.free-input-text { color: var(--text); font-weight: 600; cursor: text; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 2px 4px; border-radius: 4px; }
-  .slot-text.free-input-text:hover { background: #FED7AA; }
-  .free-input-edit { flex: 1; padding: 6px 10px; border: 2px solid #F97316; border-radius: 8px; font-size: 13px; font-family: inherit; background: white; outline: none; min-width: 0; }
-  .free-input-edit:focus { box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); }
-  .free-clear-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 6px; opacity: 0.5; flex-shrink: 0; }
-  .free-clear-btn:hover { opacity: 1; background: #FEE2E2; }
+  
+  /* 슬롯 편집 모드 입력 박스 */
+  .slot-edit-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+    outline: none;
+    min-width: 0;
+  }
+  .slot-edit-input:focus { box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
   
   /* 영어 단어 */
   .vocab-section { margin-top: 12px; padding-top: 12px; border-top: 1.5px dashed var(--border); }
@@ -190,7 +283,7 @@
   .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); }
   
   /* 형광펜 */
-  .highlighter-bar { display: flex; gap: 8px; margin-bottom: 12px; padding: 10px; background: var(--bg); border-radius: 12px; }
+  .highlighter-bar { display: flex; gap: 8px; margin-bottom: 12px; padding: 10px; background: var(--bg); border-radius: 12px; align-items: center; flex-wrap: wrap; }
   .hl-btn { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; }
   .hl-btn:hover { transform: scale(1.15); }
   .hl-btn.active { border-color: var(--text); box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text); }
@@ -201,7 +294,7 @@
   .hl-btn[data-color="red"] { background: var(--hl-red); }
   .hl-btn[data-color="orange"] { background: var(--hl-orange); }
   
-  /* 코넬노트 영역 (contenteditable) */
+  /* 코넬노트 영역 */
   .cornell-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 12px; }
   .cornell-section { display: flex; flex-direction: column; gap: 6px; }
   .cornell-section label { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
@@ -223,27 +316,51 @@
   .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
   .btn-save { flex: 1; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
   .btn-cancel { background: #F3F4F6; color: var(--text); border: none; border-radius: 12px; padding: 14px 24px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-delete { background: #FEF2F2; color: #DC2626; border: 2px solid #FCA5A5; border-radius: 12px; padding: 14px 20px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn-delete:hover { background: #DC2626; color: white; border-color: #DC2626; }
   
-  /* 빈 상태 */
+  /* 슬롯 편집 모달 */
+  .slot-edit-form { display: flex; flex-direction: column; gap: 16px; }
+  .slot-edit-form .field { display: flex; flex-direction: column; gap: 6px; }
+  .slot-edit-form label { font-size: 13px; font-weight: 700; color: var(--text); }
+  .slot-edit-form input, .slot-edit-form select, .slot-edit-form textarea {
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg);
+    outline: none;
+    font-weight: 500;
+  }
+  .slot-edit-form input:focus, .slot-edit-form select:focus, .slot-edit-form textarea:focus {
+    border-color: var(--primary);
+    background: white;
+  }
+  .time-input-row { display: flex; align-items: center; gap: 8px; }
+  .time-input-row input[type="time"] {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    text-align: center;
+  }
+  
   .empty-state { text-align: center; padding: 64px 24px; color: var(--text-light); }
   .empty-state .icon { font-size: 72px; margin-bottom: 16px; }
   .empty-state h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
   .empty-state p { font-size: 14px; line-height: 1.6; }
   
-  /* 토스트 */
   .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1F2937; color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; font-weight: 600; opacity: 0; transition: all .3s; pointer-events: none; z-index: 600; white-space: nowrap; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.success { background: linear-gradient(135deg, #10B981, #059669); }
   .toast.error { background: linear-gradient(135deg, #EF4444, #DC2626); }
   
-  /* 로딩 */
   .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 700; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
   .loading-overlay.show { display: flex; }
   .spinner { width: 48px; height: 48px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-overlay .text { font-size: 15px; font-weight: 700; color: var(--primary); }
   
-  /* 반응형 */
   @media (max-width: 600px) {
     .input-card { padding: 20px 16px; margin: 0 12px; }
     .form-grid { grid-template-columns: 1fr; }
@@ -266,9 +383,9 @@
 </div>
 
 <div class="hero">
-  <div class="hero-badge">📚 다빈치랩 시험 플래너 v2</div>
+  <div class="hero-badge">📚 다빈치랩 시험 플래너 v3</div>
   <h1>나만의 시험 D-day 자동 플래너 ✨</h1>
-  <p>시험일을 입력하면 5단계 학습법으로 자동 배분됩니다</p>
+  <p>70분 집중 + 10분 휴식 · 다빈치랩 학습법으로 자동 배분</p>
 
   <div class="input-card" id="inputCard">
     <h2>📅 시험 정보 입력</h2>
@@ -382,22 +499,74 @@
       <div class="cornell-section">
         <label>🔑 키워드 (Cue)</label>
         <div id="cornellKeywords" class="cornell-editable" contenteditable="true" 
-             data-placeholder="핵심 키워드를 적어주세요&#10;&#10;예: 함수의 정의, 일대일 대응, 정의역, 치역"></div>
+             data-placeholder="핵심 키워드를 적어주세요&#10;&#10;예: 함수의 정의, 일대일 대응"></div>
       </div>
       <div class="cornell-section">
         <label>📝 학습 내용 (Notes)</label>
         <div id="cornellContent" class="cornell-editable" contenteditable="true"
-             data-placeholder="배운 내용을 자세히 정리해주세요&#10;&#10;💡 사용법: 형광펜을 선택한 후, 색칠하고 싶은 부분을 마우스로 드래그하면 그 부분만 칠해집니다!"></div>
+             data-placeholder="배운 내용을 자세히 정리해주세요&#10;&#10;💡 형광펜 선택 후 텍스트를 드래그하면 그 부분만 칠해집니다!"></div>
       </div>
     </div>
     <div class="cornell-section cornell-summary">
-      <label>🌟 요약 (Summary) - 한 줄로 정리</label>
+      <label>🌟 요약 (Summary)</label>
       <div id="cornellSummary" class="cornell-editable summary-area" contenteditable="true"
            data-placeholder="오늘 배운 핵심을 한두 줄로 요약해주세요"></div>
     </div>
     <div class="modal-actions">
+      <button class="btn-delete" id="cornellDeleteBtn" onclick="deleteCornellNote()" style="display:none;">🗑️ 삭제</button>
       <button class="btn-cancel" onclick="closeCornellModal()">취소</button>
       <button class="btn-save" onclick="saveCornellNote()">💾 코넬노트 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 슬롯 편집 모달 -->
+<div class="modal-overlay" id="slotEditModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div class="modal-header">
+      <h3>✏️ 시간표 슬롯 수정</h3>
+      <button class="modal-close" onclick="closeSlotEditModal()">✕</button>
+    </div>
+    <div class="slot-edit-form">
+      <div class="field">
+        <label>🕐 시간</label>
+        <div class="time-input-row">
+          <input type="time" id="slotEditStartTime">
+          <span>~</span>
+          <input type="time" id="slotEditEndTime">
+        </div>
+      </div>
+      <div class="field">
+        <label>📚 과목 (선택)</label>
+        <select id="slotEditSubject">
+          <option value="">선택 안함</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>🎯 학습 단계 (선택)</label>
+        <select id="slotEditStage">
+          <option value="">선택 안함</option>
+          <option value="개념이해">💡 개념이해</option>
+          <option value="개념완성">📖 개념완성</option>
+          <option value="인강듣기">🎬 인강듣기</option>
+          <option value="문제풀이">📝 문제풀이</option>
+          <option value="유형문제">📝 유형문제</option>
+          <option value="심화문제">🔥 심화문제</option>
+          <option value="최종문제">🎯 최종문제</option>
+          <option value="오답정리">✍️ 오답정리</option>
+          <option value="암기">🧠 암기</option>
+          <option value="자유학습">📖 자유학습</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>✍️ 활동 내용 (자유 입력)</label>
+        <input type="text" id="slotEditCustomText" placeholder="예: 동백꽃 분석, 영단어 외우기 등">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" onclick="deleteSlot()">🗑️ 슬롯 삭제</button>
+      <button class="btn-cancel" onclick="closeSlotEditModal()">취소</button>
+      <button class="btn-save" onclick="saveSlotEdit()">💾 저장</button>
     </div>
   </div>
 </div>
