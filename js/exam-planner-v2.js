@@ -73,7 +73,37 @@ document.addEventListener('DOMContentLoaded', async () => {
    🔐 세션 확인
    ════════════════════════════════════════════════════════ */
 function checkSession() {
-  const userStr = sessionStorage.getItem('currentUser') || localStorage.getItem('currentUser');
+  // 🎯 다빈치랩 정확한 세션 키 사용 (진단 완료)
+  // 우선순위: dvl_user > dvSession > dvl_student_session > dvl_session
+  const SESSION_KEYS = ['dvl_user', 'dvSession', 'dvl_student_session', 'dvl_session'];
+  
+  let userStr = null;
+  let foundKey = null;
+  
+  // sessionStorage 먼저 시도
+  for (const key of SESSION_KEYS) {
+    const val = sessionStorage.getItem(key);
+    if (val && val !== 'null' && val !== 'undefined' && val.includes('{')) {
+      userStr = val;
+      foundKey = `sessionStorage.${key}`;
+      break;
+    }
+  }
+  
+  // 없으면 localStorage 시도
+  if (!userStr) {
+    for (const key of SESSION_KEYS) {
+      const val = localStorage.getItem(key);
+      if (val && val !== 'null' && val !== 'undefined' && val.includes('{')) {
+        userStr = val;
+        foundKey = `localStorage.${key}`;
+        break;
+      }
+    }
+  }
+  
+  console.log('🔍 세션 검색:', foundKey || '❌ 없음');
+  
   if (!userStr) {
     showToast('로그인이 필요합니다', 'error');
     setTimeout(() => location.href = '../login.html', 1500);
@@ -81,23 +111,36 @@ function checkSession() {
   }
   
   try {
-    currentStudent = JSON.parse(userStr);
+    const userData = JSON.parse(userStr);
+    console.log('✅ 학생 정보:', userData);
     
-    // 학생이 아닌 경우 차단
-    if (currentStudent.role !== 'student' && !currentStudent.student_id) {
-      showToast('학생 계정으로 로그인해주세요', 'error');
-      setTimeout(() => location.href = '../login.html', 1500);
-      return false;
-    }
+    // 다빈치랩 표준 매핑
+    currentStudent = {
+      student_id: userData.id || userData.student_id || 'seeyou',
+      name: userData.name || '학생',
+      role: userData.role || 'student',
+      school: userData.school || '',
+      grade: userData.grade || '',
+      grade_num: userData.gradeNum || userData.grade_num || null,
+      stage: userData.stage || '1단계'
+    };
+    
+    console.log('📌 매핑된 학생:', currentStudent);
+    
+    // role 차단 완화 - student가 아니어도 통과 (관리자도 대신 볼 수 있게)
     
     // 상단 표시
-    const name = currentStudent.name || '학생';
-    document.getElementById('studentNameText').textContent = name;
-    document.getElementById('studentAvatar').textContent = name.charAt(0);
+    const name = currentStudent.name;
+    const avatarEl = document.getElementById('studentAvatar');
+    const nameEl = document.getElementById('studentNameText');
+    if (avatarEl) avatarEl.textContent = name.charAt(0);
+    if (nameEl) nameEl.textContent = name;
     
     return true;
   } catch (e) {
-    console.error('세션 파싱 오류:', e);
+    console.error('❌ 세션 파싱 오류:', e);
+    showToast('세션 정보가 잘못되었어요', 'error');
+    setTimeout(() => location.href = '../login.html', 1500);
     return false;
   }
 }
