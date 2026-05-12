@@ -1018,10 +1018,25 @@
       <div class="hl-btn" data-color="orange" title="복습 필요"></div>
     </div>
     
-    <div class="cornell-grid">
+        <div class="cornell-grid">
       <div class="cornell-section">
         <label>🔑 키워드 (Cue)</label>
-        <textarea id="cornellKeywords" placeholder="핵심 키워드를 적어주세요&#10;&#10;예:&#10;- 함수의 정의&#10;- 일대일 대응&#10;- 정의역, 치역"></textarea>
+        <div id="cornellKeywords" class="cornell-editable" contenteditable="true" 
+             data-placeholder="핵심 키워드를 적어주세요&#10;&#10;예: 함수의 정의, 일대일 대응, 정의역, 치역"></div>
+      </div>
+      <div class="cornell-section">
+        <label>📝 학습 내용 (Notes)</label>
+        <div id="cornellContent" class="cornell-editable" contenteditable="true"
+             data-placeholder="배운 내용을 자세히 정리해주세요&#10;&#10;💡 사용법: 형광펜을 선택한 후, 색칠하고 싶은 부분을 마우스로 드래그하면 그 부분만 칠해집니다!"></div>
+      </div>
+    </div>
+    
+    <div class="cornell-section cornell-summary">
+      <label>🌟 요약 (Summary) - 한 줄로 정리</label>
+      <div id="cornellSummary" class="cornell-editable summary-area" contenteditable="true"
+           data-placeholder="오늘 배운 핵심을 한두 줄로 요약해주세요"></div>
+    </div>
+
       </div>
       <div class="cornell-section">
         <label>📝 학습 내용 (Notes)</label>
