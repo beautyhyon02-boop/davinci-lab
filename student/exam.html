@@ -519,81 +519,60 @@
     opacity: 0.7;
   }
 
-  /* ═══ 형광펜 미리보기 ═══ */
-  .cornell-section textarea {
-    transition: background 0.2s;
-  }
-  .cornell-section textarea.hl-yellow { background: linear-gradient(transparent 60%, var(--hl-yellow) 60%) !important; }
-  .cornell-section textarea.hl-green { background: linear-gradient(transparent 60%, var(--hl-green) 60%) !important; }
-  .cornell-section textarea.hl-blue { background: linear-gradient(transparent 60%, var(--hl-blue) 60%) !important; }
-  .cornell-section textarea.hl-purple { background: linear-gradient(transparent 60%, var(--hl-purple) 60%) !important; }
-  .cornell-section textarea.hl-red { background: linear-gradient(transparent 60%, var(--hl-red) 60%) !important; }
-  .cornell-section textarea.hl-orange { background: linear-gradient(transparent 60%, var(--hl-orange) 60%) !important; }
+   /* ═══ 진짜 형광펜 (드래그한 부분만 칠하기) ═══ */
   
-  /* 형광펜 정보 표시 영역 */
+  /* contenteditable div를 textarea처럼 보이게 */
+  .cornell-editable {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg);
+    outline: none;
+    line-height: 1.7;
+    overflow-y: auto;
+    cursor: text;
+  }
+  .cornell-editable:focus {
+    border-color: var(--primary);
+    background: white;
+  }
+  .cornell-editable:empty::before {
+    content: attr(data-placeholder);
+    color: #C4B5FD;
+    pointer-events: none;
+  }
+  .cornell-editable.summary-area { min-height: 80px; }
+  
+  /* 형광펜 색상 (실제 텍스트에 색이 입혀짐) */
+  .cornell-editable mark.hl-yellow { background: var(--hl-yellow); padding: 1px 3px; border-radius: 3px; }
+  .cornell-editable mark.hl-green { background: var(--hl-green); padding: 1px 3px; border-radius: 3px; }
+  .cornell-editable mark.hl-blue { background: var(--hl-blue); padding: 1px 3px; border-radius: 3px; }
+  .cornell-editable mark.hl-purple { background: var(--hl-purple); padding: 1px 3px; border-radius: 3px; }
+  .cornell-editable mark.hl-red { background: var(--hl-red); padding: 1px 3px; border-radius: 3px; }
+  .cornell-editable mark.hl-orange { background: var(--hl-orange); padding: 1px 3px; border-radius: 3px; }
+  
+  /* 형광펜 사용 안내 */
   .highlighter-info {
     margin-top: 8px;
-    padding: 8px 12px;
-    background: white;
-    border-radius: 8px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #FFFBEB, #FEF3C7);
+    border-radius: 10px;
     font-size: 12px;
-    color: var(--text-light);
-    border: 1px dashed var(--border);
-  }
-  .highlighter-info strong { color: var(--text); }
-
-  .time-slot input[type="checkbox"] {
-    width: 18px; height: 18px;
-    accent-color: var(--primary);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .time-slot .slot-time {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-light);
-    font-family: 'Courier New', monospace;
-    flex-shrink: 0;
-    min-width: 78px;
-  }
-  .time-slot .slot-text {
-    flex: 1;
-    font-size: 13px;
     color: var(--text);
-    line-height: 1.4;
+    border: 1.5px dashed #F59E0B;
+    text-align: center;
   }
-  .time-slot .stage-badge {
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 8px;
-    background: var(--primary-light);
-    color: var(--primary);
-    font-weight: 700;
-    flex-shrink: 0;
+  .highlighter-info strong { color: #D97706; }
+  
+  /* 커서 효과 - 형광펜 활성화 시 */
+  body.highlighter-active .cornell-editable {
+    cursor: cell;
   }
-  .time-slot .cornell-btn {
-    background: none;
-    border: 1.5px dashed var(--primary-mid);
-    color: var(--primary);
-    border-radius: 8px;
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all .15s;
-    flex-shrink: 0;
-  }
-  .time-slot .cornell-btn:hover {
-    background: var(--primary);
-    color: white;
-    border-style: solid;
-  }
-  .time-slot .cornell-btn.written {
-    background: #D1FAE5;
-    border-color: #10B981;
-    color: #065F46;
-    border-style: solid;
-  }
+
 
   /* 영어 단어 섹션 */
   .vocab-section {
