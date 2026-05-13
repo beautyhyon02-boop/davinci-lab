@@ -345,10 +345,14 @@ async function loadAll() {
     const subjData = await subjRes.json();
     allSubjects = subjData.data || [];
 
-    // 학생 확정 강좌
-    const courseRes = await fetch(`${API}/student_courses?limit=300`);
+        // 학생 확정 강좌 (search 파라미터 사용)
+    const courseRes = await fetch(`${API}/student_courses?search=${encodeURIComponent(currentStudent.id)}&limit=300`);
+    if (!courseRes.ok) {
+      throw new Error(`강좌 API 오류 (${courseRes.status})`);
+    }
     const courseData = await courseRes.json();
     allCourses = (courseData.data || []).filter(c => c.student_id === currentStudent.id);
+    console.log('✅ 강좌 로드:', allCourses.length, '건');
 
     populateAddModalSubjects();
     renderCourses();
