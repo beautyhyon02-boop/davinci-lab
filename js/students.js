@@ -158,10 +158,14 @@ async function confirmApprove() {
       dbId = found.id;
     }
 
-    const payload = {
-      status:     '재원',
-      stage,                            // DB 스키마 options: 1단계|2단계|3단계|3단계+컨설팅
-      consulting: stage.includes('컨설팅'), // bool 필드
+        const payload = {
+      status:          'active',
+      approval_status: 'approved',
+      approved:        true,
+      approved_at:     new Date().toISOString(),
+      is_active:       true,
+      stage,
+      consulting:      stage.includes('컨설팅'),
       ...(school && { school }),
       ...(grade  && { grade  }),
     };
