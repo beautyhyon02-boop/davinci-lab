@@ -1076,11 +1076,11 @@ document.getElementById('breakBtn')?.addEventListener('click', async () => {
       await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: '휴원' }),
+                body: JSON.stringify({ status: 'inactive', is_active: false }),
       });
     }
     const s = allStudents.find(x => x.id === currentStudent.id);
-    if (s) s.status = '휴원';
+        if (s) s.status = 'inactive';
     document.getElementById('studentDetailModal')?.classList.remove('open');
     updateSummaryBar();
     renderTable();
