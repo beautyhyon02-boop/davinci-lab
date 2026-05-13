@@ -831,7 +831,7 @@ document.getElementById('addStudentSubmit')?.addEventListener('click', async () 
     student_num:  1,
     stage:        stageVal,        // DB 스키마 options에 맞는 값
     consulting:   isConsult,       // bool 필드
-    status:       '재원',          // DB 스키마 options: 재원|휴원|졸업|대기|pending
+       status:       'active',
     password:     newPw,
     parent_phone: parentPhone,
     memo:         memo || '',
