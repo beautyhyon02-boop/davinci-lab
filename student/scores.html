@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>성적 입력 & 추천 - 다빈치랩</title>
+  <link rel="manifest" href="../manifest.json" />
+  <meta name="theme-color" content="#163A33" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/student-common.css" />
+  <style>
+    :root {
+      --green-900: #163A33;
+      --green-700: #245A4E;
+      --green-500: #2e7061;
+      --mint-50:   #f0fdf4;
+      --mint-100:  #dcfce7;
+      --mint-500:  #22c55e;
+      --orange:    #f59e0b;
+      --red:       #ef4444;
+      --blue:      #3b82f6;
+      --purple:    #8b5cf6;
+      --gray-50:   #f9fafb;
+      --gray-100:  #f3f4f6;
+      --gray-200:  #e5e7eb;
+      --gray-400:  #9ca3af;
+      --gray-600:  #4b5563;
+      --gray-800:  #1f2937;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'Noto Sans KR', sans-serif; margin: 0; background: #f5f6f7; color: var(--gray-800); }
+
+    .content-wrapper { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+
+    .page-header { margin-bottom: 24px; }
+    .page-title { font-size: 24px; font-weight: 800; color: var(--green-900); display: flex; align-items: center; gap: 10px; }
+    .page-subtitle { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
+
+    /* 단계 인디케이터 */
+    .step-indicator {
+      display: flex; gap: 8px; margin-bottom: 24px;
+      background: #fff; padding: 16px 20px; border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .step-item {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      color: var(--gray-400); transition: all .2s;
+    }
+    .step-item.active { background: var(--mint-50); color: var(--green-700); }
+    .step-item.done { color: var(--mint-500); }
+    .step-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--gray-200); color: var(--gray-600);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .step-item.active .step-num { background: var(--green-700); color: #fff; }
+    .step-item.done .step-num { background: var(--mint-500); color: #fff; }
+
+    /* 카드 */
+    .card {
+      background: #fff; border-radius: 14px; padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 17px; font-weight: 700; color: var(--green-900);
+      margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;
+    }
+    .card-desc { font-size: 13px; color: var(--gray-600); margin: -8px 0 16px 0; }
+
+    /* 시험 정보 입력 */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--gray-200);
+      border-radius: 8px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif;
+      transition: border-color .2s; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--green-700); }
+
+    /* 과목 선택 그리드 */
+    .subject-section { margin-bottom: 16px; }
+    .subject-section-label {
+      font-size: 12px; font-weight: 700; color: var(--gray-600);
+      margin-bottom: 8px; padding-left: 4px; letter-spacing: .03em;
+    }
+    .subject-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;
+    }
+    .subject-chip {
+      padding: 10px 12px; border: 1.5px solid var(--gray-200);
+      border-radius: 10px; background: #fff; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--gray-600);
+      text-align: center; transition: all .15s; user-select: none;
+    }
+    .subject-chip:hover { border-color: var(--green-500); background: var(--mint-50); }
+    .subject-chip.selected {
+      background: linear-gradient(135deg, var(--green-700), var(--green-500));
+      color: #fff; border-color: var(--green-700);
+    }
+
+    /* 점수 입력 */
+    .score-row {
+      display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px;
+      padding: 12px; background: var(--gray-50); border-radius: 10px; margin-bottom: 8px;
+      align-items: center;
+    }
+    .score-subject { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+    .score-input {
+      width: 100%; padding: 8px 12px; border: 1.5px solid var(--gray-200);
+      border-radius: 8px; font-size: 14px; text-align: center; font-weight: 700;
+    }
+    .score-input:focus { border-color: var(--green-700); outline: none; }
+    .score-band-tag {
+      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
+      text-align: center;
+    }
+    .band-top      { background: #dbeafe; color: #1e40af; }
+    .band-mid_high { background: #dcfce7; color: #15803d; }
+    .band-mid_low  { background: #fef3c7; color: #92400e; }
+    .band-low      { background: #fee2e2; color: #991b1b; }
+
+    /* 추천 카드 */
+    .rec-subject-card {
+      border: 2px solid var(--gray-200); border-radius: 14px;
+      padding: 18px; margin-bottom: 16px; transition: all .2s;
+    }
+    .rec-subject-card:hover { border-color: var(--green-500); }
+    .rec-subject-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100);
+    }
+    .rec-subject-name { font-size: 16px; font-weight: 700; color: var(--green-900); }
+    .rec-subject-meta { font-size: 12px; color: var(--gray-600); margin-top: 4px; }
+    .rec-reason {
+      padding: 10px 14px; background: #fffbeb; border-left: 3px solid var(--orange);
+      border-radius: 6px; font-size: 13px; color: #78350f; line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .rec-course-list { display: flex; flex-direction: column; gap: 6px; }
+    .rec-course-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; background: var(--mint-50); border: 1px solid var(--mint-100);
+      border-radius: 8px; cursor: pointer; transition: all .15s;
+    }
+    .rec-course-item:hover { background: var(--mint-100); }
+    .rec-course-item input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--green-700); cursor: pointer;
+    }
+    .rec-course-name { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
+    .rec-course-add {
+      margin-top: 10px; display: flex; gap: 6px;
+    }
+    .rec-course-add input {
+      flex: 1; padding: 8px 12px; border: 1.5px dashed var(--gray-200);
+      border-radius: 8px; font-size: 13px; font-family: 'Noto Sans KR', sans-serif;
+    }
+    .rec-course-add input:focus { border-color: var(--green-700); outline: none; border-style: solid; }
+    .rec-course-add button {
+      padding: 8px 16px; background: var(--green-700); color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+
+    /* 버튼 */
+    .btn { padding: 11px 22px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all .15s;
+      display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(135deg, var(--green-900), var(--green-500)); color: #fff; }
+    .btn-primary:hover { opacity: .92; }
+    .btn-secondary { background: var(--gray-100); color: var(--gray-800); }
+    .btn-large { padding: 14px 32px; font-size: 15px; }
+
+    .action-bar {
+      display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;
+    }
+
+    /* 토스트 */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      color: #fff; z-index: 9999; transition: all .3s;
+      opacity: 0; transform: translateY(10px); pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* 빈 상태 */
+    .empty-state {
+      text-align: center; padding: 40px 20px; color: var(--gray-400);
+    }
+    .empty-state i { font-size: 36px; margin-bottom: 12px; opacity: .5; }
+    .empty-state p { margin: 0; font-size: 14px; }
+
+    /* 로딩 */
+    .loading { text-align: center; padding: 30px; color: var(--gray-400); }
+    .loading i { margin-right: 8px; }
+
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+      .score-row { grid-template-columns: 1fr 1fr; }
+      .score-band-tag { grid-column: 1 / -1; }
+      .content-wrapper { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 학생 공통 사이드바 + 상단바 -->
+<div id="appLayout"></div>
+
+<main class="content-wrapper">
+  <div class="page-header">
+    <h1 class="page-title"><i class="fas fa-chart-line" style="color:var(--green-700);"></i> 성적 입력 & 추천</h1>
+    <p class="page-subtitle">시험 점수를 입력하면 학년·점수대에 맞는 인강이 자동 추천됩니다.</p>
+  </div>
+
+  <!-- 단계 인디케이터 -->
+  <div class="step-indicator">
+    <div class="step-item active" id="step1">
+      <div class="step-num">1</div><span>과목 선택</span>
+    </div>
+    <div class="step-item" id="step2">
+      <div class="step-num">2</div><span>점수 입력</span>
+    </div>
+    <div class="step-item" id="step3">
+      <div class="step-num">3</div><span>맞춤 추천</span>
+    </div>
+  </div>
+
+  <!-- ─── STEP 1: 과목 선택 ─── -->
+  <section class="card" id="section-subjects">
+    <h2 class="card-title"><i class="fas fa-book"></i> 1. 공부하는 과목 선택</h2>
+    <p class="card-desc">시험 본 과목을 모두 선택해주세요. <span id="gradeLabel" style="color:var(--green-700);font-weight:700;"></span></p>
+    <div id="subjectArea"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 과목 불러오는 중...</div></div>
+  </section>
+
+  <!-- ─── STEP 2: 점수 입력 ─── -->
+  <section class="card" id="section-scores" style="display:none;">
+    <h2 class="card-title"><i class="fas fa-pen"></i> 2. 점수 입력</h2>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>시험 종류</label>
+        <select id="examType">
+          <option value="midterm">중간고사</option>
+          <option value="final">기말고사</option>
+          <option value="mock">모의고사</option>
+          <option value="self">자체평가</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>시험명 (선택)</label>
+        <input type="text" id="examName" placeholder="예: 2026 1학기 중간고사" />
+      </div>
+      <div class="form-group">
+        <label>시험 날짜</label>
+        <input type="date" id="examDate" />
+      </div>
+    </div>
+
+    <div id="scoreInputs"></div>
+
+    <div class="action-bar">
+      <button class="btn btn-secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> 과목 다시 선택</button>
+      <button class="btn btn-primary btn-large" onclick="submitScores()">
+        <i class="fas fa-magic"></i> 저장하고 추천 받기
+      </button>
+    </div>
+  </section>
+
+  <!-- ─── STEP 3: 추천 결과 ─── -->
+  <section class="card" id="section-recommendations" style="display:none;">
+    <h2 class="card-title"><i class="fas fa-magic"></i> 3. 맞춤 학습 추천</h2>
+    <p class="card-desc">아래에서 듣고 싶은 강좌를 선택하고, 원하는 강좌를 자유롭게 추가할 수 있어요.</p>
+    <div id="recommendationsArea"></div>
+    <div class="action-bar">
+      <button class="btn btn-secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> 점수 다시 입력</button>
+      <button class="btn btn-primary btn-large" onclick="confirmCourses()">
+        <i class="fas fa-check"></i> 학습 강좌 확정하기
+      </button>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════
+   다빈치랩 - 성적 입력 & 추천 시스템 v1
+═══════════════════════════════════════ */
+const API = '/tables';
+let currentStudent = null;
+let allSubjects = [];        // subject_catalog 전체
+let selectedSubjects = [];   // 학생이 고른 과목
+let scoresInput = {};        // { subject_code: score }
+let recommendations = {};    // { subject_code: matrix row }
+let selectedCourses = {};    // { subject_code: [course_name, ...] }
+
+/* ── 세션 확인 ── */
+function checkSession() {
+  const keys = ['dvl_user','dvl_student_session','dvl_session','dvSession'];
+  let userStr = null;
+  for (const k of keys) {
+    const v = sessionStorage.getItem(k) || localStorage.getItem(k);
+    if (v && v !== 'null') { userStr = v; break; }
+  }
+  if (!userStr) {
+    showToast('로그인이 필요합니다', 'error');
+    setTimeout(() => location.href = '../login.html', 1500);
+    return false;
+  }
+  try {
+    currentStudent = JSON.parse(userStr);
+    return true;
+  } catch (e) {
+    showToast('세션 오류', 'error');
+    return false;
+  }
+}
+
+/* ── 토스트 ── */
+function showToast(msg, type = 'ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  const bg = { ok: '#163A33', error: '#b91c1c', warn: '#d97706', info: '#3b82f6' };
+  el.style.background = bg[type] || bg.ok;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ── 학년 → school_type 매핑 ── */
+function getSchoolType(grade) {
+  if (!grade) return 'middle';
+  if (grade.startsWith('중')) return 'middle';
+  if (grade === '고1') return 'high_common';
+  if (grade === '고2' || grade === '고3') return 'high_elective';
+  return 'middle';
+}
+
+/* ── 점수대 판정 ── */
+function getScoreBand(score) {
+  if (score >= 90) return 'top';
+  if (score >= 70) return 'mid_high';
+  if (score >= 50) return 'mid_low';
+  return 'low';
+}
+function getBandLabel(band) {
+  return { top: '100~90점', mid_high: '89~70점', mid_low: '69~50점', low: '50점 이하' }[band];
+}
+
+/* ── 과목 로드 ── */
+async function loadSubjects() {
+  try {
+    const res = await fetch(`${API}/subject_catalog?limit=200`);
+    const data = await res.json();
+    allSubjects = (data.data || []).filter(s => s.is_active !== false);
+
+    const grade = currentStudent.grade || '중1';
+    const schoolType = getSchoolType(grade);
+    document.getElementById('gradeLabel').textContent = `(${grade} 기준)`;
+
+    renderSubjectArea(schoolType, grade);
+  } catch (e) {
+    document.getElementById('subjectArea').innerHTML =
+      '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>과목을 불러올 수 없습니다.</p></div>';
+    console.error(e);
+  }
+}
+
+/* ── 과목 선택 UI 렌더 ── */
+function renderSubjectArea(schoolType, grade) {
+  const area = document.getElementById('subjectArea');
+
+  let filtered = allSubjects.filter(s => {
+    if (s.school_type !== schoolType) return false;
+    if (s.grade_levels && Array.isArray(s.grade_levels)) {
+      return s.grade_levels.includes(grade);
+    }
+    return true;
+  });
+
+  if (!filtered.length) {
+    area.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>해당 학년에 등록된 과목이 없습니다.</p></div>';
+    return;
+  }
+
+  // 카테고리별 그룹
+  const groups = { main: [], social: [], science: [], etc: [] };
+  filtered.forEach(s => { (groups[s.category] || groups.etc).push(s); });
+
+  const labels = { main: '📚 주요 과목', social: '🌏 사회 영역', science: '🔬 과학', etc: '🎨 기타' };
+
+  let html = '';
+  ['main','social','science','etc'].forEach(cat => {
+    if (!groups[cat].length) return;
+    // 일반선택은 다시 elective_type별로 묶기
+    const generals = groups[cat].filter(s => !s.elective_type || s.elective_type === 'general');
+    const careers = groups[cat].filter(s => s.elective_type === 'career' || s.elective_type === 'fusion');
+
+    if (generals.length) {
+      html += `<div class="subject-section">
+        <div class="subject-section-label">${labels[cat]}</div>
+        <div class="subject-grid">
+          ${generals.map(s => `
+            <div class="subject-chip" data-code="${s.subject_code}" onclick="toggleSubject('${s.subject_code}')">
+              ${s.subject_name}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (careers.length) {
+      html += `<div class="subject-section">
+        <div class="subject-section-label">🎯 ${cat === 'social' ? '사회 진로/융합선택' : '진로/융합선택'}</div>
+        <div class="subject-grid">
+          ${careers.map(s => `
+            <div class="subject-chip" data-code="${s.subject_code}" onclick="toggleSubject('${s.subject_code}')">
+              ${s.subject_name}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  });
+
+  html += `<div class="action-bar">
+    <button class="btn btn-primary btn-large" onclick="goToStep(2)">
+      다음: 점수 입력 <i class="fas fa-arrow-right"></i>
+    </button>
+  </div>`;
+
+  area.innerHTML = html;
+}
+
+/* ── 과목 선택 토글 ── */
+function toggleSubject(code) {
+  const chip = document.querySelector(`.subject-chip[data-code="${code}"]`);
+  if (selectedSubjects.includes(code)) {
+    selectedSubjects = selectedSubjects.filter(c => c !== code);
+    chip.classList.remove('selected');
+  } else {
+    selectedSubjects.push(code);
+    chip.classList.add('selected');
+  }
+}
+
+/* ── 점수 입력 영역 렌더 ── */
+function renderScoreInputs() {
+  if (!selectedSubjects.length) {
+    showToast('먼저 과목을 1개 이상 선택해주세요', 'warn');
+    goToStep(1);
+    return;
+  }
+  const wrap = document.getElementById('scoreInputs');
+  wrap.innerHTML = selectedSubjects.map(code => {
+    const s = allSubjects.find(x => x.subject_code === code);
+    if (!s) return '';
+    const prev = scoresInput[code] || '';
+    return `<div class="score-row" data-code="${code}">
+      <div class="score-subject">${s.subject_name}</div>
+      <input type="number" class="score-input" min="0" max="100"
+             value="${prev}" placeholder="0~100"
+             oninput="onScoreInput('${code}', this.value)" />
+      <div class="score-band-tag" id="band-${code}">점수 입력</div>
+    </div>`;
+  }).join('');
+
+  // 시험 날짜 기본값 = 오늘
+  const dateEl = document.getElementById('examDate');
+  if (!dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+}
+
+function onScoreInput(code, val) {
+  const n = parseInt(val, 10);
+  scoresInput[code] = isNaN(n) ? null : Math.max(0, Math.min(100, n));
+  const tag = document.getElementById(`band-${code}`);
+  if (scoresInput[code] === null || scoresInput[code] === undefined) {
+    tag.textContent = '점수 입력'; tag.className = 'score-band-tag';
+  } else {
+    const band = getScoreBand(scoresInput[code]);
+    tag.textContent = getBandLabel(band);
+    tag.className = `score-band-tag band-${band}`;
+  }
+}
+
+/* ── 점수 저장 + 추천 조회 ── */
+async function submitScores() {
+  const examType = document.getElementById('examType').value;
+  const examName = document.getElementById('examName').value.trim();
+  const examDate = document.getElementById('examDate').value;
+
+  const filled = selectedSubjects.filter(c => scoresInput[c] !== null && scoresInput[c] !== undefined);
+  if (!filled.length) { showToast('점수를 1개 이상 입력해주세요', 'warn'); return; }
+
+  showToast('💾 저장 중...', 'info');
+
+  try {
+    // 1. 점수 저장
+    for (const code of filled) {
+      await fetch(`${API}/student_scores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: currentStudent.id,
+          subject_code: code,
+          score: scoresInput[code],
+          exam_type: examType,
+          exam_name: examName || null,
+          exam_date: examDate || new Date().toISOString().slice(0,10),
+        }),
+      });
+    }
+
+    // 2. 추천 조회
+    const grade = currentStudent.grade || '중1';
+    const matrixRes = await fetch(`${API}/recommendation_matrix?limit=300`);
+    const matrixData = await matrixRes.json();
+    const allMatrix = matrixData.data || [];
+
+    recommendations = {};
+    filled.forEach(code => {
+      const band = getScoreBand(scoresInput[code]);
+      // 정확 매칭 우선
+      let match = allMatrix.find(m => m.grade === grade && m.score_band === band && m.subject_code === code);
+      // 폴백: 같은 카테고리 첫 항목 (선택과목용)
+      if (!match) {
+        const subjInfo = allSubjects.find(s => s.subject_code === code);
+        if (subjInfo) {
+          match = allMatrix.find(m =>
+            m.grade === grade && m.score_band === band &&
+            allSubjects.find(s => s.subject_code === m.subject_code)?.category === subjInfo.category
+          );
+        }
+      }
+      if (match) recommendations[code] = match;
+    });
+
+    renderRecommendations();
+    goToStep(3);
+    showToast('✅ 추천이 생성되었습니다!', 'ok');
+  } catch (e) {
+    console.error(e);
+    showToast('저장 실패: ' + e.message, 'error');
+  }
+}
+
+/* ── 추천 결과 렌더 ── */
+function renderRecommendations() {
+  const wrap = document.getElementById('recommendationsArea');
+  const filled = selectedSubjects.filter(c => scoresInput[c] !== null && scoresInput[c] !== undefined);
+
+  if (!filled.length) {
+    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>추천 결과가 없습니다.</p></div>';
+    return;
+  }
+
+  selectedCourses = {};
+
+  wrap.innerHTML = filled.map(code => {
+    const subj = allSubjects.find(s => s.subject_code === code);
+    const score = scoresInput[code];
+    const band = getScoreBand(score);
+    const rec = recommendations[code];
+
+    if (!rec) {
+      return `<div class="rec-subject-card">
+        <div class="rec-subject-header">
+          <div>
+            <div class="rec-subject-name">${subj?.subject_name || code}</div>
+            <div class="rec-subject-meta">${score}점 (${getBandLabel(band)})</div>
+          </div>
+        </div>
+        <div class="empty-state" style="padding:20px;">
+          <p>이 학년·점수대 추천 데이터가 아직 없습니다.<br/>아래에 직접 강좌를 추가해주세요.</p>
+        </div>
+        <div class="rec-course-add">
+          <input type="text" placeholder="강좌명 직접 입력" id="custom-${code}" />
+          <button onclick="addCustomCourse('${code}')"><i class="fas fa-plus"></i> 추가</button>
+        </div>
+      </div>`;
+    }
+
+    const courses = Array.isArray(rec.recommended_courses) ? rec.recommended_courses : [];
+    selectedCourses[code] = [...courses]; // 기본 전체 선택
+
+    return `<div class="rec-subject-card">
+      <div class="rec-subject-header">
+        <div>
+          <div class="rec-subject-name">${subj?.subject_name || code}</div>
+          <div class="rec-subject-meta">${score}점 · ${getBandLabel(band)} · ${rec.difficulty || ''}</div>
+        </div>
+        <div class="score-band-tag band-${band}">${getBandLabel(band)}</div>
+      </div>
+      ${rec.reason ? `<div class="rec-reason">💡 ${rec.reason}</div>` : ''}
+      <div class="rec-course-list" id="courses-${code}">
+        ${courses.map((c, i) => `
+          <label class="rec-course-item">
+            <input type="checkbox" checked onchange="toggleCourse('${code}', ${i}, this.checked)" />
+            <span class="rec-course-name">${typeof c === 'string' ? c : c.name}</span>
+          </label>`).join('')}
+      </div>
+      <div class="rec-course-add">
+        <input type="text" placeholder="다른 강좌를 직접 추가 (예: ○○ 인강)" id="custom-${code}" />
+        <button onclick="addCustomCourse('${code}')"><i class="fas fa-plus"></i> 추가</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCourse(code, idx, checked) {
+  const rec = recommendations[code];
+  const courses = Array.isArray(rec.recommended_courses) ? rec.recommended_courses : [];
+  const courseName = typeof courses[idx] === 'string' ? courses[idx] : courses[idx].name;
+  if (checked) {
+    if (!selectedCourses[code]) selectedCourses[code] = [];
+    if (!selectedCourses[code].includes(courseName)) selectedCourses[code].push(courseName);
+  } else {
+    selectedCourses[code] = (selectedCourses[code] || []).filter(c => c !== courseName);
+  }
+}
+
+function addCustomCourse(code) {
+  const inp = document.getElementById(`custom-${code}`);
+  const name = (inp.value || '').trim();
+  if (!name) return;
+  if (!selectedCourses[code]) selectedCourses[code] = [];
+  selectedCourses[code].push(name);
+
+  const list = document.getElementById(`courses-${code}`);
+  if (list) {
+    const lbl = document.createElement('label');
+    lbl.className = 'rec-course-item';
+    lbl.innerHTML = `
+      <input type="checkbox" checked onchange="toggleCustomCourse('${code}', '${name.replace(/'/g,"\\'")}', this.checked)" />
+      <span class="rec-course-name">${name} <em style="font-size:11px;color:var(--green-700);font-style:normal;">(직접 추가)</em></span>`;
+    list.appendChild(lbl);
+  } else {
+    // 추천이 없던 카드의 경우 목록 자체가 없으므로 알림만
+    showToast(`✅ ${name} 추가됨`, 'ok');
+  }
+  inp.value = '';
+}
+
+function toggleCustomCourse(code, name, checked) {
+  if (checked) {
+    if (!selectedCourses[code]) selectedCourses[code] = [];
+    if (!selectedCourses[code].includes(name)) selectedCourses[code].push(name);
+  } else {
+    selectedCourses[code] = (selectedCourses[code] || []).filter(c => c !== name);
+  }
+}
+
+/* ── 강좌 확정 ── */
+async function confirmCourses() {
+  const all = [];
+  Object.keys(selectedCourses).forEach(code => {
+    (selectedCourses[code] || []).forEach(name => {
+      all.push({ subject_code: code, course_name: name });
+    });
+  });
+  if (!all.length) { showToast('선택한 강좌가 없습니다', 'warn'); return; }
+
+  showToast('💾 강좌 확정 중...', 'info');
+  try {
+    for (const item of all) {
+      await fetch(`${API}/student_courses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          student_id: currentStudent.id,
+          subject_code: item.subject_code,
+          course_name: item.course_name,
+          course_type: 'lecture',
+          source: 'recommended',
+          status: 'active',
+          added_by: currentStudent.id,
+        }),
+      });
+    }
+    showToast(`✅ ${all.length}개 강좌가 확정되었습니다!`, 'ok');
+    setTimeout(() => location.href = 'my-courses.html', 1500);
+  } catch (e) {
+    showToast('확정 실패: ' + e.message, 'error');
+  }
+}
+
+/* ── 단계 전환 ── */
+function goToStep(n) {
+  ['section-subjects','section-scores','section-recommendations'].forEach((id, i) => {
+    document.getElementById(id).style.display = (n === i+1) ? '' : 'none';
+  });
+  ['step1','step2','step3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.remove('active','done');
+    if (i+1 === n) el.classList.add('active');
+    else if (i+1 < n) el.classList.add('done');
+  });
+  if (n === 2) renderScoreInputs();
+}
+
+/* ── 초기화 ── */
+document.addEventListener('DOMContentLoaded', () => {
+  if (!checkSession()) return;
+  loadSubjects();
+});
+</script>
+
+</body>
+</html>
