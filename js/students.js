@@ -313,7 +313,7 @@ function renderTable() {
       </tr>
       ${pending.map(s => `
         <tr style="background:#fffbeb;" data-id="${s.id}">
-          <td><input type="checkbox" disabled /></td>
+                    <td><input type="checkbox" class="row-check" data-id="${s.id}" ${selectedIds.has(s.id)?'checked':''}/></td>
           <td><span style="color:#92400e;font-weight:700;">${s.name}</span><br><span style="font-size:11px;color:#b45309;">${s.id}</span></td>
           <td>${s.school || '미입력'}</td>
           <td>${s.grade || '미입력'}</td>
