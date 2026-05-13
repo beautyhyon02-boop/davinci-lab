@@ -363,7 +363,7 @@ function renderTable() {
       <td>${s.plan}</td>
       <td>${s.assess !== '-' ? `<span style="color:var(--red);font-weight:600;">${s.assess}</span>` : s.assess}</td>
       <td>${s.manager}</td>
-      <td>${s.status === '휴원'
+            <td>${(s.status === '휴원' || s.status === 'inactive')
         ? '<span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">휴원</span>'
         : '<span style="background:rgba(34,197,94,.12);color:#16a34a;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">활성</span>'
       }</td>
