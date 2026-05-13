@@ -975,8 +975,7 @@ async function archiveStudent(dbId, localId, statusVal = '졸업') {
     }
     // 로컬 데이터 업데이트
     const s = allStudents.find(x => x.id === localId || x._id === dbId);
-    if (s) s.status = statusVal;
-
+            body: JSON.stringify({ status: 'active', is_active: true }),
     document.getElementById('studentDetailModal')?.classList.remove('open');
     updateSummaryBar();
     renderTable();
