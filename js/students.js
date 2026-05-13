@@ -967,7 +967,10 @@ async function archiveStudent(dbId, localId, statusVal = '졸업') {
       await fetch(`${_API}/${TABLE_PROFILES}/${dbId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: statusVal }),
+                body: JSON.stringify({
+          status: statusVal === '졸업' ? 'graduated' : 'inactive',
+          is_active: false
+        }),
       });
     }
     // 로컬 데이터 업데이트
