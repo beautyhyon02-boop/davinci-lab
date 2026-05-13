@@ -90,12 +90,14 @@ function getPendingStudents() {
   return allStudents.filter(s => s.status === 'pending');
 }
 function getActiveStudents() {
-  return allStudents.filter(s => s.status !== '휴원' && s.status !== '졸업' && s.status !== 'pending');
+  return allStudents.filter(s =>
+    s.status !== '휴원' && s.status !== '졸업' && s.status !== 'pending' &&
+    s.status !== 'inactive' && s.status !== 'graduated' && s.status !== '비활성' && s.status !== '퇴원'
+  );
 }
 function getBreakStudents() {
-  return allStudents.filter(s => s.status === '휴원');
+  return allStudents.filter(s => s.status === '휴원' || s.status === 'inactive');
 }
-function getAllStudents() { return allStudents; }
 
 /* ═══════════════════════════════════════
    가입 승인 모달
