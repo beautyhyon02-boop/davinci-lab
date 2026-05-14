@@ -1437,11 +1437,19 @@
         }),
       });
 
-      // 2. 완료 처리 시 강좌 진도 +25%
-      if (newDone && a.course_id) {
+            // 2. 강좌 진도 업데이트 (완료 시 +25%, 취소 시 -25%)
+      if (a.course_id) {
         const course = myCourses.find(c => c.id === a.course_id);
         if (course) {
-          const newProgress = Math.min(100, (course.progress || 0) + (a.progress_added || 25));
+          const delta = a.progress_added || 25;
+          let newProgress;
+          if (newDone) {
+            // 완료: +25%
+            newProgress = Math.min(100, (course.progress || 0) + delta);
+          } else {
+            // 취소: -25% (0 미만으로 안 내려가게)
+            newProgress = Math.max(0, (course.progress || 0) - delta);
+          }
           const newCourseStatus = newProgress >= 100 ? 'completed' : 'active';
           await fetch(`/tables/${TABLE_COURSES}/${course.id}`, {
             method: 'PATCH',
@@ -1456,7 +1464,6 @@
           course.status = newCourseStatus;
         }
       }
-
       // 3. 로컬 업데이트
       a.status = newStatus;
       a.completed_at = completedAt;
