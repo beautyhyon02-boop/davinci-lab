@@ -1102,7 +1102,12 @@
 
   /* ─────────────── 상세 보기 (인라인 확장) ─────────────── */
   window.openDetailView = (id) => {
-    const a = myRecords.find(x => x.id === id);
+   const a = myRecords.find(x => String(x.id) === String(id));
+if (!a) {
+  console.error('[openDetailView] 레코드 못 찾음. id:', id, '| myRecords:', myRecords.map(r => r.id));
+  showToast('상세 정보를 불러올 수 없습니다', 'error');
+  return;
+}
     if (!a) return;
 
     let history = [];
