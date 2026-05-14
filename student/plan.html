@@ -815,8 +815,13 @@
      DB 연동: exam_planners, planner_tasks
   ═══════════════════════════════════════════ */
 
-  const TABLE_PLANNERS = 'exam_planners';
+    const TABLE_PLANNERS = 'exam_planners';
   const TABLE_TASKS    = 'planner_tasks';
+  const TABLE_DAILY    = 'daily_assignments';
+  const TABLE_COURSES  = 'student_courses';
+
+  let todayAssignments = [];
+  let myCourses = [];
 
   let session     = null;
   let studentId   = '';
