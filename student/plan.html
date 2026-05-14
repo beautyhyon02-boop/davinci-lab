@@ -967,7 +967,7 @@
       }
     } catch(e) { allPlanners = []; console.error('[plan.html] 플래너 로드 실패:', e); }
 
-    try {
+       try {
       // 태스크 로드 (limit을 크게 하여 전체 조회 후 클라이언트 필터링)
       const tr = await fetch(`/tables/${TABLE_TASKS}?limit=1000`);
       if (tr.ok) {
@@ -978,6 +978,33 @@
         console.log(`[plan.html] 태스크: 전체 ${td.data?.length}, 내 것 ${allTasks.length}`);
       }
     } catch(e) { allTasks = []; console.error('[plan.html] 태스크 로드 실패:', e); }
+
+    // ── 오늘의 일일 배정 로드 ──
+    try {
+      const today = toLocalDateStrPlan(new Date());
+      const dr = await fetch(`/tables/${TABLE_DAILY}?limit=200`);
+      if (dr.ok) {
+        const dd = await dr.json();
+        todayAssignments = (dd.data || []).filter(a =>
+          String(a.student_id).trim() === String(studentId).trim() &&
+          String(a.assigned_date).substring(0,10) === today
+        ).sort((a, b) => (a.display_order||0) - (b.display_order||0));
+        console.log(`[plan.html] 오늘 배정: ${todayAssignments.length}건`);
+      }
+    } catch(e) { todayAssignments = []; console.error('[plan.html] 일일 배정 로드 실패:', e); }
+
+    // ── 내 강좌 로드 (자동 배분 시 필요) ──
+    try {
+      const cr = await fetch(`/tables/${TABLE_COURSES}?limit=500`);
+      if (cr.ok) {
+        const cd = await cr.json();
+        myCourses = (cd.data || []).filter(c =>
+          String(c.student_id).trim() === String(studentId).trim() &&
+          c.status === 'active'
+        );
+        console.log(`[plan.html] 내 강좌: ${myCourses.length}건`);
+      }
+    } catch(e) { myCourses = []; }
   }
 
   /* ── 탭 전환 ── */
