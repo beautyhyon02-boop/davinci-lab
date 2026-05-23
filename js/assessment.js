@@ -332,28 +332,61 @@ window._openNewModal = window.openNewModal = (assessId = null) => {
 
   modal.classList.add('open');
 
-  /* 이미지 미리보기 초기화 */
   const imgPreview = document.getElementById('naImagePreview');
   const imgInput   = document.getElementById('naImageInput');
+  const camInput   = document.getElementById('naCameraInput');
   if (imgPreview) imgPreview.innerHTML = '';
   if (imgInput)   imgInput.value = '';
+  if (camInput)   camInput.value = '';
   window._naImages = [];
+  window._naImageProcessing = false;
+  setNaImageStatus('');
 
-  /* 수정 모드: 기존 이미지 복원 */
   if (editTarget) {
     try {
       const existing = JSON.parse(editTarget.notice_images || '[]');
       window._naImages = [...existing];
       renderNaImagePreview();
-    } catch(e) {}
+    } catch(e) {
+      console.warn('[assessment] 기존 공지 이미지 복원 실패', e);
+    }
+  } else {
+    renderNaImagePreview();
   }
 };
 
-/* ─── 이미지 미리보기 렌더 ─── */
+const NA_MAX_IMAGES = 3;
+const NA_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+const NA_MAX_EDGE = 1600;
+const NA_JPEG_QUALITY = 0.84;
+
+function setNaImageStatus(message = '', tone = '') {
+  const el = document.getElementById('naImageStatus');
+  if (!el) return;
+  el.textContent = message;
+  el.className = `na-img-status${tone ? ` is-${tone}` : ''}`;
+}
+
+function setNaSaveButtonsDisabled(disabled, loadingText = '등록') {
+  ['naSave', 'naSaveHeader'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = disabled;
+    if (disabled) {
+      btn.dataset.prevHtml = btn.dataset.prevHtml || btn.innerHTML;
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
+    } else if (btn.dataset.prevHtml) {
+      btn.innerHTML = btn.dataset.prevHtml;
+      delete btn.dataset.prevHtml;
+    }
+  });
+}
+
 function renderNaImagePreview() {
   const wrap = document.getElementById('naImagePreview');
   if (!wrap) return;
-  wrap.innerHTML = (window._naImages || []).map((src, i) => `
+  const imgs = window._naImages || [];
+  wrap.innerHTML = imgs.map((src, i) => `
     <div class="na-img-preview-item">
       <img src="${src}" alt="첨부 ${i+1}" />
       <button class="na-img-remove" onclick="removeNaImage(${i})" type="button">
@@ -361,6 +394,14 @@ function renderNaImagePreview() {
       </button>
     </div>
   `).join('');
+
+  if (window._naImageProcessing) {
+    setNaImageStatus(`이미지를 준비하고 있어요... (${imgs.length}/${NA_MAX_IMAGES})`, 'processing');
+  } else if (imgs.length > 0) {
+    setNaImageStatus(`사진 ${imgs.length}장 준비 완료`, 'success');
+  } else {
+    setNaImageStatus('');
+  }
 }
 window.removeNaImage = function(idx) {
   if (!window._naImages) return;
@@ -368,40 +409,120 @@ window.removeNaImage = function(idx) {
   renderNaImagePreview();
 };
 
-/* ─── 이미지 파일 선택 공통 핸들러 ─── */
-function handleNaImageFiles(fileList, inputEl) {
-  const files = Array.from(fileList || []);
-  if (!window._naImages) window._naImages = [];
-  const remaining = 3 - window._naImages.length;
-  if (remaining <= 0) { showToast('사진은 최대 3장까지 첨부할 수 있습니다.', 'warn'); return; }
-  const toAdd = files.filter(f => f.type.startsWith('image/')).slice(0, remaining);
-  if (files.length > remaining) showToast(`사진은 최대 3장입니다. ${toAdd.length}장만 추가합니다.`, 'warn');
-  if (toAdd.length === 0) return;
-  let loaded = 0;
-  toAdd.forEach(file => {
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = ev => {
-      window._naImages.push(ev.target.result);
-      loaded++;
-      if (loaded === toAdd.length) renderNaImagePreview();
-    };
+    reader.onload = ev => resolve(ev.target.result);
+    reader.onerror = () => reject(new Error('이미지 파일을 읽지 못했습니다.'));
     reader.readAsDataURL(file);
   });
-  if (inputEl) inputEl.value = '';
 }
 
-/* 갤러리 선택 */
-document.getElementById('naImageInput')?.addEventListener('change', function(e) {
-  handleNaImageFiles(e.target.files, this);
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('이미지를 불러오지 못했습니다.'));
+    };
+    img.src = objectUrl;
+  });
+}
+
+async function optimizeNoticeImage(file) {
+  if (!file.type.startsWith('image/')) throw new Error('이미지 파일만 첨부할 수 있습니다.');
+  if (file.size > NA_MAX_UPLOAD_BYTES) {
+    throw new Error('한 장당 15MB 이하 이미지만 업로드할 수 있습니다.');
+  }
+
+  if (file.type === 'image/svg+xml') {
+    return fileToDataUrl(file);
+  }
+
+  const img = await loadImageFromFile(file);
+  const scale = Math.min(1, NA_MAX_EDGE / Math.max(img.width, img.height));
+  const width = Math.max(1, Math.round(img.width * scale));
+  const height = Math.max(1, Math.round(img.height * scale));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
+
+  const keepPng = file.type === 'image/png' && file.size < 1.2 * 1024 * 1024;
+  return canvas.toDataURL(keepPng ? 'image/png' : 'image/jpeg', keepPng ? undefined : NA_JPEG_QUALITY);
+}
+
+async function handleNaImageFiles(fileList, inputEl) {
+  const files = Array.from(fileList || []);
+  if (!window._naImages) window._naImages = [];
+
+  const remaining = NA_MAX_IMAGES - window._naImages.length;
+  if (remaining <= 0) {
+    showToast('사진은 최대 3장까지 첨부할 수 있습니다.', 'info');
+    if (inputEl) inputEl.value = '';
+    return;
+  }
+
+  const imageFiles = files.filter(f => f.type.startsWith('image/')).slice(0, remaining);
+  if (files.length > remaining) {
+    showToast(`사진은 최대 3장입니다. ${imageFiles.length}장만 추가합니다.`, 'info');
+  }
+  if (imageFiles.length === 0) {
+    showToast('이미지 파일만 선택해주세요.', 'error');
+    if (inputEl) inputEl.value = '';
+    return;
+  }
+
+  window._naImageProcessing = true;
+  setNaSaveButtonsDisabled(true, '이미지 준비 중');
+  setNaImageStatus(`이미지를 준비하고 있어요... (0/${imageFiles.length})`, 'processing');
+
+  try {
+    let done = 0;
+    for (const file of imageFiles) {
+      const optimized = await optimizeNoticeImage(file);
+      window._naImages.push(optimized);
+      done += 1;
+      setNaImageStatus(`이미지를 준비하고 있어요... (${done}/${imageFiles.length})`, 'processing');
+      renderNaImagePreview();
+    }
+    renderNaImagePreview();
+  } catch (e) {
+    console.error('[assessment] 이미지 처리 오류', e);
+    showToast(`⚠️ 이미지 처리 실패: ${e.message}`, 'error');
+    setNaImageStatus(`이미지 처리 실패: ${e.message}`, 'error');
+  } finally {
+    window._naImageProcessing = false;
+    setNaSaveButtonsDisabled(false);
+    renderNaImagePreview();
+    if (inputEl) inputEl.value = '';
+  }
+}
+
+document.getElementById('naImageInput')?.addEventListener('change', async function(e) {
+  await handleNaImageFiles(e.target.files, this);
 });
 
-/* 카메라 바로 촬영 */
-document.getElementById('naCameraInput')?.addEventListener('change', function(e) {
-  handleNaImageFiles(e.target.files, this);
+document.getElementById('naCameraInput')?.addEventListener('change', async function(e) {
+  await handleNaImageFiles(e.target.files, this);
 });
 
 /* ─── 저장 ─── */
 document.getElementById('naSave')?.addEventListener('click', async () => {
+  if (window._naImageProcessing) {
+    showToast('이미지 처리 중입니다. 잠시만 기다려주세요.', 'info');
+    return;
+  }
+
   const sel     = document.getElementById('naStudent');
   const stuId   = sel?.value || '';
   const stuOpt  = sel?.options[sel.selectedIndex];
@@ -477,6 +598,7 @@ document.getElementById('naSave')?.addEventListener('click', async () => {
     showToast(`⚠️ 저장 실패: ${e.message}`, 'error');
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> 저장'; }
+    setNaSaveButtonsDisabled(false);
   }
 });
 
