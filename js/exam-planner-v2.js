@@ -1,9 +1,3 @@
-/* ════════════════════════════════════════════════════════
-   🎯 다빈치랩 시험 플래너 v3 - 80분 단위 + 슬롯 수정
-   작성일: 2026-05-12
-   특징: 70분 학습 + 10분 휴식, 저녁 18:30~19:30 제외
-   ════════════════════════════════════════════════════════ */
-
 const API_BASE = '/tables';
 const TBL = {
   planners: 'exam_planners',
@@ -606,9 +600,15 @@ function renderWeekTabs() {
   if (!currentPlanner || !currentPlanner.weeks_data) return;
   const container = document.getElementById('weekTabs');
   container.innerHTML = '';
-  currentPlanner.weeks_data.forEach((week, idx) => {
+
+  if (!activeWeekTab) {
+    activeWeekTab = getAutoWeekTabId();
+  }
+
+  currentPlanner.weeks_data.forEach((week) => {
     const tab = document.createElement('div');
-    tab.className = `week-tab ${idx === 0 ? 'active ' + week.cls : ''}`;
+    const isActive = activeWeekTab === week.id;
+    tab.className = `week-tab ${isActive ? 'active ' + week.cls : ''}`;
     tab.innerHTML = `
       <span class="emoji">${week.emoji}</span>
       <div class="name">${week.name}</div>
@@ -616,12 +616,10 @@ function renderWeekTabs() {
     `;
     tab.onclick = () => {
       activeWeekTab = week.id;
-      document.querySelectorAll('.week-tab').forEach(t => t.classList.remove('active','pre','w1','w2','w3','w4'));
-      tab.classList.add('active', week.cls);
+      renderWeekTabs();
       renderDayGrid();
     };
     container.appendChild(tab);
-    if (idx === 0) activeWeekTab = week.id;
   });
 }
 
@@ -629,26 +627,32 @@ function renderDayGrid() {
   if (!currentPlanner || !currentPlanner.daily_tasks) return;
   const grid = document.getElementById('dayGrid');
   grid.innerHTML = '';
-  const currentWeek = currentPlanner.weeks_data.find(w => w.id === activeWeekTab);
+
+  const currentWeek = currentPlanner.weeks_data.find(w => w.id === activeWeekTab) || currentPlanner.weeks_data[0];
   if (!currentWeek) return;
-  const todayStr = formatDate(new Date());
-  
-  currentWeek.day_dates.forEach((dateStr) => {
+
+  const todayStr = getTodayStr();
+  const orderedDates = [...currentWeek.day_dates].sort((a, b) => {
+    if (a === todayStr) return -1;
+    if (b === todayStr) return 1;
+    return a.localeCompare(b);
+  });
+
+  orderedDates.forEach((dateStr) => {
     const dayTask = currentPlanner.daily_tasks[dateStr];
     if (!dayTask) return;
     const isToday = dateStr === todayStr;
     const ddayLabel = calcDdayFromDate(dateStr);
     const card = document.createElement('div');
     card.className = `day-card ${currentWeek.cls} ${isToday ? 'today-card' : ''}`;
-    
+
     const completedCount = (dayTask.completed_slots || []).length;
-    // 휴식/식사는 통계 제외
     const countableSlots = dayTask.slots.filter(s => s.type !== 'rest' && s.type !== 'meal');
     const totalCount = countableSlots.length;
     const pct = totalCount > 0 ? Math.round(completedCount / totalCount * 100) : 0;
-    
+
     const startMin = dayTask.start_minutes || (dayTask.is_weekend ? WEEKEND_DEFAULT_START : WEEKDAY_DEFAULT_START);
-    
+
     card.innerHTML = `
       <div class="day-header">
         <div class="day-num">${ddayLabel}</div>
@@ -661,7 +665,7 @@ function renderDayGrid() {
       <div class="day-body">
         <div class="day-start-time">
           <label>🕐 시작 시간:</label>
-          <input type="time" value="${minToTime(startMin)}" 
+          <input type="time" value="${minToTime(startMin)}"
                  onchange="changeDayStartTime('${dateStr}', this.value)">
           <button class="regen-btn" onclick="regenerateDaySchedule('${dateStr}')" title="새 시작시간으로 시간표 다시 생성">
             🔄 재생성
@@ -673,6 +677,13 @@ function renderDayGrid() {
       </div>
     `;
     grid.appendChild(card);
+  });
+
+  requestAnimationFrame(() => {
+    document.querySelector('.day-card.today-card')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   });
 }
 
@@ -1230,6 +1241,29 @@ async function loadExistingPlanner() {
 }
 
 /* ════════ 헬퍼 ════════ */
+function getTodayStr() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return formatDate(today);
+}
+
+function getAutoWeekTabId() {
+  if (!currentPlanner || !Array.isArray(currentPlanner.weeks_data) || currentPlanner.weeks_data.length === 0) {
+    return 'pre';
+  }
+
+  const todayStr = getTodayStr();
+  const currentWeek = currentPlanner.weeks_data.find(
+    week => todayStr >= week.start_date && todayStr <= week.end_date
+  );
+  if (currentWeek) return currentWeek.id;
+
+  const upcomingWeek = currentPlanner.weeks_data.find(week => todayStr < week.start_date);
+  if (upcomingWeek) return upcomingWeek.id;
+
+  return currentPlanner.weeks_data[currentPlanner.weeks_data.length - 1].id;
+}
+
 function formatDate(d) {
   if (typeof d === 'string') return d.split('T')[0];
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
