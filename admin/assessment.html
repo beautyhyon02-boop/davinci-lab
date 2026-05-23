@@ -6,6 +6,7 @@
   <title>수행평가 관리 – 다빈치랩</title>
   <link rel="manifest" href="../admin-manifest.json" />
   <meta name="theme-color" content="#163A33" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="DVL관리자" />
@@ -18,13 +19,6 @@
   <link rel="stylesheet" href="../css/admin.css" />
   <link rel="stylesheet" href="../css/mobile.css" />
   <link rel="stylesheet" href="../css/assessment.css" />
-  <link rel="manifest" href="../admin-manifest.json" />
-  <meta name="theme-color" content="#163A33" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="다빈치랩" />
-  <link rel="apple-touch-icon" href="../images/icon-180.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
 </head>
 <body class="admin-body">
 
@@ -108,7 +102,7 @@
           <p class="page-subtitle">수행평가를 등록하고 학생에게 피드백을 제공합니다</p>
         </div>
         <button class="btn-add" onclick="openNewModal()" style="display:flex;align-items:center;gap:6px">
-          <i class="fas fa-plus"></i> 새 수행평가
+          <i class="fas fa-plus"></i> 새 수행평가 공지 등록하기
         </button>
       </div>
 
@@ -306,19 +300,19 @@
 
         <!-- ── 사진/파일 첨부 ── -->
         <div class="form-group">
-          <label>공지 사진 첨부 <span style="font-size:.78rem;color:#94a3b8;font-weight:400;">(최대 3장)</span></label>
+          <label>공지 사진 첨부 <span style="font-size:.78rem;color:#94a3b8;font-weight:400;">(최대 3장 · 스마트폰 카메라/갤러리 지원)</span></label>
           <div class="na-img-btn-row">
-            <!-- 갤러리 선택 -->
             <label for="naImageInput" class="na-img-upload-btn na-btn-gallery">
-              <i class="fas fa-images"></i> 갤러리
+              <i class="fas fa-images"></i> 갤러리에서 선택
             </label>
             <input type="file" id="naImageInput" accept="image/*" multiple style="display:none;" />
-            <!-- 카메라 바로 촬영 -->
             <label for="naCameraInput" class="na-img-upload-btn na-btn-camera">
-              <i class="fas fa-camera"></i> 카메라 촬영
+              <i class="fas fa-camera"></i> 스마트폰 카메라 촬영
             </label>
             <input type="file" id="naCameraInput" accept="image/*" capture="environment" style="display:none;" />
           </div>
+          <div class="na-img-guide">촬영 또는 선택한 이미지는 자동으로 최적화되어 저장됩니다. 사진은 최대 3장까지 첨부할 수 있습니다.</div>
+          <div id="naImageStatus" class="na-img-status"></div>
           <div id="naImagePreview" class="na-img-preview-wrap"></div>
         </div>
       </div>
@@ -403,6 +397,23 @@
     .na-img-upload-btn i { font-size: 1.1rem; }
 
     /* ── 미리보기 영역 ── */
+    .na-img-guide {
+      margin-top: 8px;
+      font-size: .8rem;
+      line-height: 1.5;
+      color: #64748b;
+    }
+    .na-img-status {
+      margin-top: 8px;
+      min-height: 20px;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #4338ca;
+    }
+    .na-img-status.is-processing { color: #d97706; }
+    .na-img-status.is-error { color: #dc2626; }
+    .na-img-status.is-success { color: #065f46; }
+
     .na-img-preview-wrap {
       display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
     }
@@ -492,7 +503,7 @@
 
   <script src="../js/dvl-session.js?v=20260430"></script>
   <script src="../js/admin-common.js?v=20260430"></script>
-  <script src="../js/assessment.js?v=20260430" defer></script>
+  <script src="../js/assessment.js?v=20260523a" defer></script>
 
   <!-- ===== 모바일 하단 네비 (관리자) ===== -->
   <nav class="mobile-nav mobile-nav--admin">
