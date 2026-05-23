@@ -1239,11 +1239,6 @@ async function saveCornellNote() {
     const commonPayload = {
       student_id: currentStudent.student_id,
       planner_id: currentPlanner.id,
-      slot_key: slotKey,
-      study_date: dateStr,
-      slot_index: slotIdx,
-      slot_start_time: slot.start_time || '',
-      slot_end_time: slot.end_time || '',
       subject: slot.subject || '',
       unit: '',
       stage: slot.stage || '',
