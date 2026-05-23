@@ -1115,6 +1115,33 @@ async function loadCornellNoteById(noteId) {
   }
 }
 
+async function findCornellNoteBySlot(dateStr, slotIdx, slot) {
+  try {
+    const slotKey = ensureCornellSlotKey(dateStr, slotIdx);
+    const params = new URLSearchParams({
+      student_id: currentStudent.student_id,
+      planner_id: currentPlanner.id,
+      slot_key: slotKey,
+      limit: '10'
+    });
+    const res = await fetch(`${API_BASE}/${TBL.notes}?${params.toString()}`);
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => null);
+    const notes = data?.data || data?.records || data || [];
+    const liveNotes = Array.isArray(notes) ? notes.filter(note => !note.is_deleted) : [];
+    if (liveNotes.length > 0) return pickLatestCornellNote(liveNotes);
+  } catch (e) {
+    console.warn('코넬노트 슬롯 조회:', e);
+  }
+
+  if (slot?.cornell_note_id) {
+    const byId = await loadCornellNoteById(slot.cornell_note_id);
+    if (byId && !byId.is_deleted) return byId;
+  }
+
+  return null;
+}
+
 function openCornellModal(dateStr, slotIdx) {
   currentCornellSlot = { dateStr, slotIdx };
   const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
@@ -1135,34 +1162,25 @@ async function loadExistingNote(dateStr, slotIdx, slot) {
   document.getElementById('cornellDeleteBtn').style.display = 'none';
 
   try {
-    const localNote = getSlotCornellStore(dateStr, slotIdx);
-    const hasLocalContent = !!(localNote?.keywords || localNote?.content || localNote?.summary);
-
-    if (hasLocalContent) {
-      applyCornellValuesToModal(localNote);
-      currentCornellNoteId = slot.cornell_note_id || null;
-      updateSaveButtonLabel(true);
-      document.getElementById('cornellDeleteBtn').style.display = 'inline-block';
+    const remoteNote = await findCornellNoteBySlot(dateStr, slotIdx, slot);
+    if (!remoteNote) {
+      clearSlotCornellState(dateStr, slotIdx);
+      savePlannerData().catch(err => console.warn('빈 코넬 상태 저장:', err));
       return;
     }
 
-    if (slot.cornell_note_id) {
-      const remoteNote = await loadCornellNoteById(slot.cornell_note_id);
-      if (remoteNote) {
-        applyCornellValuesToModal(remoteNote);
-        currentCornellNoteId = remoteNote.id || slot.cornell_note_id;
-        setSlotCornellState(dateStr, slotIdx, {
-          note_id: currentCornellNoteId,
-          keywords: remoteNote.keywords || '',
-          content: remoteNote.content || '',
-          summary: remoteNote.summary || '',
-          updated_at: remoteNote.updated_at || remoteNote.created_at || new Date().toISOString()
-        });
-        updateSaveButtonLabel(true);
-        document.getElementById('cornellDeleteBtn').style.display = 'inline-block';
-        savePlannerData().catch(err => console.warn('코넬 로컬 동기화:', err));
-      }
-    }
+    currentCornellNoteId = remoteNote.id || null;
+    applyCornellValuesToModal(remoteNote);
+    setSlotCornellState(dateStr, slotIdx, {
+      note_id: currentCornellNoteId,
+      keywords: remoteNote.keywords || '',
+      content: remoteNote.content || '',
+      summary: remoteNote.summary || '',
+      updated_at: remoteNote.updated_at || remoteNote.created_at || new Date().toISOString()
+    });
+    updateSaveButtonLabel(true);
+    document.getElementById('cornellDeleteBtn').style.display = 'inline-block';
+    savePlannerData().catch(err => console.warn('코넬 로컬 동기화:', err));
   } catch (e) {
     console.warn('코넬노트 로드:', e);
   }
@@ -1230,15 +1248,24 @@ async function saveCornellNote() {
     return;
   }
 
-  const isEditMode = !!currentCornellNoteId;
-  showLoading(isEditMode ? '수정 중...' : '저장 중...');
+  showLoading(currentCornellNoteId ? '수정 중...' : '저장 중...');
 
   try {
     const nowIso = new Date().toISOString();
     const hasHL = keywords.includes('<mark') || content.includes('<mark') || summary.includes('<mark');
+    const baseDate = new Date(`${dateStr}T00:00:00`);
+    const d1 = new Date(baseDate); d1.setDate(d1.getDate() + 1);
+    const d3 = new Date(baseDate); d3.setDate(d3.getDate() + 3);
+    const d7 = new Date(baseDate); d7.setDate(d7.getDate() + 7);
+
     const commonPayload = {
       student_id: currentStudent.student_id,
       planner_id: currentPlanner.id,
+      slot_key: slotKey,
+      study_date: dateStr,
+      slot_index: slotIdx,
+      slot_start_time: slot.start_time || '',
+      slot_end_time: slot.end_time || '',
       subject: slot.subject || '',
       unit: '',
       stage: slot.stage || '',
@@ -1247,11 +1274,26 @@ async function saveCornellNote() {
       content,
       summary,
       highlights: { has_highlighter: hasHL },
+      image_urls: [],
+      review_date_1: formatDate(d1),
+      review_date_3: formatDate(d3),
+      review_date_7: formatDate(d7),
+      reviewed_1: false,
+      reviewed_3: false,
+      reviewed_7: false,
+      is_mastered: false,
+      is_deleted: false,
       updated_at: nowIso
     };
 
-    if (isEditMode) {
-      const res = await fetch(`${API_BASE}/${TBL.notes}/${currentCornellNoteId}`, {
+    let noteId = currentCornellNoteId;
+    if (!noteId) {
+      const existingNote = await findCornellNoteBySlot(dateStr, slotIdx, slot);
+      if (existingNote?.id) noteId = existingNote.id;
+    }
+
+    if (noteId) {
+      const res = await fetch(`${API_BASE}/${TBL.notes}/${noteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(commonPayload)
@@ -1260,36 +1302,20 @@ async function saveCornellNote() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || '수정 실패');
       }
+      currentCornellNoteId = noteId;
       showToast('✏️ 코넬노트가 수정되었습니다!', 'success');
     } else {
-      const baseDate = new Date(dateStr + 'T00:00:00');
-      const d1 = new Date(baseDate); d1.setDate(d1.getDate() + 1);
-      const d3 = new Date(baseDate); d3.setDate(d3.getDate() + 3);
-      const d7 = new Date(baseDate); d7.setDate(d7.getDate() + 7);
-
-      const noteData = {
-        ...commonPayload,
-        image_urls: [],
-        created_at: nowIso,
-        review_date_1: formatDate(d1),
-        review_date_3: formatDate(d3),
-        review_date_7: formatDate(d7),
-        reviewed_1: false,
-        reviewed_3: false,
-        reviewed_7: false,
-        is_mastered: false
-      };
       const res = await fetch(`${API_BASE}/${TBL.notes}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(noteData)
+        body: JSON.stringify({ ...commonPayload, created_at: nowIso })
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || '저장 실패');
       }
       const saved = await res.json();
-      currentCornellNoteId = saved.id || (saved.data && saved.data.id);
+      currentCornellNoteId = saved.id || saved.data?.id || null;
       showToast('💾 코넬노트가 저장되었습니다!', 'success');
     }
 
@@ -1317,15 +1343,27 @@ async function deleteCornellNote() {
 
   showLoading('삭제 중...');
   try {
-    if (currentCornellNoteId) {
-      const res = await fetch(`${API_BASE}/${TBL.notes}/${currentCornellNoteId}`, { method: 'DELETE' });
-      if (!res.ok && res.status !== 204) {
+    const { dateStr, slotIdx } = currentCornellSlot;
+    const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
+    let noteId = currentCornellNoteId;
+
+    if (!noteId) {
+      const existingNote = await findCornellNoteBySlot(dateStr, slotIdx, slot);
+      if (existingNote?.id) noteId = existingNote.id;
+    }
+
+    if (noteId) {
+      const res = await fetch(`${API_BASE}/${TBL.notes}/${noteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_deleted: true, updated_at: new Date().toISOString() })
+      });
+      if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || '삭제 실패');
       }
     }
 
-    const { dateStr, slotIdx } = currentCornellSlot;
     clearSlotCornellState(dateStr, slotIdx);
     await savePlannerData();
 
