@@ -992,9 +992,66 @@ async function deleteSlot() {
 }
 
 /* ════════ 코넬노트 모달 ════════ */
+function sanitizeCornellKeyPart(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^0-9A-Za-z가-힣_-]+/g, '_')
+    .replace(/^_+|_+$/g, '') || 'na';
+}
+
+function ensureCornellSlotKey(dateStr, slotIdx) {
+  if (!currentPlanner || !currentPlanner.daily_tasks || !currentPlanner.daily_tasks[dateStr]) return '';
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  if (!dayTask.slots || !dayTask.slots[slotIdx]) return '';
+
+  const slot = dayTask.slots[slotIdx];
+  if (!slot.cornell_slot_key) {
+    slot.cornell_slot_key = [
+      'cornell',
+      sanitizeCornellKeyPart(currentPlanner.id || 'planner'),
+      sanitizeCornellKeyPart(dateStr),
+      `idx${slotIdx}`,
+      sanitizeCornellKeyPart(slot.start_time || 'nostart'),
+      sanitizeCornellKeyPart(slot.end_time || 'noend'),
+      sanitizeCornellKeyPart(slot.subject || 'nosubject'),
+      sanitizeCornellKeyPart(slot.stage || 'nostage')
+    ].join('__');
+  }
+  return slot.cornell_slot_key;
+}
+
+function ensurePlannerCornellKeys() {
+  if (!currentPlanner || !currentPlanner.daily_tasks) return false;
+  let changed = false;
+
+  Object.entries(currentPlanner.daily_tasks).forEach(([dateStr, dayTask]) => {
+    if (!dayTask || !Array.isArray(dayTask.slots)) return;
+    dayTask.slots.forEach((slot, slotIdx) => {
+      if (!slot || slot.type === 'rest' || slot.type === 'meal' || slot.type === 'free') return;
+      if (!slot.cornell_slot_key) {
+        ensureCornellSlotKey(dateStr, slotIdx);
+        changed = true;
+      }
+    });
+  });
+
+  return changed;
+}
+
+function pickLatestCornellNote(notes) {
+  if (!Array.isArray(notes) || notes.length === 0) return null;
+  return [...notes].sort((a, b) => {
+    const ta = new Date(a.updated_at || a.created_at || 0).getTime();
+    const tb = new Date(b.updated_at || b.created_at || 0).getTime();
+    if (ta !== tb) return ta - tb;
+    return Number(a.id || 0) - Number(b.id || 0);
+  })[notes.length - 1];
+}
+
 function openCornellModal(dateStr, slotIdx) {
   currentCornellSlot = { dateStr, slotIdx };
   const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
+  ensureCornellSlotKey(dateStr, slotIdx);
   document.getElementById('cornellInfo').innerHTML = `
     <strong>📅 ${dateStr}</strong> · ${slot.subject_emoji || '📖'} ${slot.subject || ''} · ${slot.stage_emoji || ''} ${slot.stage || ''}
   `;
@@ -1011,30 +1068,39 @@ async function loadExistingNote(dateStr, slotIdx, slot) {
     if (el.tagName === 'TEXTAREA') el.value = val;
     else el.innerHTML = val;
   };
+
   setVal('cornellKeywords', '');
   setVal('cornellContent', '');
   setVal('cornellSummary', '');
   currentCornellNoteId = null;
   updateSaveButtonLabel(false);
   document.getElementById('cornellDeleteBtn').style.display = 'none';
-  
+
   try {
-    const url = `${API_BASE}/${TBL.notes}?student_id=${currentStudent.student_id}&subject=${encodeURIComponent(slot.subject || '')}&stage=${encodeURIComponent(slot.stage || '')}&planner_id=${currentPlanner.id}&limit=10`;
+    const slotKey = ensureCornellSlotKey(dateStr, slotIdx);
+    if (!slotKey) return;
+
+    const url = `${API_BASE}/${TBL.notes}?student_id=${currentStudent.student_id}&planner_id=${currentPlanner.id}&slot_key=${encodeURIComponent(slotKey)}&limit=10`;
     const res = await fetch(url);
     if (!res.ok) return;
+
     const data = await res.json();
     const notes = data.data || data.records || data || [];
-    if (notes.length > 0) {
-      const n = notes[notes.length - 1];
-      setVal('cornellKeywords', n.keywords || '');
-      setVal('cornellContent', n.content || '');
-      setVal('cornellSummary', n.summary || '');
-      currentCornellNoteId = n.id;
-      updateSaveButtonLabel(true);
-      document.getElementById('cornellDeleteBtn').style.display = 'inline-block';
-      console.log('📝 노트 로드:', n.id);
-    }
-  } catch (e) { console.warn('노트 로드:', e); }
+    const note = pickLatestCornellNote(notes);
+    if (!note) return;
+
+    setVal('cornellKeywords', note.keywords || '');
+    setVal('cornellContent', note.content || '');
+    setVal('cornellSummary', note.summary || '');
+    currentCornellNoteId = note.id;
+    slot.cornell_written = true;
+    slot.cornell_note_id = note.id;
+    updateSaveButtonLabel(true);
+    document.getElementById('cornellDeleteBtn').style.display = 'inline-block';
+    console.log('📝 코넬노트 로드:', note.id, slotKey);
+  } catch (e) {
+    console.warn('코넬노트 로드:', e);
+  }
 }
 
 function updateSaveButtonLabel(isEditMode) {
@@ -1077,7 +1143,8 @@ async function saveCornellNote() {
   if (!currentCornellSlot) return;
   const { dateStr, slotIdx } = currentCornellSlot;
   const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
-  
+  const slotKey = ensureCornellSlotKey(dateStr, slotIdx);
+
   const getVal = (id) => {
     const el = document.getElementById(id);
     if (!el) return '';
@@ -1088,31 +1155,46 @@ async function saveCornellNote() {
     if (!el) return '';
     return el.tagName === 'TEXTAREA' ? el.value.trim() : el.textContent.trim();
   };
-  
+
   const keywords = getVal('cornellKeywords');
   const content = getVal('cornellContent');
   const summary = getVal('cornellSummary');
-  
+
   if (!getText('cornellKeywords') && !getText('cornellContent')) {
     showToast('키워드나 학습 내용 중 하나는 입력해주세요!', 'error');
     return;
   }
-  
+
   const isEditMode = !!currentCornellNoteId;
   showLoading(isEditMode ? '수정 중...' : '저장 중...');
-  
+
   try {
+    const nowIso = new Date().toISOString();
     const hasHL = keywords.includes('<mark') || content.includes('<mark') || summary.includes('<mark');
-    
+    const commonPayload = {
+      student_id: currentStudent.student_id,
+      planner_id: currentPlanner.id,
+      slot_key: slotKey,
+      study_date: dateStr,
+      slot_index: slotIdx,
+      slot_start_time: slot.start_time || '',
+      slot_end_time: slot.end_time || '',
+      subject: slot.subject || '',
+      unit: '',
+      stage: slot.stage || '',
+      note_type: 'study',
+      keywords,
+      content,
+      summary,
+      highlights: { has_highlighter: hasHL },
+      updated_at: nowIso
+    };
+
     if (isEditMode) {
       const res = await fetch(`${API_BASE}/${TBL.notes}/${currentCornellNoteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keywords, content, summary,
-          highlights: { has_highlighter: hasHL },
-          updated_at: new Date().toISOString()
-        })
+        body: JSON.stringify(commonPayload)
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -1120,25 +1202,21 @@ async function saveCornellNote() {
       }
       showToast('✏️ 코넬노트가 수정되었습니다!', 'success');
     } else {
-      const today = new Date();
-      const d1 = new Date(today); d1.setDate(d1.getDate() + 1);
-      const d3 = new Date(today); d3.setDate(d3.getDate() + 3);
-      const d7 = new Date(today); d7.setDate(d7.getDate() + 7);
-      
+      const baseDate = new Date(dateStr + 'T00:00:00');
+      const d1 = new Date(baseDate); d1.setDate(d1.getDate() + 1);
+      const d3 = new Date(baseDate); d3.setDate(d3.getDate() + 3);
+      const d7 = new Date(baseDate); d7.setDate(d7.getDate() + 7);
+
       const noteData = {
-        student_id: currentStudent.student_id,
-        planner_id: currentPlanner.id,
-        subject: slot.subject || '',
-        unit: '',
-        stage: slot.stage || '',
-        note_type: 'study',
-        keywords, content, summary,
-        highlights: { has_highlighter: hasHL },
+        ...commonPayload,
         image_urls: [],
+        created_at: nowIso,
         review_date_1: formatDate(d1),
         review_date_3: formatDate(d3),
         review_date_7: formatDate(d7),
-        reviewed_1: false, reviewed_3: false, reviewed_7: false,
+        reviewed_1: false,
+        reviewed_3: false,
+        reviewed_7: false,
         is_mastered: false
       };
       const res = await fetch(`${API_BASE}/${TBL.notes}`, {
@@ -1154,21 +1232,26 @@ async function saveCornellNote() {
       currentCornellNoteId = saved.id || (saved.data && saved.data.id);
       showToast('💾 코넬노트가 저장되었습니다!', 'success');
     }
-    
+
     slot.cornell_written = true;
+    slot.cornell_note_id = currentCornellNoteId;
+    slot.cornell_slot_key = slotKey;
+    slot.cornell_updated_at = nowIso;
     await savePlannerData();
     closeCornellModal();
     renderDayGrid();
   } catch (e) {
     console.error('코넬노트:', e);
     showToast('실패: ' + e.message, 'error');
-  } finally { hideLoading(); }
+  } finally {
+    hideLoading();
+  }
 }
 
 async function deleteCornellNote() {
   if (!currentCornellNoteId) return;
   if (!confirm('정말 이 코넬노트를 삭제하시겠어요?\n(복습 일정도 함께 사라집니다)')) return;
-  
+
   showLoading('삭제 중...');
   try {
     const res = await fetch(`${API_BASE}/${TBL.notes}/${currentCornellNoteId}`, { method: 'DELETE' });
@@ -1176,14 +1259,16 @@ async function deleteCornellNote() {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || '삭제 실패');
     }
-    
-    // 슬롯의 cornell_written 플래그 해제
+
     if (currentCornellSlot) {
       const { dateStr, slotIdx } = currentCornellSlot;
-      currentPlanner.daily_tasks[dateStr].slots[slotIdx].cornell_written = false;
+      const slot = currentPlanner.daily_tasks[dateStr].slots[slotIdx];
+      slot.cornell_written = false;
+      slot.cornell_note_id = null;
+      slot.cornell_updated_at = null;
       await savePlannerData();
     }
-    
+
     showToast('🗑️ 코넬노트가 삭제되었습니다', 'success');
     closeCornellModal();
     renderDayGrid();
@@ -1226,6 +1311,7 @@ async function loadExistingPlanner() {
       if (typeof p.daily_tasks === 'string') p.daily_tasks = JSON.parse(p.daily_tasks);
       if (typeof p.subjects === 'string') p.subjects = JSON.parse(p.subjects);
       currentPlanner = p;
+      const cornellKeysPatched = ensurePlannerCornellKeys();
       const examEnd = new Date(p.exam_end_date);
       const today = new Date();
       if (examEnd >= today) {
@@ -1235,6 +1321,9 @@ async function loadExistingPlanner() {
         renderWeekTabs();
         renderDayGrid();
         updateStats();
+      }
+      if (cornellKeysPatched) {
+        savePlannerData().catch(err => console.warn('코넬 슬롯 키 저장:', err));
       }
     }
   } catch (e) { console.warn('기존 플래너 로드:', e); }
