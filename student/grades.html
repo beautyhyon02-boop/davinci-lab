@@ -659,10 +659,7 @@
           </div>
           <div class="grades-selector-group">
             <select class="grades-select" id="schoolYear" onchange="onFilterChange()">
-              <option value="2026">2026년</option>
-              <option value="2025">2025년</option>
-              <option value="2024">2024년</option>
-              <option value="2023">2023년</option>
+              <!-- JS에서 동적 생성 -->
             </select>
             <select class="grades-select" id="schoolSemester" onchange="onFilterChange()">
               <option value="1">1학기</option>
@@ -771,6 +768,13 @@
       <p id="modalGradeSystemDesc">해당 학기의 교과 성적을 입력하세요.</p>
       <div class="modal-form-grid">
         <div>
+          <label class="modal-label">시험 구분</label>
+          <select class="modal-input" id="modalExamType">
+            <option value="midterm">중간고사</option>
+            <option value="final">기말고사</option>
+          </select>
+        </div>
+        <div>
           <label class="modal-label">교과</label>
           <select class="modal-input" id="modalSubjectGroup">
             <option>국어</option><option>수학</option><option>영어</option>
@@ -799,6 +803,26 @@
         <div id="modalAchieveRateWrap">
           <label class="modal-label">성취도율 (%)</label>
           <input class="modal-input" id="modalAchieveRate" type="number" min="0" max="100" placeholder="예: 34.5" step="0.1" />
+        </div>
+        <!-- 성취등급 (A~E, 중학+고교학점제 공통) -->
+        <div id="modalAchieveLevelWrap" style="display:none">
+          <label class="modal-label">성취등급 (A~E)</label>
+          <select class="modal-input" id="modalAchieveLevel">
+            <option value="A">A (90점↑)</option>
+            <option value="B">B (80~89)</option>
+            <option value="C">C (70~79)</option>
+            <option value="D">D (60~69)</option>
+            <option value="E">E (60 미만)</option>
+          </select>
+        </div>
+        <!-- 전교 석차 -->
+        <div>
+          <label class="modal-label">전교 석차</label>
+          <input class="modal-input" id="modalSchoolRank" type="number" min="1" placeholder="예: 15" />
+        </div>
+        <div>
+          <label class="modal-label">전체 학생 수</label>
+          <input class="modal-input" id="modalTotalStudents" type="number" min="1" placeholder="예: 280" />
         </div>
         <!-- 9등급제만 표시: 석차등급 (1~9) -->
         <div id="modalRankWrap" style="display:none">
@@ -883,6 +907,18 @@
         <div>
           <label class="modal-label">영어 백분위</label>
           <input class="modal-input" id="mockEngPct" type="number" min="0" max="100" placeholder="82" />
+        </div>
+        <div>
+          <label class="modal-label">국어 등급 (1~9)</label>
+          <input class="modal-input" id="mockKorGrade" type="number" min="1" max="9" placeholder="3" />
+        </div>
+        <div>
+          <label class="modal-label">수학 등급 (1~9)</label>
+          <input class="modal-input" id="mockMathGrade" type="number" min="1" max="9" placeholder="3" />
+        </div>
+        <div>
+          <label class="modal-label">영어 등급 (1~9)</label>
+          <input class="modal-input" id="mockEngGrade" type="number" min="1" max="9" placeholder="3" />
         </div>
       </div><!-- /기본 3과목 그리드 끝 -->
 
@@ -1060,8 +1096,8 @@
             <span class="grade-scale-pill" style="background:#fef2f2;color:#b91c1c;border-color:#fee2e2;">8등급</span>
             <span class="grade-scale-pill" style="background:#fef2f2;color:#b91c1c;border-color:#fee2e2;">9등급</span>
           </div>`,
-        cols: ['#','교과','과목명(단위수)','원점수','과목평균','성취도율','석차등급',''],
-        colWidths: ['40px','80px','','80px','80px','80px','80px','48px'],
+        cols: ['#','시험','교과','과목명(단위수)','원점수','과목평균','성취도율','석차등급','전교석차',''],
+        colWidths: ['40px','60px','80px','','80px','80px','80px','80px','70px','48px'],
       },
       grade5: {
         badgeClass: 'type-5',
@@ -1075,8 +1111,8 @@
             <span class="grade-scale-pill" style="background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;">D (60~69)</span>
             <span class="grade-scale-pill" style="background:#fef2f2;color:#b91c1c;border-color:#fee2e2;">E (60 미만)</span>
           </div>`,
-        cols: ['#','교과','과목명(단위수) · 등급, 성취도','원점수','과목평균','성취도율',''],
-        colWidths: ['40px','80px','','80px','80px','80px','48px'],
+        cols: ['#','시험','교과','과목명(단위수) · 등급, 성취도','원점수','과목평균','성취도율','전교석차',''],
+        colWidths: ['40px','60px','80px','','80px','80px','80px','70px','48px'],
       },
       gradeMid: {
         badgeClass: 'type-mid',
@@ -1090,8 +1126,8 @@
             <span class="grade-scale-pill" style="background:#f3f4f6;color:#6b7280;border-color:#e5e7eb;">D (60~69)</span>
             <span class="grade-scale-pill" style="background:#fef2f2;color:#b91c1c;border-color:#fee2e2;">E (60 미만)</span>
           </div>`,
-        cols: ['#','교과','과목명(단위수)','원점수','과목평균','성취도율','성취등급',''],
-        colWidths: ['40px','80px','','80px','80px','80px','80px','48px'],
+        cols: ['#','시험','교과','과목명(단위수)','원점수','과목평균','성취도율','성취등급','전교석차',''],
+        colWidths: ['40px','60px','80px','','80px','80px','80px','80px','70px','48px'],
       }
     };
 
@@ -1128,8 +1164,21 @@
             r.student_id === STUDENT_ID &&
             String(r.year) === String(year) &&
             String(r.semester) === String(sem) &&
-            r.gradeLevel === gl
-          );
+            (r.grade_level === gl || r.gradeLevel === gl)
+          ).map(r => ({
+            ...r,
+            // camelCase 호환 레이어
+            subjectGroup: r.subject_group || r.subjectGroup,
+            subjectName:  r.subject_name  || r.subjectName,
+            avg:          r.average_score ?? r.avg,
+            achieveRate:  r.achieve_rate  ?? r.achieveRate,
+            gradeLevel:   r.grade_level   || r.gradeLevel,
+            gradeType:    r.grade_type    || r.gradeType,
+            rank:         r.school_grade  ?? r.rank,
+            rank5Num:     r.school_grade  ?? r.rank5Num,
+            rank5:        r.achievement_level || r.rank5,
+            rankMid:      r.achievement_level || r.rankMid,
+          }));
         }
       } catch(e) {
         const saved = localStorage.getItem(`dvl_grades_school_${year}_${sem}_${gl}`);
@@ -1226,11 +1275,15 @@
         let subjectCell = '';
         let rankCells   = '';
 
+        const examTypeLabel = (g.exam_type || g.examType) === 'final' ? '기말' : '중간';
+        const rankDisplay = g.school_rank ? `${g.school_rank}${g.total_students ? '/' + g.total_students : ''}` : '–';
+
         if (gt === 'grade9') {
           // 9등급: 과목명(단위수) 별도 셀 + 석차등급 셀
-          subjectCell = `<td>${g.subjectName}<span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit})</span></td>`;
-          const rc = `rank-${g.rank}`;
-          rankCells   = `<td style="text-align:center"><span class="rank-badge ${rc}">${g.rank ?? '–'}</span></td>`;
+          subjectCell = `<td>${g.subjectName || g.subject_name}<span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit})</span></td>`;
+          const rv = g.school_grade ?? g.rank;
+          const rc = `rank-${rv}`;
+          rankCells   = `<td style="text-align:center"><span class="rank-badge ${rc}">${rv ?? '–'}</span></td><td style="text-align:center;font-size:12px;color:#374151">${rankDisplay}</td>`;
         } else if (gt === 'grade5') {
           // 고교학점제: 과목명(단위수) · X등급, Y 형식으로 한 셀에 병기
           const rcNum = g.rank5Num ? `rank-${g.rank5Num}` : '';
@@ -1250,12 +1303,14 @@
               ${achBadge ? '<span style="color:var(--text-300);font-size:11.5px;">,</span>' + achBadge : ''}
             </div>
           </td>`;
-          rankCells = '';
+          rankCells = `<td style="text-align:center;font-size:12px;color:#374151">${rankDisplay}</td>`;
         } else {
           // 중학교: 과목명(단위수) + 성취등급
-          subjectCell = `<td>${g.subjectName}<span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit})</span></td>`;
-          const rc = `rank-${g.rankMid}mid`;
-          rankCells = `<td style="text-align:center"><span class="rank-badge ${rc}">${g.rankMid ?? '–'}</span></td>`;
+          const sn = g.subjectName || g.subject_name;
+          subjectCell = `<td>${sn}<span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit})</span></td>`;
+          const rm = g.achievement_level || g.rankMid;
+          const rc = `rank-${rm}mid`;
+          rankCells = `<td style="text-align:center"><span class="rank-badge ${rc}">${rm ?? '–'}</span></td><td style="text-align:center;font-size:12px;color:#374151">${rankDisplay}</td>`;
         }
 
         tbody.innerHTML += `
@@ -1331,15 +1386,38 @@
       try {
         for (const g of schoolGrades) {
           if (!g._saved) {
-            await fetch('/tables/grades_school', {
+            const payload = {
+              student_id:      STUDENT_ID,
+              year:            Number(year),
+              semester:        Number(sem),
+              grade_level:     g.grade_level || gl,
+              grade_type:      g.grade_type  || g.gradeType,
+              exam_type:       g.exam_type   || 'midterm',
+              subject_group:   g.subject_group || g.subjectGroup,
+              subject_name:    g.subject_name  || g.subjectName,
+              credit:          g.credit,
+              original_score:  g.original_score ?? g.score,
+              average_score:   g.average_score  ?? g.avg,
+              achieve_rate:    g.achieve_rate    ?? g.achieveRate,
+              achievement_level: g.achievement_level || g.rank5 || g.rankMid || null,
+              school_grade:    g.school_grade ?? g.rank ?? g.rank5Num ?? null,
+              school_rank:     g.school_rank  ?? null,
+              total_students:  g.total_students ?? null,
+            };
+            const resp = await fetch('/tables/grades_school', {
               method: 'POST',
               headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({ student_id: STUDENT_ID, year, semester: sem, gradeLevel: gl, ...g })
+              body: JSON.stringify(payload)
             });
-            g._saved = true;
+            if (resp.ok) { const saved = await resp.json(); g._saved = true; g.id = saved.id || saved[0]?.id; }
+            else {
+              const err = await resp.json().catch(() => ({}));
+              showToast('❌ 저장 실패: ' + (err.message || resp.status));
+              return;
+            }
           }
         }
-      } catch(e) { /* fallback */ }
+      } catch(e) { showToast('❌ 저장 중 오류: ' + e.message); return; }
       pendingSchool = false;
       document.getElementById('schoolSaveBar').style.display = 'none';
       updateSummary();
@@ -1361,6 +1439,8 @@
       document.getElementById('modalRank5NumWrap').style.display   = gt === 'grade5'   ? '' : 'none';
       document.getElementById('modalRank5Wrap').style.display      = gt === 'grade5'   ? '' : 'none';
       document.getElementById('modalRankMidWrap').style.display    = gt === 'gradeMid' ? '' : 'none';
+      // 성취등급 표시: grade5 + gradeMid
+      document.getElementById('modalAchieveLevelWrap').style.display = (gt === 'grade5' || gt === 'gradeMid') ? '' : 'none';
 
       // 모달 설명
       const meta = GRADE_META[gt];
@@ -1368,7 +1448,7 @@
         `[${gl} · ${meta.badgeLabel}] 해당 학기 교과 성적을 입력하세요.`;
 
       document.getElementById('schoolModalOverlay').classList.add('show');
-      ['modalSubjectName','modalScore','modalAvg','modalAchieveRate','modalRank','modalRank5Num'].forEach(id => {
+      ['modalSubjectName','modalScore','modalAvg','modalAchieveRate','modalRank','modalRank5Num','modalSchoolRank','modalTotalStudents'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -1380,29 +1460,50 @@
       const gl = getGradeLevel();
       const gt = getGradeType(gl);
 
+      const examType   = document.getElementById('modalExamType').value;
+      const schoolRank = Number(document.getElementById('modalSchoolRank').value) || null;
+      const totalStu   = Number(document.getElementById('modalTotalStudents').value) || null;
+
       const g = {
-        subjectGroup:  document.getElementById('modalSubjectGroup').value,
-        subjectName:   document.getElementById('modalSubjectName').value || document.getElementById('modalSubjectGroup').value,
-        credit:        Number(document.getElementById('modalCredit').value) || 3,
-        score:         Number(document.getElementById('modalScore').value) || 0,
-        avg:           Number(document.getElementById('modalAvg').value) || 0,
-        achieveRate:   parseFloat(document.getElementById('modalAchieveRate').value) || null,
-        gradeLevel:    gl,
-        gradeType:     gt,
+        exam_type:      examType,
+        subject_group:  document.getElementById('modalSubjectGroup').value,
+        subject_name:   document.getElementById('modalSubjectName').value || document.getElementById('modalSubjectGroup').value,
+        // legacy camelCase (렌더링에 사용)
+        subjectGroup:   document.getElementById('modalSubjectGroup').value,
+        subjectName:    document.getElementById('modalSubjectName').value || document.getElementById('modalSubjectGroup').value,
+        credit:         Number(document.getElementById('modalCredit').value) || 3,
+        original_score: Number(document.getElementById('modalScore').value) || 0,
+        score:          Number(document.getElementById('modalScore').value) || 0,
+        average_score:  Number(document.getElementById('modalAvg').value) || 0,
+        avg:            Number(document.getElementById('modalAvg').value) || 0,
+        achieve_rate:   parseFloat(document.getElementById('modalAchieveRate').value) || null,
+        achieveRate:    parseFloat(document.getElementById('modalAchieveRate').value) || null,
+        school_rank:    schoolRank,
+        total_students: totalStu,
+        grade_level:    gl,
+        gradeLevel:     gl,
+        grade_type:     gt,
+        gradeType:      gt,
         _saved: false
       };
 
       // 학년별 등급 필드
       if (gt === 'grade9') {
-        g.rank = Number(document.getElementById('modalRank').value) || 5;
+        const rv = Number(document.getElementById('modalRank').value) || null;
+        g.rank = rv; g.school_grade = rv;
       } else if (gt === 'grade5') {
-        g.rank5Num = Number(document.getElementById('modalRank5Num').value) || null;
-        g.rank5    = document.getElementById('modalRank5').value || 'C';
+        const r5n = Number(document.getElementById('modalRank5Num').value) || null;
+        const r5  = document.getElementById('modalRank5').value || 'C';
+        const al  = document.getElementById('modalAchieveLevel').value || 'C';
+        g.rank5Num = r5n; g.school_grade = r5n;
+        g.rank5 = r5; g.achievement_level = al;
       } else {
-        g.rankMid = document.getElementById('modalRankMid').value || 'B';
+        const rm = document.getElementById('modalRankMid').value || 'B';
+        const al = document.getElementById('modalAchieveLevel').value || 'B';
+        g.rankMid = rm; g.achievement_level = al;
       }
 
-      if (!g.subjectName) { alert('과목명을 입력해주세요.'); return; }
+      if (!g.subject_name) { alert('과목명을 입력해주세요.'); return; }
       schoolGrades.push(g);
       renderSchoolTable();
       markPendingSchool();
@@ -1450,9 +1551,9 @@
         const sci1Label = m.sci1Name ? `탐구① ${m.sci1Name}` : '탐구①';
         const sci2Label = m.sci2Name ? `탐구② ${m.sci2Name}` : '탐구②';
         const subjects = [
-          { name:'국어', score: m.kor, pct: m.korPct },
-          { name:'수학', score: m.math, pct: m.mathPct },
-          { name:'영어', score: m.eng, pct: m.engPct },
+          { name:'국어', score: m.kor || m.korean_score, pct: m.korPct || m.korean_percentile, grade: m.kor_grade || m.korean_grade },
+          { name:'수학', score: m.math || m.math_score, pct: m.mathPct || m.math_percentile, grade: m.math_grade },
+          { name:'영어', score: m.eng || m.english_score, pct: m.engPct || m.english_percentile, grade: m.eng_grade || m.english_grade },
           ...(m.sci1 != null ? [{ name: sci1Label, score: m.sci1, pct: m.sci1Pct }] : []),
           ...(m.sci2 != null ? [{ name: sci2Label, score: m.sci2, pct: m.sci2Pct }] : []),
         ];
@@ -1462,7 +1563,7 @@
             <div class="mock-score-wrap">
               <div>
                 <div class="mock-score">${s.score ?? '–'}</div>
-                <div class="mock-percentile">백분위 ${s.pct ?? '–'}</div>
+                <div class="mock-percentile">백분위 ${s.pct ?? '–'}${s.grade ? ' · <strong>' + s.grade + '등급</strong>' : ''}</div>
               </div>
               <div class="mock-score-bar">
                 <div class="mock-score-fill" style="width:${s.score ?? 0}%"></div>
@@ -1473,8 +1574,8 @@
         <div class="mock-card">
           <div class="mock-card-header">
             <div>
-              <div class="mock-card-title">${m.examType}</div>
-              <div class="mock-card-date">${m.examDate}${m.memo ? ' · ' + m.memo : ''}</div>
+              <div class="mock-card-title">${m.examType || m.exam_name}</div>
+              <div class="mock-card-date">${m.examDate || m.exam_date}${m.memo ? ' · ' + m.memo : ''}</div>
             </div>
             <button class="btn-row-delete" onclick="deleteMockGrade(${idx})" title="삭제">
               <i class="fas fa-trash-can"></i>
@@ -1541,7 +1642,7 @@
       document.getElementById('mockExamDate').value = toLocalDateStrMock(new Date());
       initMockSciUI();
       // 폼 초기화
-      ['mockKorScore','mockKorPct','mockMathScore','mockMathPct','mockEngScore','mockEngPct',
+      ['mockKorScore','mockKorPct','mockKorGrade','mockMathScore','mockMathPct','mockMathGrade','mockEngScore','mockEngPct','mockEngGrade',
        'mockComSci1Score','mockComSci1Pct','mockComSci2Score','mockComSci2Pct',
        'mockH3Sci1Score','mockH3Sci1Pct','mockH3Sci2Score','mockH3Sci2Pct',
        'mockH3Sci1NameCustom','mockH3Sci2NameCustom','mockMemo'].forEach(id => {
@@ -1589,15 +1690,28 @@
       }
 
       const m = {
-        student_id: STUDENT_ID,
-        examType:  document.getElementById('mockExamType').value,
-        examDate:  document.getElementById('mockExamDate').value,
-        kor:       Number(document.getElementById('mockKorScore').value)  || null,
-        korPct:    Number(document.getElementById('mockKorPct').value)    || null,
-        math:      Number(document.getElementById('mockMathScore').value) || null,
-        mathPct:   Number(document.getElementById('mockMathPct').value)   || null,
-        eng:       Number(document.getElementById('mockEngScore').value)  || null,
-        engPct:    Number(document.getElementById('mockEngPct').value)    || null,
+        student_id:  STUDENT_ID,
+        examType:    document.getElementById('mockExamType').value,
+        exam_name:   document.getElementById('mockExamType').value,
+        examDate:    document.getElementById('mockExamDate').value,
+        exam_date:   document.getElementById('mockExamDate').value,
+        kor:         Number(document.getElementById('mockKorScore').value)  || null,
+        korean_score:Number(document.getElementById('mockKorScore').value)  || null,
+        korPct:      Number(document.getElementById('mockKorPct').value)    || null,
+        korean_percentile: Number(document.getElementById('mockKorPct').value) || null,
+        kor_grade:   Number(document.getElementById('mockKorGrade').value)  || null,
+        korean_grade:Number(document.getElementById('mockKorGrade').value)  || null,
+        math:        Number(document.getElementById('mockMathScore').value) || null,
+        math_score:  Number(document.getElementById('mockMathScore').value) || null,
+        mathPct:     Number(document.getElementById('mockMathPct').value)   || null,
+        math_percentile: Number(document.getElementById('mockMathPct').value) || null,
+        math_grade:  Number(document.getElementById('mockMathGrade').value) || null,
+        eng:         Number(document.getElementById('mockEngScore').value)  || null,
+        english_score: Number(document.getElementById('mockEngScore').value)|| null,
+        engPct:      Number(document.getElementById('mockEngPct').value)    || null,
+        english_percentile: Number(document.getElementById('mockEngPct').value) || null,
+        eng_grade:   Number(document.getElementById('mockEngGrade').value)  || null,
+        english_grade: Number(document.getElementById('mockEngGrade').value)|| null,
         sci1Name, sci1, sci1Pct,
         sci2Name, sci2, sci2Pct,
         memo: document.getElementById('mockMemo').value,
@@ -1636,7 +1750,7 @@
       const avgSubEl  = document.getElementById('summaryAvgRankSub');
       if (schoolGrades.length) {
         if (gt === 'grade9') {
-          const total = schoolGrades.reduce((a,g) => a + Number(g.credit), 0);
+          const total = schoolGrades.reduce((a,g) => a + Number(g.credit || 0), 0);
           const avg   = schoolGrades.reduce((a,g) => a + Number(g.rank||5) * Number(g.credit), 0) / total;
           avgRankEl.textContent = avg.toFixed(2) + '등급';
           if (avgSubEl) avgSubEl.textContent = '석차등급 (9등급제)';
@@ -1937,5 +2051,6 @@
       dim.addEventListener('click', close);
     })();
   </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
