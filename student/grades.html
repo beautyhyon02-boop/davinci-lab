@@ -1286,57 +1286,64 @@
       }
 
       schoolGrades.forEach((g, idx) => {
+        const subjectGroupDisp = [g.subjectGroup, g.subject_group].find(v => v != null && String(v).trim() !== '' && String(v).toLowerCase() !== 'null') || '–';
+        const subjectNameRaw = [g.subjectName, g.subject_name, g.subjectGroup, g.subject_group].find(v => v != null && String(v).trim() !== '' && String(v).toLowerCase() !== 'null');
+        const subjectNameDisp = subjectNameRaw || '–';
+        const scoreValue = g.score ?? g.original_score;
+        const scoreDisp = scoreValue != null && String(scoreValue).toLowerCase() !== 'null' ? scoreValue : '–';
+        const avgValue = g.avg ?? g.average_score;
+        const avgDisp = avgValue != null && String(avgValue).toLowerCase() !== 'null' && String(avgValue) !== '' ? avgValue : '–';
         const achieveRateValue = g.achieve_rate ?? g['achieve' + 'Rate'];
-        const achieveRateDisp = achieveRateValue != null ? `${achieveRateValue}%` : '–';
+        const achieveRateDisp = achieveRateValue != null && String(achieveRateValue).toLowerCase() !== 'null' && String(achieveRateValue) !== '' ? `${achieveRateValue}%` : '–';
 
         let subjectCell = '';
         let rankCells   = '';
 
-        const examTypeLabel = (g.exam_type || g.examType) === 'final' ? '기말' : '중간';
         const rankDisplay = g.school_rank ? `${g.school_rank}${g.total_students ? '/' + g.total_students : ''}` : '–';
 
         if (gt === 'grade9') {
-          // 9등급: 과목명(단위수) 별도 셀 + 석차등급 셀
-          subjectCell = `<td>${g.subjectName || g.subject_name}<span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit})</span></td>`;
           const rv = g.school_grade ?? g.rank;
-          const rc = `rank-${rv}`;
+          const rc = rv ? `rank-${rv}` : '';
+          subjectCell = `<td><span style="font-weight:700;color:var(--text-900);">${subjectNameDisp}</span><span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit || '–'})</span></td>`;
           rankCells   = `<td style="text-align:center"><span class="rank-badge ${rc}">${rv ?? '–'}</span></td><td style="text-align:center;font-size:12px;color:#374151">${rankDisplay}</td>`;
         } else if (gt === 'grade5') {
-          // 고교학점제: 과목명(단위수) · X등급, Y 형식으로 한 셀에 병기
-          const rcNum = g.rank5Num ? `rank-${g.rank5Num}` : '';
-          const rc5   = g.rank5   ? `rank-${g.rank5}5`   : '';
-          const numBadge = g.rank5Num
-            ? `<span class="rank-badge ${rcNum}" style="font-size:12px;padding:0 7px;">${g.rank5Num}등급</span>`
+          const rankNum = g.rank5Num ?? g.school_grade;
+          const achLevel = g.rank5 || g.achievement_level;
+          const rcNum = rankNum ? `rank-${rankNum}` : '';
+          const rc5   = achLevel ? `rank-${achLevel}5` : '';
+          const numBadge = rankNum
+            ? `<span class="rank-badge ${rcNum}" style="font-size:12px;padding:0 7px;">${rankNum}등급</span>`
             : '';
-          const achBadge = g.rank5
-            ? `<span class="rank-badge ${rc5}" style="font-size:12px;padding:0 7px;">${g.rank5}</span>`
+          const achBadge = achLevel
+            ? `<span class="rank-badge ${rc5}" style="font-size:12px;padding:0 7px;">${achLevel}</span>`
             : '';
           subjectCell = `<td>
-            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
-              <span style="font-weight:700;color:var(--text-900);">${g.subjectName}</span>
-              <span style="color:var(--text-400);font-size:12px;">(${g.credit})</span>
-              <span style="color:var(--text-300);font-size:11px;">·</span>
-              ${numBadge}
-              ${achBadge ? '<span style="color:var(--text-300);font-size:11.5px;">,</span>' + achBadge : ''}
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span style="font-weight:700;color:var(--text-900);">${subjectNameDisp}</span>
+                <span style="color:var(--text-400);font-size:12px;">(${g.credit || '–'})</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                ${numBadge || '<span style="color:var(--text-300);font-size:12px;">등급 없음</span>'}
+                ${achBadge}
+              </div>
             </div>
           </td>`;
           rankCells = `<td style="text-align:center;font-size:12px;color:#374151">${rankDisplay}</td>`;
         } else {
-          // 중학교: 과목명(단위수) + 성취등급
-          const sn = g.subjectName || g.subject_name;
-          subjectCell = `<td>${sn}<span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit})</span></td>`;
           const rm = g.achievement_level || g.rankMid;
-          const rc = `rank-${rm}mid`;
+          const rc = rm ? `rank-${rm}mid` : '';
+          subjectCell = `<td><span style="font-weight:700;color:var(--text-900);">${subjectNameDisp}</span><span style="color:var(--text-300);font-size:11.5px;margin-left:3px">(${g.credit || '–'})</span></td>`;
           rankCells = `<td style="text-align:center"><span class="rank-badge ${rc}">${rm ?? '–'}</span></td><td style="text-align:center;font-size:12px;color:#374151">${rankDisplay}</td>`;
         }
 
         tbody.innerHTML += `
         <tr>
           <td style="color:var(--text-300);font-size:12px">${idx+1}</td>
-          <td><span style="font-weight:600">${g.subjectGroup}</span></td>
+          <td><span style="font-weight:600">${subjectGroupDisp}</span></td>
           ${subjectCell}
-          <td style="text-align:center;font-weight:700;color:var(--text-900)">${g.score}</td>
-          <td style="text-align:center;color:var(--text-500)">${g.avg}</td>
+          <td style="text-align:center;font-weight:700;color:var(--text-900)">${scoreDisp}</td>
+          <td style="text-align:center;color:var(--text-500)">${avgDisp}</td>
           <td style="text-align:center;color:var(--text-500);font-size:12.5px">${achieveRateDisp}</td>
           ${rankCells}
           <td>
@@ -1524,7 +1531,6 @@
         score:          Number(document.getElementById('modalScore').value) || 0,
         average_score:  Number(document.getElementById('modalAvg').value) || 0,
         avg:            Number(document.getElementById('modalAvg').value) || 0,
-        achieve_rate:   parseFloat(document.getElementById('modalAchieveRate').value) || null,
         achieve_rate:   parseFloat(document.getElementById('modalAchieveRate').value) || null,
         school_rank:    schoolRank,
         total_students: totalStu,
@@ -2105,3 +2111,4 @@
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
+
