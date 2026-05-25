@@ -1378,101 +1378,92 @@
       document.getElementById('schoolSaveBar').style.display = 'flex';
     }
 
-<script>
-async function saveSchoolGrades() {
-  const year = document.getElementById('schoolYear').value;
-  const sem  = document.getElementById('schoolSemester').value;
-  const gl   = getGradeLevel();
+    async function saveSchoolGrades() {
+      const year = document.getElementById('schoolYear').value;
+      const sem  = document.getElementById('schoolSemester').value;
+      const gl   = getGradeLevel();
+      localStorage.setItem(`dvl_grades_school_${year}_${sem}_${gl}`, JSON.stringify(schoolGrades));
 
-  localStorage.setItem(`dvl_grades_school_${year}_${sem}_${gl}`, JSON.stringify(schoolGrades));
-
-  try {
-    for (const g of schoolGrades) {
-      if (g._saved) continue;
-
-      const payload = {
-        student_id: STUDENT_ID,
-
-        // 연도/학기: 예전 구조 호환 위해 문자열 유지
-        year: String(year),
-        semester: String(sem),
-
-        // 신구 구조 동시 전송
-        grade_level: g.grade_level || g.gradeLevel || gl,
-        gradeLevel:  g.grade_level || g.gradeLevel || gl,
-
-        grade_type: g.grade_type || g.gradeType || null,
-        gradeType:  g.grade_type || g.gradeType || null,
-
-        exam_type: g.exam_type || 'midterm',
-
-        subject_group: g.subject_group || g.subjectGroup || '',
-        subjectGroup:  g.subject_group || g.subjectGroup || '',
-
-        subject_name: g.subject_name || g.subjectName || '',
-        subjectName:  g.subject_name || g.subjectName || '',
-
-        credit: Number(g.credit || 0),
-
-        original_score: g.original_score ?? g.score ?? null,
-        score:          g.original_score ?? g.score ?? null,
-
-        average_score: g.average_score ?? g.avg ?? null,
-        avg:           g.average_score ?? g.avg ?? null,
-
-        achieve_rate: g.achieve_rate ?? g.achieveRate ?? null,
-        achieveRate:  g.achieve_rate ?? g.achieveRate ?? null,
-
-        achievement_level: g.achievement_level || g.rank5 || g.rankMid || null,
-        school_grade:      g.school_grade ?? g.rank ?? g.rank5Num ?? null,
-        school_rank:       g.school_rank ?? null,
-        total_students:    g.total_students ?? null
-      };
-
-      // 기존 레거시 등급 필드도 같이 보냄
-      const gt = payload.grade_type;
-
-      if (gt === 'grade9') {
-        payload.rank = payload.school_grade;
-      } else if (gt === 'grade5') {
-        payload.rank5Num = payload.school_grade;
-        payload.rank5 = payload.achievement_level;
-      } else {
-        payload.rankMid = payload.achievement_level;
-      }
-
-      const resp = await fetch('/tables/grades_school', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      let result = null;
       try {
-        result = await resp.json();
-      } catch (_) {}
+        for (const g of schoolGrades) {
+          if (g._saved) continue;
 
-      if (!resp.ok) {
-        console.error('grades_school save failed:', result);
-        showToast('❌ 저장 실패: ' + ((result && (result.error || result.message || result.details)) || resp.status));
-        return;
+          const payload = {
+            student_id: STUDENT_ID,
+            year: String(year),
+            semester: String(sem),
+
+            grade_level: g.grade_level || g.gradeLevel || gl,
+            gradeLevel:  g.grade_level || g.gradeLevel || gl,
+
+            grade_type: g.grade_type || g.gradeType || null,
+            gradeType:  g.grade_type || g.gradeType || null,
+
+            exam_type: g.exam_type || 'midterm',
+
+            subject_group: g.subject_group || g.subjectGroup || '',
+            subjectGroup:  g.subject_group || g.subjectGroup || '',
+
+            subject_name: g.subject_name || g.subjectName || '',
+            subjectName:  g.subject_name || g.subjectName || '',
+
+            credit: Number(g.credit || 0),
+
+            original_score: g.original_score ?? g.score ?? null,
+            score:          g.original_score ?? g.score ?? null,
+
+            average_score: g.average_score ?? g.avg ?? null,
+            avg:           g.average_score ?? g.avg ?? null,
+
+            achieve_rate: g.achieve_rate ?? g.achieveRate ?? null,
+            achieveRate:  g.achieve_rate ?? g.achieveRate ?? null,
+
+            achievement_level: g.achievement_level || g.rank5 || g.rankMid || null,
+            school_grade:      g.school_grade ?? g.rank ?? g.rank5Num ?? null,
+            school_rank:       g.school_rank ?? null,
+            total_students:    g.total_students ?? null
+          };
+
+          const gt = payload.grade_type;
+          if (gt === 'grade9') {
+            payload.rank = payload.school_grade;
+          } else if (gt === 'grade5') {
+            payload.rank5Num = payload.school_grade;
+            payload.rank5 = payload.achievement_level;
+          } else {
+            payload.rankMid = payload.achievement_level;
+          }
+
+          const resp = await fetch('/tables/grades_school', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          let result = null;
+          try {
+            result = await resp.json();
+          } catch (_) {}
+
+          if (!resp.ok) {
+            console.error('grades_school save failed:', result);
+            showToast('❌ 저장 실패: ' + ((result && (result.error || result.message || result.details)) || resp.status));
+            return;
+          }
+
+          g._saved = true;
+          g.id = result?.id || result?.data?.id || result?.[0]?.id || g.id || null;
+        }
+
+        pendingSchool = false;
+        document.getElementById('schoolSaveBar').style.display = 'none';
+        updateSummary();
+        showToast('✅ 내신 성적이 저장되었습니다.');
+      } catch (e) {
+        console.error(e);
+        showToast('❌ 저장 중 오류: ' + (e.message || e));
       }
-
-      g._saved = true;
-      g.id = result?.id || result?.data?.id || result?.[0]?.id || g.id || null;
     }
-
-    pendingSchool = false;
-    document.getElementById('schoolSaveBar').style.display = 'none';
-    updateSummary();
-    showToast('✅ 내신 성적이 저장되었습니다.');
-  } catch (e) {
-    console.error(e);
-    showToast('❌ 저장 중 오류: ' + (e.message || e));
-  }
-}
-</script>
-
 
     /* 필터 변경 시 */
     function onFilterChange() {
