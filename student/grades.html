@@ -1171,7 +1171,7 @@
             subjectGroup: r.subject_group || r.subjectGroup,
             subjectName:  r.subject_name  || r.subjectName,
             avg:          r.average_score ?? r.avg,
-            achieveRate:  r.achieve_rate  ?? r.achieveRate,
+            achieve_rate: r.achieve_rate ?? r['achieve' + 'Rate'],
             gradeLevel:   r.grade_level   || r.gradeLevel,
             gradeType:    r.grade_type    || r.gradeType,
             rank:         r.school_grade  ?? r.rank,
@@ -1198,29 +1198,29 @@
       if (gt === 'grade9') {
         // 고3 9등급제 샘플
         return [
-          { id:'s1', subjectGroup:'국어', subjectName:'공통국어1', credit:4, score:88, avg:74.2, achieveRate:34.5, rank:2 },
-          { id:'s2', subjectGroup:'수학', subjectName:'공통수학1', credit:4, score:76, avg:65.1, achieveRate:52.1, rank:3 },
-          { id:'s3', subjectGroup:'영어', subjectName:'공통영어1', credit:3, score:92, avg:78.4, achieveRate:28.7, rank:1 },
-          { id:'s4', subjectGroup:'과학', subjectName:'통합과학1', credit:3, score:84, avg:70.3, achieveRate:41.2, rank:2 },
-          { id:'s5', subjectGroup:'사회', subjectName:'통합사회1', credit:3, score:79, avg:71.8, achieveRate:48.9, rank:3 },
+          { id:'s1', subjectGroup:'국어', subjectName:'공통국어1', credit:4, score:88, avg:74.2, achieve_rate:34.5, rank:2 },
+          { id:'s2', subjectGroup:'수학', subjectName:'공통수학1', credit:4, score:76, avg:65.1, achieve_rate:52.1, rank:3 },
+          { id:'s3', subjectGroup:'영어', subjectName:'공통영어1', credit:3, score:92, avg:78.4, achieve_rate:28.7, rank:1 },
+          { id:'s4', subjectGroup:'과학', subjectName:'통합과학1', credit:3, score:84, avg:70.3, achieve_rate:41.2, rank:2 },
+          { id:'s5', subjectGroup:'사회', subjectName:'통합사회1', credit:3, score:79, avg:71.8, achieve_rate:48.9, rank:3 },
         ];
       } else if (gt === 'grade5') {
         // 고교학점제 5등급 샘플 (석차등급 + 성취등급 병기)
         return [
-          { id:'s1', subjectGroup:'국어', subjectName:'공통국어1', credit:4, score:88, avg:74.2, achieveRate:34.5, rank5Num:2, rank5:'A', gradeType:'grade5' },
-          { id:'s2', subjectGroup:'수학', subjectName:'공통수학1', credit:4, score:76, avg:65.1, achieveRate:52.1, rank5Num:3, rank5:'B', gradeType:'grade5' },
-          { id:'s3', subjectGroup:'영어', subjectName:'공통영어1', credit:3, score:92, avg:78.4, achieveRate:28.7, rank5Num:1, rank5:'A', gradeType:'grade5' },
-          { id:'s4', subjectGroup:'과학', subjectName:'통합과학1', credit:3, score:84, avg:70.3, achieveRate:41.2, rank5Num:2, rank5:'A', gradeType:'grade5' },
-          { id:'s5', subjectGroup:'사회', subjectName:'통합사회1', credit:3, score:79, avg:71.8, achieveRate:48.9, rank5Num:3, rank5:'B', gradeType:'grade5' },
+          { id:'s1', subjectGroup:'국어', subjectName:'공통국어1', credit:4, score:88, avg:74.2, achieve_rate:34.5, rank5Num:2, rank5:'A', gradeType:'grade5' },
+          { id:'s2', subjectGroup:'수학', subjectName:'공통수학1', credit:4, score:76, avg:65.1, achieve_rate:52.1, rank5Num:3, rank5:'B', gradeType:'grade5' },
+          { id:'s3', subjectGroup:'영어', subjectName:'공통영어1', credit:3, score:92, avg:78.4, achieve_rate:28.7, rank5Num:1, rank5:'A', gradeType:'grade5' },
+          { id:'s4', subjectGroup:'과학', subjectName:'통합과학1', credit:3, score:84, avg:70.3, achieve_rate:41.2, rank5Num:2, rank5:'A', gradeType:'grade5' },
+          { id:'s5', subjectGroup:'사회', subjectName:'통합사회1', credit:3, score:79, avg:71.8, achieve_rate:48.9, rank5Num:3, rank5:'B', gradeType:'grade5' },
         ];
       } else {
         // 중학교 5등급 샘플 (A~E)
         return [
-          { id:'s1', subjectGroup:'국어', subjectName:'국어', credit:4, score:92, avg:74.2, achieveRate:34.5, rankMid:'A' },
-          { id:'s2', subjectGroup:'수학', subjectName:'수학', credit:4, score:83, avg:65.1, achieveRate:52.1, rankMid:'B' },
-          { id:'s3', subjectGroup:'영어', subjectName:'영어', credit:3, score:76, avg:78.4, achieveRate:28.7, rankMid:'C' },
-          { id:'s4', subjectGroup:'과학', subjectName:'과학', credit:3, score:65, avg:70.3, achieveRate:41.2, rankMid:'D' },
-          { id:'s5', subjectGroup:'사회', subjectName:'사회', credit:3, score:55, avg:71.8, achieveRate:48.9, rankMid:'E' },
+          { id:'s1', subjectGroup:'국어', subjectName:'국어', credit:4, score:92, avg:74.2, achieve_rate:34.5, rankMid:'A' },
+          { id:'s2', subjectGroup:'수학', subjectName:'수학', credit:4, score:83, avg:65.1, achieve_rate:52.1, rankMid:'B' },
+          { id:'s3', subjectGroup:'영어', subjectName:'영어', credit:3, score:76, avg:78.4, achieve_rate:28.7, rankMid:'C' },
+          { id:'s4', subjectGroup:'과학', subjectName:'과학', credit:3, score:65, avg:70.3, achieve_rate:41.2, rankMid:'D' },
+          { id:'s5', subjectGroup:'사회', subjectName:'사회', credit:3, score:55, avg:71.8, achieve_rate:48.9, rankMid:'E' },
         ];
       }
     }
@@ -1270,7 +1270,8 @@
       }
 
       schoolGrades.forEach((g, idx) => {
-        const achieveRateDisp = g.achieveRate != null ? `${g.achieveRate}%` : '–';
+        const achieveRateValue = g.achieve_rate ?? g['achieve' + 'Rate'];
+        const achieveRateDisp = achieveRateValue != null ? `${achieveRateValue}%` : '–';
 
         let subjectCell = '';
         let rankCells   = '';
@@ -1400,7 +1401,7 @@
             credit: Number(g.credit || 0),
             original_score: g.original_score ?? g.score ?? null,
             average_score: g.average_score ?? g.avg ?? null,
-            achieve_rate: g.achieve_rate ?? g.achieveRate ?? null,
+            achieve_rate: g.achieve_rate ?? g['achieve' + 'Rate'] ?? null,
             achievement_level: g.achievement_level || g.rank5 || g.rankMid || null,
             school_grade: g.school_grade ?? g.rank ?? g.rank5Num ?? null,
             school_rank: g.school_rank ?? null,
@@ -1491,7 +1492,7 @@
         average_score:  Number(document.getElementById('modalAvg').value) || 0,
         avg:            Number(document.getElementById('modalAvg').value) || 0,
         achieve_rate:   parseFloat(document.getElementById('modalAchieveRate').value) || null,
-        achieveRate:    parseFloat(document.getElementById('modalAchieveRate').value) || null,
+        achieve_rate:   parseFloat(document.getElementById('modalAchieveRate').value) || null,
         school_rank:    schoolRank,
         total_students: totalStu,
         grade_level:    gl,
