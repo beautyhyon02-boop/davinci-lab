@@ -1152,9 +1152,25 @@
     /* ─────────────────────────────────────────
        내신 성적 (REST API + localStorage fallback)
     ───────────────────────────────────────── */
+    function ensureSchoolYearOptions() {
+      const sel = document.getElementById('schoolYear');
+      if (!sel) return String(new Date().getFullYear());
+
+      const nowYear = new Date().getFullYear();
+      const remembered = localStorage.getItem('dvl_school_year');
+      const currentValue = String(sel.value || remembered || nowYear);
+      const years = [];
+      for (let y = nowYear + 1; y >= nowYear - 5; y--) years.push(String(y));
+
+      sel.innerHTML = years.map(y => `<option value="${y}">${y}년</option>`).join('');
+      sel.value = years.includes(currentValue) ? currentValue : String(nowYear);
+      localStorage.setItem('dvl_school_year', sel.value);
+      return sel.value;
+    }
+
     async function loadSchoolGrades() {
-      const year = document.getElementById('schoolYear').value;
-      const sem  = document.getElementById('schoolSemester').value;
+      const year = ensureSchoolYearOptions();
+      const sem  = String(document.getElementById('schoolSemester')?.value || '1');
       const gl   = getGradeLevel();
       try {
         const res = await fetch(`/tables/grades_school?limit=200&search=${STUDENT_ID}`);
@@ -1380,9 +1396,24 @@
     }
 
     async function saveSchoolGrades() {
-      const year = document.getElementById('schoolYear').value;
-      const sem  = document.getElementById('schoolSemester').value;
-      const gl   = getGradeLevel();
+      const yearEl = document.getElementById('schoolYear');
+      const semEl  = document.getElementById('schoolSemester');
+      const year   = String(yearEl?.value || ensureSchoolYearOptions() || '').trim();
+      const sem    = String(semEl?.value || '1').trim();
+      const gl     = getGradeLevel();
+
+      if (!/^\d{4}$/.test(year)) {
+        showToast('❌ 연도를 다시 선택해주세요.');
+        yearEl?.focus();
+        return;
+      }
+      if (!['1','2'].includes(sem)) {
+        showToast('❌ 학기를 다시 선택해주세요.');
+        semEl?.focus();
+        return;
+      }
+
+      localStorage.setItem('dvl_school_year', year);
       localStorage.setItem(`dvl_grades_school_${year}_${sem}_${gl}`, JSON.stringify(schoolGrades));
 
       try {
@@ -1391,8 +1422,8 @@
 
           const payload = {
             student_id: STUDENT_ID,
-            year: Number(year),
-            semester: Number(sem),
+            year: year,
+            semester: sem,
             grade_level: g.grade_level || g.gradeLevel || gl,
             grade_type: g.grade_type || g.gradeType || null,
             exam_type: g.exam_type || 'midterm',
@@ -1401,7 +1432,7 @@
             credit: Number(g.credit || 0),
             original_score: g.original_score ?? g.score ?? null,
             average_score: g.average_score ?? g.avg ?? null,
-            achieve_rate: g.achieve_rate ?? g['achieve' + 'Rate'] ?? null,
+            achieve_rate: g.achieve_rate ?? null,
             achievement_level: g.achievement_level || g.rank5 || g.rankMid || null,
             school_grade: g.school_grade ?? g.rank ?? g.rank5Num ?? null,
             school_rank: g.school_rank ?? null,
@@ -1427,6 +1458,8 @@
 
           g._saved = true;
           g.id = result?.id || result?.data?.id || result?.[0]?.id || g.id || null;
+          g.year = year;
+          g.semester = sem;
         }
 
         pendingSchool = false;
@@ -1945,16 +1978,17 @@
       if (_sn) _sn.textContent = _gradeSession.name || '학생';
       if (_ss) _ss.textContent = (_gradeSession.school || '') + ' ' + (_gradeSession.grade || '');
       if (_tn) _tn.textContent = _gradeSession.name || '학생';
-      // 아바타
       const av = (_gradeSession.name || '학')[0];
       document.querySelectorAll('.sidebar-avatar, .topbar-avatar, .stu-avatar').forEach(el => el.textContent = av);
 
-      // 세션에서 학년 자동 설정 (고1~고3, 중1~중3)
+      ensureSchoolYearOptions();
+      document.getElementById('schoolYear')?.addEventListener('change', (e) => {
+        localStorage.setItem('dvl_school_year', e.target.value || '');
+      });
+
       const gradeStr = _gradeSession.grade || '';
       const sel = document.getElementById('schoolGradeLevel');
       if (sel && gradeStr) {
-        // "고1", "고2", "고3", "중1", "중2", "중3" 형태에서 매칭
-        const gradeMap = { '1': '고1', '2': '고2', '3': '고3' };
         let matched = '';
         if (gradeStr.includes('고3') || gradeStr === '3') matched = '고3';
         else if (gradeStr.includes('고2') || gradeStr === '2') matched = '고2';
@@ -1971,6 +2005,7 @@
     })();
     loadSchoolGrades();
     loadMockGrades();
+
   </script>
 
   <!-- ===== 모바일 하단 네비 (학생) ===== -->
@@ -2066,6 +2101,7 @@
       dim.addEventListener('click', close);
     })();
   </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
