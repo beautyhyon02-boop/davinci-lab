@@ -233,6 +233,38 @@
         </div>
       </div>
 
+
+      <div id="approvalQuickPanel" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:0 0 16px 0;">
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#163A33;display:flex;align-items:center;gap:7px;">
+                <i class="fas fa-user-check" style="color:#22c55e;"></i> 학생 가입 승인
+              </div>
+              <div style="font-size:12px;color:#64748b;margin-top:4px;">학생 승인은 아래 표의 승인 대기 섹션에서 바로 처리됩니다.</div>
+            </div>
+            <span id="studentPendingQuickCount" style="background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;white-space:nowrap;">0명 대기</span>
+          </div>
+        </div>
+        <div id="parentPendingQuickPanel" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:14px 16px;display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#92400e;display:flex;align-items:center;gap:7px;">
+                <i class="fas fa-users" style="color:#f59e0b;"></i> 학부모 가입 승인
+              </div>
+              <div style="font-size:12px;color:#92400e;margin-top:4px;">여기서 빠르게 승인하거나, 학부모 관리 페이지로 이동해 전체 목록을 확인할 수 있습니다.</div>
+            </div>
+            <span id="parentPendingQuickCount" style="background:#fff;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;white-space:nowrap;">0명 대기</span>
+          </div>
+          <div id="parentPendingQuickList" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;"></div>
+          <div style="margin-top:12px;">
+            <a id="parentApprovalNavLink" href="parents.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;background:#fff;color:#92400e;border:1px solid #fcd34d;font-size:12.5px;font-weight:700;text-decoration:none;">
+              <i class="fas fa-arrow-right"></i> 학부모 관리 전체 열기
+            </a>
+          </div>
+        </div>
+      </div>
+
       <!-- Student Table -->
       <div class="dash-panel full-panel">
         <div class="panel-body" style="padding:0;">
@@ -586,7 +618,7 @@
           </select>
         </div>
         <div>
-          <label style="font-size:12px;font-weight:600;color:#111;display:block;margin-bottom:8px;">컨설팅 여부 <span style="color:#ef4444;">*</span></label>
+          <label style="font-size:12px;font-weight:600;color:#111;display:block;margin-bottom:8px;">수강 단계 <span style="color:#ef4444;">*</span></label>
           <select id="apv-stage"
             style="width:100%;border:1.5px solid #22c55e;border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;box-sizing:border-box;outline:none;background:#fff;color:#16a34a;">
             <option value="1단계">1단계 – 일반 수강</option>
@@ -599,7 +631,7 @@
 
       <div style="background:#fef3c7;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12.5px;color:#92400e;line-height:1.5;">
         <i class="fas fa-info-circle"></i>
-        승인 후 학생은 즉시 로그인이 가능합니다. 컨설팅 여부는 나중에 변경할 수 있습니다.
+        승인 후 학생은 즉시 로그인이 가능합니다. 수강 단계는 이후에도 언제든 변경할 수 있습니다.
       </div>
 
       <div style="display:flex;gap:10px;">
@@ -617,7 +649,7 @@
 
   <script src="../js/dvl-session.js?v=20260430"></script>
   <script src="../js/admin-common.js?v=20260430"></script>
-  <script src="../js/students.js?v=20260430"></script>
+  <script src="../js/students.js?v=20260527a"></script>
   <script>
   /* ════════════════════════════════════════
      관리자 계정 관리 (마스터 전용)
@@ -861,5 +893,6 @@
   </nav>
   <div class="sidebar-dim" id="sidebarDim"></div>
   <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
