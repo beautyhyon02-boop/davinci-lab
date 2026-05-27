@@ -778,9 +778,105 @@
     let ALL_MOCK_GRADES   = [];
     let filteredStudents  = [];
 
+    function normalizeGradeLabel(raw) {
+      const v = String(raw || '').trim();
+      if (!v) return '';
+      if (v.includes('고3')) return '고3';
+      if (v.includes('고2')) return '고2';
+      if (v.includes('고1')) return '고1';
+      if (v.includes('중3')) return '중3';
+      if (v.includes('중2')) return '중2';
+      if (v.includes('중1')) return '중1';
+      if (v === '3') return '고3';
+      if (v === '2') return '고2';
+      if (v === '1') return '고1';
+      return v;
+    }
+
+    function fillAdminYearOptions() {
+      const current = new Date().getFullYear();
+      const years = [];
+      for (let y = current + 1; y >= current - 5; y--) years.push(String(y));
+      [
+        { id:'filterYear', includeAll:true, placeholder:'전체 연도' },
+        { id:'drawerYear', includeAll:true, placeholder:'전체 연도' },
+      ].forEach(cfg => {
+        const sel = document.getElementById(cfg.id);
+        if (!sel) return;
+        const prev = String(sel.value || '');
+        sel.innerHTML = `${cfg.includeAll ? `<option value="">${cfg.placeholder}</option>` : ''}` + years.map(y => `<option value="${y}">${y}년</option>`).join('');
+        sel.value = years.includes(prev) ? prev : (cfg.includeAll ? '' : String(current));
+      });
+      const yearInput = document.getElementById('dAddYear');
+      if (yearInput && !yearInput.value) yearInput.value = String(current);
+      if (yearInput) yearInput.placeholder = String(current);
+    }
+
+    function normalizeSchoolGradeRecord(g) {
+      const gradeLevel = normalizeGradeLabel(g.grade_level || g.gradeLevel || g.grade || '');
+      const gradeType = g.grade_type || g.gradeType || getGradeTypeAdmin(gradeLevel);
+      const subjectGroup = [g.subject_group, g.subjectGroup].find(v => v != null && String(v).trim() !== '' && String(v).toLowerCase() !== 'null') || '';
+      const subjectName = [g.subject_name, g.subjectName, subjectGroup].find(v => v != null && String(v).trim() !== '' && String(v).toLowerCase() !== 'null') || '';
+      const averageScore = g.average_score ?? g.avg ?? null;
+      const originalScore = g.original_score ?? g.score ?? null;
+      const achieveRate = g.achieve_rate ?? g.achieveRate ?? null;
+      const schoolGrade = g.school_grade ?? g.rank ?? g.rank5Num ?? null;
+      const achievementLevel = g.achievement_level || g.rank5 || g.rankMid || null;
+      return {
+        ...g,
+        year: String(g.year ?? ''),
+        semester: String(g.semester ?? ''),
+        grade_level: gradeLevel,
+        gradeLevel,
+        grade_type: gradeType,
+        gradeType,
+        exam_type: g.exam_type || g.examType || 'midterm',
+        subject_group: subjectGroup,
+        subjectGroup,
+        subject_name: subjectName,
+        subjectName,
+        credit: Number(g.credit ?? 0) || 0,
+        original_score: originalScore,
+        score: originalScore,
+        average_score: averageScore,
+        avg: averageScore,
+        achieve_rate: achieveRate,
+        achieveRate,
+        achievement_level: achievementLevel,
+        school_grade: schoolGrade,
+        school_rank: g.school_rank ?? null,
+        total_students: g.total_students ?? null,
+        rank: g.rank ?? ((gradeType === 'grade9') ? schoolGrade : null),
+        rank5Num: g.rank5Num ?? ((gradeType === 'grade5') ? schoolGrade : null),
+        rank5: g.rank5 ?? ((gradeType === 'grade5') ? achievementLevel : null),
+        rankMid: g.rankMid ?? ((gradeType === 'gradeMid') ? achievementLevel : null),
+      };
+    }
+
+    function normalizeMockRecord(m) {
+      return {
+        ...m,
+        examType: m.examType || m.exam_type || '3월 학평',
+        examDate: m.examDate || m.exam_date || '',
+        kor: m.kor ?? m.korean_score ?? null,
+        korPct: m.korPct ?? m.korean_percentile ?? null,
+        math: m.math ?? m.math_score ?? null,
+        mathPct: m.mathPct ?? m.math_percentile ?? null,
+        eng: m.eng ?? m.english_score ?? null,
+        engPct: m.engPct ?? m.english_percentile ?? null,
+        sci1Name: m.sci1Name || m.sci1_name || '',
+        sci2Name: m.sci2Name || m.sci2_name || '',
+        sci1: m.sci1 ?? null,
+        sci1Pct: m.sci1Pct ?? m.sci1_percentile ?? null,
+        sci2: m.sci2 ?? null,
+        sci2Pct: m.sci2Pct ?? m.sci2_percentile ?? null,
+      };
+    }
+
     /* ── 초기 로드 ── */
     async function initGradesAdmin() {
       const grid = document.getElementById('studentGradeGrid');
+      fillAdminYearOptions();
       if (grid) grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#9ca3af;">
         <i class="fas fa-circle-notch fa-spin" style="font-size:24px;margin-bottom:10px;display:block;"></i>
         데이터를 불러오는 중...</div>`;
@@ -796,8 +892,8 @@
         const mockData = await mockRes.json();
 
         ALL_STUDENTS      = (stuData.data  || []).filter(s => s.status !== 'inactive');
-        ALL_SCHOOL_GRADES = schData.data   || [];
-        ALL_MOCK_GRADES   = mockData.data  || [];
+        ALL_SCHOOL_GRADES = (schData.data  || []).map(normalizeSchoolGradeRecord);
+        ALL_MOCK_GRADES   = (mockData.data || []).map(normalizeMockRecord);
 
         filteredStudents = [...ALL_STUDENTS];
         renderCards();
@@ -822,14 +918,15 @@
     function getStuMock(studentId) {
       return ALL_MOCK_GRADES
         .filter(m => m.student_id === studentId)
-        .sort((a, b) => (b.examDate || '').localeCompare(a.examDate || ''));
+        .sort((a, b) => String(b.examDate || b.exam_date || '').localeCompare(String(a.examDate || a.exam_date || '')));
     }
 
     /* ── 학년별 등급제 헬퍼 (관리자용) ── */
     function getGradeTypeAdmin(gl) {
-      if (gl === '고3' || gl === '3') return 'grade9';
-      if (['고2','고1','중3','2','1'].includes(String(gl))) return 'grade5';
-      return 'gradeMid'; // 중학교 1~2: 5등급 A~E (90/80/70/60/미만)
+      const v = normalizeGradeLabel(gl);
+      if (v === '고3') return 'grade9';
+      if (v === '고2' || v === '고1') return 'grade5';
+      return 'gradeMid';
     }
     const GRADE_META_ADMIN = {
       grade9:   { label:'9등급제', rankKey:'rank',    col:'석차등급' },
@@ -995,42 +1092,45 @@
     async function saveDrawerSchoolGrade() {
       if (!currentDrawerStudent) return;
       const sid   = currentDrawerStudent.student_id || currentDrawerStudent.id;
-      const year  = document.getElementById('dAddYear')?.value    ||
-                    document.getElementById('drawerYear')?.value  ||
-                    document.getElementById('filterYear').value;
-      const sem   = document.getElementById('dAddSem')?.value     ||
-                    document.getElementById('drawerSem')?.value   ||
-                    document.getElementById('filterSem').value;
-      const gl    = currentDrawerStudent.grade ? currentDrawerStudent.grade + '학년' : '고1';
-      const gt    = getGradeTypeAdmin(currentDrawerStudent.grade || '');
-      const rec = {
-        student_id   : sid,
-        year, semester: sem, gradeLevel: gl, gradeType: gt,
-        subjectGroup : document.getElementById('dAddSubjectGroup').value.trim(),
-        subjectName  : document.getElementById('dAddSubjectName').value.trim(),
-        credit       : Number(document.getElementById('dAddCredit').value) || 4,
-        score        : Number(document.getElementById('dAddScore').value)  || 0,
-        avg          : Number(document.getElementById('dAddAvg').value)    || 0,
-        achieveRate  : Number(document.getElementById('dAddAchieve').value)|| 0,
+      const year  = String(document.getElementById('dAddYear')?.value || document.getElementById('drawerYear')?.value || document.getElementById('filterYear').value || new Date().getFullYear());
+      const sem   = String(document.getElementById('dAddSem')?.value || document.getElementById('drawerSem')?.value || document.getElementById('filterSem').value || '1');
+      const gl    = normalizeGradeLabel(currentDrawerStudent.grade || '고1');
+      const gt    = getGradeTypeAdmin(gl);
+      const payload = {
+        student_id: sid,
+        year,
+        semester: sem,
+        grade_level: gl,
+        grade_type: gt,
+        exam_type: document.getElementById('dAddExamType')?.value || 'midterm',
+        subject_group: document.getElementById('dAddSubjectGroup').value.trim(),
+        subject_name: document.getElementById('dAddSubjectName').value.trim(),
+        credit: Number(document.getElementById('dAddCredit').value) || 4,
+        original_score: Number(document.getElementById('dAddScore').value) || 0,
+        average_score: Number(document.getElementById('dAddAvg').value) || null,
+        achieve_rate: Number(document.getElementById('dAddAchieve').value) || null,
+        school_rank: Number(document.getElementById('dAddSchoolRank')?.value) || null,
+        total_students: Number(document.getElementById('dAddTotalStudents')?.value) || null,
       };
-      if (!rec.subjectGroup || !rec.subjectName) { alert('교과와 과목명을 입력하세요.'); return; }
-      if (gt==='grade9')  rec.rank    = Number(document.getElementById('dAddRank').value)   || null;
-      if (gt==='grade5')  { rec.rank5Num = Number(document.getElementById('dAddRank5Num').value)||null; rec.rank5=document.getElementById('dAddRank5').value; }
-      if (gt==='gradeMid') rec.rankMid = document.getElementById('dAddRankMid').value;
+      if (!payload.subject_group || !payload.subject_name) { alert('교과와 과목명을 입력하세요.'); return; }
+      if (gt === 'grade9')  payload.school_grade = Number(document.getElementById('dAddRank').value) || null;
+      if (gt === 'grade5')  {
+        payload.school_grade = Number(document.getElementById('dAddRank5Num').value) || null;
+        payload.achievement_level = document.getElementById('dAddRank5').value || null;
+      }
+      if (gt === 'gradeMid') payload.achievement_level = document.getElementById('dAddRankMid').value || null;
 
       const btn = event.target;
       btn.disabled = true; btn.textContent = '저장 중…';
       try {
         const res = await fetch('/tables/grades_school', {
-          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(rec)
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
         });
         if (!res.ok) throw new Error();
-        // 전역 캐시 갱신
-        const newRec = await res.json();
+        const newRec = normalizeSchoolGradeRecord(await res.json());
         ALL_SCHOOL_GRADES.push(newRec);
         closeDrawerSchoolForm();
-        // 폼 초기화
-        ['dAddSubjectGroup','dAddSubjectName','dAddCredit','dAddScore','dAddAvg','dAddAchieve','dAddRank','dAddRank5Num','dAddYear']
+        ['dAddSubjectGroup','dAddSubjectName','dAddCredit','dAddScore','dAddAvg','dAddAchieve','dAddRank','dAddRank5Num','dAddYear','dAddSchoolRank','dAddTotalStudents']
           .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
         renderDrawerSchool();
         renderCards();
@@ -1177,26 +1277,22 @@
       if (!currentDrawerStudent) return;
       const dYear = document.getElementById('drawerYear')?.value  || '';
       const dSem  = document.getElementById('drawerSem')?.value   || '';
-      const data = getStuSchool(currentDrawerStudent.student_id || currentDrawerStudent.id, dYear, dSem);
+      const data = getStuSchool(currentDrawerStudent.student_id || currentDrawerStudent.id, dYear, dSem).map(normalizeSchoolGradeRecord);
       const tbody = document.getElementById('drawerSchoolTbody');
       const thead = document.getElementById('drawerSchoolThead');
 
-      // 학년별 등급제 파악
-      const gl = currentDrawerStudent.grade ? currentDrawerStudent.grade + '학년' : '고1';
-      const gt = getGradeTypeAdmin(currentDrawerStudent.grade || 'high');
+      const gl = normalizeGradeLabel(currentDrawerStudent.grade || '고1') || '고1';
+      const gt = getGradeTypeAdmin(gl);
       const gmeta = GRADE_META_ADMIN[gt];
 
-      // 배너 업데이트
       const badge = document.getElementById('drawerGradeSystemBadge');
       if (badge) {
-        const bClasses = {grade9:'rank-1',grade5:'rank-A5',gradeMid:'rank-Amid'};
         badge.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:14px;font-size:12px;font-weight:700;background:#f3f4f6;color:#374151">
           <i class="fas fa-graduation-cap"></i>${gl} · ${gmeta.label}
         </span>`;
       }
 
-      // 헤더
-      const rankColLabel = gmeta.col;
+      const rankColLabel = gt === 'grade9' ? '석차등급' : '성취등급';
       thead.innerHTML = `<tr>
         <th>교과 / 과목</th>
         <th style="text-align:center">단위</th>
@@ -1217,20 +1313,30 @@
       if (cntEl) cntEl.textContent = `총 ${data.length}개 과목`;
 
       tbody.innerHTML = data.map(g => {
-        let rankCell = '';
+        const subjectGroup = g.subjectGroup || g.subject_group || '–';
+        const subjectName = g.subjectName || g.subject_name || subjectGroup || '–';
+        const credit = g.credit ?? '–';
+        const score = (g.score ?? g.original_score) ?? '–';
+        const avg = (g.avg ?? g.average_score) ?? '–';
+        const achieveRate = (g.achieveRate ?? g.achieve_rate);
+        const achieveDisp = achieveRate != null && String(achieveRate).toLowerCase() !== 'null' ? achieveRate + '%' : '–';
+        let rankCell = '–';
         if (gt === 'grade9') {
-          rankCell = `<span class="rank-badge rank-${g.rank}">${g.rank ?? '–'}</span>`;
+          const rank = g.rank ?? g.school_grade;
+          rankCell = `<span class="rank-badge ${rank ? `rank-${rank}` : ''}">${rank ?? '–'}</span>`;
         } else if (gt === 'grade5') {
-          rankCell = `<span class="rank-badge rank-${g.rank5}5">${g.rank5 ?? '–'}</span>`;
+          const rank = g.rank5 || g.achievement_level;
+          rankCell = `<span class="rank-badge ${rank ? `rank-${rank}5` : ''}">${rank ?? '–'}</span>`;
         } else {
-          rankCell = `<span class="rank-badge rank-${g.rankMid}mid">${g.rankMid ?? '–'}</span>`;
+          const rank = g.rankMid || g.achievement_level;
+          rankCell = `<span class="rank-badge ${rank ? `rank-${rank}mid` : ''}">${rank ?? '–'}</span>`;
         }
         return `<tr id="gr-row-${g.id}">
-          <td><strong>${g.subjectGroup}</strong> <span style="color:var(--text-500);font-size:12px">${g.subjectName !== g.subjectGroup ? g.subjectName : ''}</span></td>
-          <td style="text-align:center">${g.credit}</td>
-          <td style="text-align:center;font-weight:700">${g.score}</td>
-          <td style="text-align:center;color:var(--text-500)">${g.avg}</td>
-          <td style="text-align:center;color:var(--text-500);font-size:12px">${g.achieveRate != null ? g.achieveRate + '%' : '–'}</td>
+          <td><strong>${subjectGroup}</strong> <span style="color:var(--text-500);font-size:12px">${subjectName !== subjectGroup ? subjectName : ''}</span></td>
+          <td style="text-align:center">${credit ?? '–'}</td>
+          <td style="text-align:center;font-weight:700">${score}</td>
+          <td style="text-align:center;color:var(--text-500)">${avg != null && String(avg).toLowerCase() !== 'null' ? avg : '–'}</td>
+          <td style="text-align:center;color:var(--text-500);font-size:12px">${achieveDisp}</td>
           <td style="text-align:center">${rankCell}</td>
           <td style="text-align:center;white-space:nowrap;">
             <button onclick="startEditGrade('${g.id}')"
@@ -1519,22 +1625,25 @@
     async function saveEditGrade(recordId) {
       const g = ALL_SCHOOL_GRADES.find(x => x.id === recordId);
       if (!g) return;
-      const gt = getGradeTypeAdmin(currentDrawerStudent?.grade || '');
+      const gt = getGradeTypeAdmin(normalizeGradeLabel(currentDrawerStudent?.grade || ''));
 
       const updated = {
-        subjectGroup : document.getElementById('ei-group')?.value.trim()   || g.subjectGroup,
-        subjectName  : document.getElementById('ei-name')?.value.trim()    || g.subjectName,
-        credit       : Number(document.getElementById('ei-credit')?.value) || g.credit,
-        score        : Number(document.getElementById('ei-score')?.value)  ?? g.score,
-        avg          : Number(document.getElementById('ei-avg')?.value)    ?? g.avg,
-        achieveRate  : Number(document.getElementById('ei-achieve')?.value)?? g.achieveRate,
+        subject_group: document.getElementById('ei-group')?.value.trim() || g.subjectGroup,
+        subject_name: document.getElementById('ei-name')?.value.trim() || g.subjectName,
+        credit: Number(document.getElementById('ei-credit')?.value) || g.credit,
+        original_score: Number(document.getElementById('ei-score')?.value) || g.score,
+        average_score: Number(document.getElementById('ei-avg')?.value) || g.avg,
+        achieve_rate: Number(document.getElementById('ei-achieve')?.value) || g.achieveRate,
       };
-      if (gt === 'grade9')   updated.rank    = Number(document.getElementById('ei-rank')?.value)    || g.rank;
-      if (gt === 'grade5')   { updated.rank5Num = Number(document.getElementById('ei-rank5num')?.value)||g.rank5Num; updated.rank5 = document.getElementById('ei-rank5')?.value||g.rank5; }
-      if (gt === 'gradeMid') updated.rankMid = document.getElementById('ei-rankMid')?.value || g.rankMid;
+      if (gt === 'grade9')   updated.school_grade = Number(document.getElementById('ei-rank')?.value) || g.rank;
+      if (gt === 'grade5')   {
+        updated.school_grade = Number(document.getElementById('ei-rank5num')?.value) || g.rank5Num;
+        updated.achievement_level = document.getElementById('ei-rank5')?.value || g.rank5;
+      }
+      if (gt === 'gradeMid') updated.achievement_level = document.getElementById('ei-rankMid')?.value || g.rankMid;
 
       const row = document.getElementById(`gr-row-${recordId}`);
-      if (row) { row.style.opacity='0.5'; }
+      if (row) row.style.opacity='0.5';
 
       try {
         const res = await fetch(`/tables/grades_school/${recordId}`, {
@@ -1543,8 +1652,7 @@
           body   : JSON.stringify(updated),
         });
         if (!res.ok) throw new Error();
-        const newRec = await res.json();
-        // 전역 캐시 갱신
+        const newRec = normalizeSchoolGradeRecord(await res.json());
         const idx = ALL_SCHOOL_GRADES.findIndex(x=>x.id===recordId);
         if (idx!==-1) ALL_SCHOOL_GRADES[idx] = { ...ALL_SCHOOL_GRADES[idx], ...newRec };
         renderDrawerSchool();
@@ -1553,10 +1661,11 @@
         showToast('성적이 수정되었습니다.');
       } catch(e) {
         alert('수정 실패. 다시 시도해주세요.');
-        if (row) { row.style.opacity='1'; }
+        if (row) row.style.opacity='1';
         cancelEditGrade(recordId);
       }
     }
+
     window.saveEditGrade = saveEditGrade;
 
     /* ── 헬퍼 ── */
@@ -1567,11 +1676,11 @@
       if (!data.length) return null;
       if (!data[0]) return null;
       // grade9만 수치 평균 가능
-      if (data[0].gradeType === 'grade9' || data[0].rank != null) {
+      if (data[0].gradeType === 'grade9' || data[0].grade_type === 'grade9' || data[0].rank != null || data[0].school_grade != null) {
         const total = data.reduce((a,g)=>a+Number(g.credit),0);
         if (!total) return null;
         return (data.reduce((a,g)=>a+Number(g.rank||5)*Number(g.credit),0)/total).toFixed(2) + '등급';
-      } else if (data[0].gradeType === 'grade5' || data[0].rank5) {
+      } else if (data[0].gradeType === 'grade5' || data[0].grade_type === 'grade5' || data[0].rank5 || data[0].achievement_level) {
         const cnt = {A:0,B:0,C:0,D:0,E:0};
         data.forEach(g=>{ if(g.rank5) cnt[g.rank5]++; });
         const best = ['A','B','C','D','E'].find(k=>cnt[k]>0);
@@ -1630,5 +1739,6 @@
   <script src="../js/dvl-session.js?v=20260430"></script>
   <script src="../js/admin-common.js?v=20260430"></script>
   <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
