@@ -437,11 +437,99 @@
     let mockChartObj      = null;
     let isLoading         = false;
 
+    function normalizeGradeLabel(raw) {
+      const v = String(raw || '').trim();
+      if (!v) return '';
+      if (v.includes('고3')) return '고3';
+      if (v.includes('고2')) return '고2';
+      if (v.includes('고1')) return '고1';
+      if (v.includes('중3')) return '중3';
+      if (v.includes('중2')) return '중2';
+      if (v.includes('중1')) return '중1';
+      if (v === '3') return '고3';
+      if (v === '2') return '고2';
+      if (v === '1') return '고1';
+      return v;
+    }
+
+    function normalizeSchoolGradeRecord(g) {
+      const gradeLevel = normalizeGradeLabel(g.grade_level || g.gradeLevel || g.grade || '');
+      const gradeType = g.grade_type || g.gradeType || getGradeTypeParent(gradeLevel);
+      const subjectGroup = [g.subject_group, g.subjectGroup].find(v => v != null && String(v).trim() !== '' && String(v).toLowerCase() !== 'null') || '';
+      const subjectName = [g.subject_name, g.subjectName, subjectGroup].find(v => v != null && String(v).trim() !== '' && String(v).toLowerCase() !== 'null') || '';
+      const originalScore = g.original_score ?? g.score ?? null;
+      const averageScore = g.average_score ?? g.avg ?? null;
+      const achieveRate = g.achieve_rate ?? g.achieveRate ?? null;
+      const schoolGrade = g.school_grade ?? g.rank ?? g.rank5Num ?? null;
+      const achievementLevel = g.achievement_level || g.rank5 || g.rankMid || null;
+      return {
+        ...g,
+        year: String(g.year ?? ''),
+        semester: String(g.semester ?? ''),
+        grade_level: gradeLevel,
+        gradeLevel,
+        grade_type: gradeType,
+        gradeType,
+        exam_type: g.exam_type || g.examType || 'midterm',
+        subject_group: subjectGroup,
+        subjectGroup,
+        subject_name: subjectName,
+        subjectName,
+        credit: Number(g.credit ?? 0) || 0,
+        original_score: originalScore,
+        score: originalScore,
+        average_score: averageScore,
+        avg: averageScore,
+        achieve_rate: achieveRate,
+        achieveRate,
+        achievement_level: achievementLevel,
+        school_grade: schoolGrade,
+        school_rank: g.school_rank ?? null,
+        total_students: g.total_students ?? null,
+        rank: g.rank ?? ((gradeType === 'grade9') ? schoolGrade : null),
+        rank5Num: g.rank5Num ?? ((gradeType === 'grade5') ? schoolGrade : null),
+        rank5: g.rank5 ?? ((gradeType === 'grade5') ? achievementLevel : null),
+        rankMid: g.rankMid ?? ((gradeType === 'gradeMid') ? achievementLevel : null),
+      };
+    }
+
+    function normalizeMockRecord(m) {
+      return {
+        ...m,
+        examType: m.examType || m.exam_type || '모의고사',
+        examDate: m.examDate || m.exam_date || '',
+        kor: m.kor ?? m.korean_score ?? null,
+        korPct: m.korPct ?? m.korean_percentile ?? null,
+        math: m.math ?? m.math_score ?? null,
+        mathPct: m.mathPct ?? m.math_percentile ?? null,
+        eng: m.eng ?? m.english_score ?? null,
+        engPct: m.engPct ?? m.english_percentile ?? null,
+        sci1: m.sci1 ?? null,
+        sci1Pct: m.sci1Pct ?? m.sci1_percentile ?? null,
+        sci2: m.sci2 ?? null,
+        sci2Pct: m.sci2Pct ?? m.sci2_percentile ?? null,
+        sci1Name: m.sci1Name || m.sci1_name || '탐구①',
+        sci2Name: m.sci2Name || m.sci2_name || '탐구②',
+      };
+    }
+
+    function fillParentYearOptions() {
+      const years = [...new Set(ALL_SCHOOL_GRADES.map(g => String(g.year)).filter(Boolean))].sort().reverse();
+      const yrSel = document.getElementById('pgYear');
+      if (!yrSel) return;
+      const prev = String(yrSel.value || '');
+      if (years.length) {
+        yrSel.innerHTML = years.map(y => `<option value="${y}">${y}년</option>`).join('');
+        yrSel.value = years.includes(prev) ? prev : years[0];
+      }
+    }
+
     /* ── 학년별 등급제 헬퍼 ── */
     function getGradeTypeParent(gl) {
-      if (!gl) return 'gradeMid';
-      if (gl === '고3' || gl === '3') return 'grade9';
-      if (['고2','고1','중3','2','1'].includes(gl)) return 'grade5';
+      const v = normalizeGradeLabel(gl);
+      if (!v) return 'gradeMid';
+      if (v === '고3') return 'grade9';
+      if (v === '고2' || v === '고1') return 'grade5';
       return 'gradeMid';
     }
 
@@ -476,7 +564,7 @@
     function getChildMockGrades(cid) {
       return ALL_MOCK_GRADES
         .filter(g => g.student_id === cid || g.studentId === cid)
-        .sort((a,b) => (b.examDate||'').localeCompare(a.examDate||''));
+        .sort((a,b) => String(b.examDate || b.exam_date || '').localeCompare(String(a.examDate || a.exam_date || '')));
     }
 
     /* ── 메인 렌더 ── */
@@ -496,8 +584,8 @@
       const gt    = getGradeTypeParent(gl || '');
       const tbody = document.getElementById('pgSchoolTbody');
       const thead = document.getElementById('pgSchoolThead');
+      const rows = (data || []).map(normalizeSchoolGradeRecord);
 
-      // 헤더 동적 업데이트
       const rankLabel   = gt === 'grade9' ? '석차등급' : '성취등급';
       const creditLabel = gt === 'grade5' ? '학점' : '단위수';
       if (thead) {
@@ -511,47 +599,57 @@
         </tr>`;
       }
 
-      if (!data.length) {
+      if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="7">
           <div class="pg-empty"><i class="fas fa-clock"></i><p>해당 학기 성적 데이터가 없습니다.</p></div>
         </td></tr>`;
         return;
       }
 
-      tbody.innerHTML = data.map(g => {
+      tbody.innerHTML = rows.map(g => {
+        const subjectGroup = g.subjectGroup || g.subject_group || '–';
+        const subjectName = g.subjectName || g.subject_name || subjectGroup || '–';
+        const score = g.score ?? g.original_score;
+        const avg = g.avg ?? g.average_score;
+        const achieveRate = g.achieveRate ?? g.achieve_rate;
         let rankCell = '';
         if (gt === 'grade9') {
-          rankCell = `<span class="rank-badge rank-${g.rank}">${g.rank ?? '–'}</span>`;
+          const rank = g.rank ?? g.school_grade;
+          rankCell = `<span class="rank-badge ${rank ? `rank-${rank}` : ''}">${rank ?? '–'}</span>`;
         } else if (gt === 'grade5') {
-          rankCell = `<span class="rank-badge rank-${g.rank5}5">${g.rank5 ?? '–'}</span>`;
+          const ach = g.rank5 || g.achievement_level;
+          rankCell = `<span class="rank-badge ${ach ? `rank-${ach}5` : ''}">${ach ?? '–'}</span>`;
         } else {
-          rankCell = `<span class="rank-badge rank-${g.rankMid}mid">${g.rankMid ?? '–'}</span>`;
+          const ach = g.rankMid || g.achievement_level;
+          rankCell = `<span class="rank-badge ${ach ? `rank-${ach}mid` : ''}">${ach ?? '–'}</span>`;
         }
-        const arDisplay = g.achieveRate != null ? Number(g.achieveRate).toFixed(1) + '%' : '–';
+        const arDisplay = achieveRate != null && String(achieveRate).toLowerCase() !== 'null'
+          ? Number(achieveRate).toFixed(1) + '%'
+          : '–';
+        const avgDisplay = avg != null && String(avg).toLowerCase() !== 'null' ? Number(avg).toFixed(1) : '–';
         return `<tr>
-          <td><strong>${g.subjectGroup || '–'}</strong></td>
-          <td>${g.subjectName || '–'}</td>
+          <td><strong>${subjectGroup}</strong></td>
+          <td>${subjectName}</td>
           <td style="text-align:center">${g.credit ?? '–'}</td>
-          <td style="text-align:center;font-weight:700">${g.score ?? '–'}</td>
-          <td style="text-align:center;color:var(--text-500)">${g.avg != null ? Number(g.avg).toFixed(1) : '–'}</td>
+          <td style="text-align:center;font-weight:700">${score ?? '–'}</td>
+          <td style="text-align:center;color:var(--text-500)">${avgDisplay}</td>
           <td style="text-align:center;color:var(--text-500);font-size:12px">${arDisplay}</td>
           <td style="text-align:center">${rankCell}</td>
         </tr>`;
       }).join('');
 
-      // 합계 행
-      const total = data.reduce((a,g)=>a+Number(g.credit||0),0);
+      const total = rows.reduce((a,g)=>a+Number(g.credit||0),0);
       let sumCell = '';
       if (gt === 'grade9') {
-        const avg = total > 0 ? (data.reduce((a,g)=>a+Number(g.rank||5)*Number(g.credit||0),0)/total).toFixed(2) : '–';
+        const avg = total > 0 ? (rows.reduce((a,g)=>a+Number((g.rank ?? g.school_grade) || 5)*Number(g.credit||0),0)/total).toFixed(2) : '–';
         sumCell = `<td style="text-align:center;color:#5b21b6">${avg}등급</td>`;
       } else if (gt === 'grade5') {
-        const cnt={A:0,B:0,C:0,D:0,E:0}; data.forEach(g=>{if(g.rank5)cnt[g.rank5]++;});
-        const s = Object.entries(cnt).filter(e=>e[1]>0).map(e=>e[0]+':'+e[1]).join(' / ');
+        const cnt={A:0,B:0,C:0,D:0,E:0}; rows.forEach(g=>{ const k = g.rank5 || g.achievement_level; if(k)cnt[k]=(cnt[k]||0)+1;});
+        const s = Object.entries(cnt).filter(e=>e[1]>0).map(e=>e[0]+':'+e[1]).join(' / ') || '–';
         sumCell = `<td style="text-align:center;color:#5b21b6;font-size:12px">${s}</td>`;
       } else {
-        const cnt={A:0,B:0,C:0,D:0,E:0}; data.forEach(g=>{if(g.rankMid)cnt[g.rankMid]++;});
-        const s = ['A','B','C','D','E'].filter(k=>cnt[k]>0).map(k=>k+':'+cnt[k]).join(' / ');
+        const cnt={A:0,B:0,C:0,D:0,E:0}; rows.forEach(g=>{ const k = g.rankMid || g.achievement_level; if(k)cnt[k]=(cnt[k]||0)+1;});
+        const s = ['A','B','C','D','E'].filter(k=>cnt[k]>0).map(k=>k+':'+cnt[k]).join(' / ') || '–';
         sumCell = `<td style="text-align:center;color:#5b21b6;font-size:12px">${s}</td>`;
       }
       tbody.innerHTML += `<tr style="background:#faf5ff;font-weight:700">
@@ -564,18 +662,20 @@
 
     function renderMock(data) {
       const list = document.getElementById('pgMockList');
-      if (!data.length) {
+      const rows = (data || []).map(normalizeMockRecord);
+      if (!rows.length) {
         list.innerHTML = `<div class="pg-empty">
           <i class="fas fa-file-circle-xmark"></i>
           <p>입력된 모의고사 성적이 없습니다.</p></div>`;
         return;
       }
-      list.innerHTML = data.map(m => {
+      list.innerHTML = rows.map(m => {
         const subs = [
           { name:'국어', score:m.kor, pct:m.korPct },
           { name:'수학', score:m.math, pct:m.mathPct },
           { name:'영어', score:m.eng, pct:m.engPct },
-          ...(m.sci1 ? [{ name:'탐구①', score:m.sci1, pct:m.sci1Pct }] : [])
+          ...(m.sci1 != null ? [{ name:m.sci1Name || '탐구①', score:m.sci1, pct:m.sci1Pct }] : []),
+          ...(m.sci2 != null ? [{ name:m.sci2Name || '탐구②', score:m.sci2, pct:m.sci2Pct }] : []),
         ];
         return `<div class="mock-card">
           <div class="mock-card-header">
@@ -598,27 +698,29 @@
     }
 
     function updateSummary(sgData, mkData, gl) {
+      const grades = (sgData || []).map(normalizeSchoolGradeRecord);
+      const mocks = (mkData || []).map(normalizeMockRecord);
       const gt = getGradeTypeParent(gl || '중2');
       const avgEl = document.getElementById('pgAvgRank');
-      if (sgData.length) {
+      if (grades.length) {
         if (gt === 'grade9') {
-          const tot = sgData.reduce((a,g)=>a+Number(g.credit),0);
-          const avg = (sgData.reduce((a,g)=>a+Number(g.rank||5)*Number(g.credit),0)/tot).toFixed(2);
+          const tot = grades.reduce((a,g)=>a+Number(g.credit || 0),0);
+          const avg = tot ? (grades.reduce((a,g)=>a+Number((g.rank ?? g.school_grade)||5)*Number(g.credit||0),0)/tot).toFixed(2) : '–';
           avgEl.textContent = avg + '등급';
         } else if (gt === 'grade5') {
-          const cnt={A:0,B:0,C:0,D:0,E:0}; sgData.forEach(g=>{if(g.rank5)cnt[g.rank5]++;});
+          const cnt={A:0,B:0,C:0,D:0,E:0}; grades.forEach(g=>{ const k = g.rank5 || g.achievement_level; if(k)cnt[k]=(cnt[k]||0)+1;});
           const best = ['A','B','C','D','E'].find(k=>cnt[k]>0) || '–';
           avgEl.textContent = best + ' (성취)';
         } else {
-          const cnt={A:0,B:0,C:0,D:0,E:0}; sgData.forEach(g=>{if(g.rankMid)cnt[g.rankMid]++;});
+          const cnt={A:0,B:0,C:0,D:0,E:0}; grades.forEach(g=>{ const k = g.rankMid || g.achievement_level; if(k)cnt[k]=(cnt[k]||0)+1;});
           const best = ['A','B','C','D','E'].find(k=>cnt[k]>0) || '–';
           avgEl.textContent = best + ' (성취)';
         }
       } else {
         avgEl.textContent = '–';
       }
-      if (mkData.length) {
-        const latest = mkData[0];
+      if (mocks.length) {
+        const latest = mocks[0];
         document.getElementById('pgKorean').textContent  = `${latest.kor ?? '–'} / ${latest.korPct ?? '–'}`;
         document.getElementById('pgMath').textContent    = `${latest.math ?? '–'} / ${latest.mathPct ?? '–'}`;
         document.getElementById('pgEnglish').textContent = `${latest.eng ?? '–'} / ${latest.engPct ?? '–'}`;
@@ -632,8 +734,9 @@
       if (!child) return;
       const cid    = child.id;
 
-      // ── 내신 추이 (학기별 평균) ──
-      const allSchool = ALL_SCHOOL_GRADES.filter(g => g.student_id===cid || g.studentId===cid);
+      const allSchool = ALL_SCHOOL_GRADES
+        .filter(g => g.student_id===cid || g.studentId===cid)
+        .map(normalizeSchoolGradeRecord);
       const semMap = {};
       allSchool.forEach(g => {
         const key = `${g.year}-${g.semester}학기`;
@@ -648,12 +751,12 @@
         const arr = semMap[key];
         const total = arr.reduce((a,g)=>a+Number(g.credit||1),0);
         if (gt0 === 'grade9') {
-          const avg = total > 0 ? arr.reduce((a,g)=>a+Number(g.rank||5)*Number(g.credit||1),0)/total : null;
+          const avg = total > 0 ? arr.reduce((a,g)=>a+Number((g.rank ?? g.school_grade)||5)*Number(g.credit||1),0)/total : null;
           trendData.push(avg ? +avg.toFixed(2) : null);
         } else {
           const map = {A:1,B:2,C:3,D:4,E:5};
           const field = gt0==='grade5' ? 'rank5' : 'rankMid';
-          const numArr = arr.map(g=>map[g[field]]).filter(v=>v);
+          const numArr = arr.map(g=>map[g[field] || g.achievement_level]).filter(v=>v);
           trendData.push(numArr.length ? +(numArr.reduce((a,b)=>a+b,0)/numArr.length).toFixed(2) : null);
         }
       });
@@ -662,6 +765,7 @@
       if (trendChartObj) trendChartObj.destroy();
 
       if (!trendLabels.length) {
+        ctx1.clearRect(0, 0, ctx1.canvas.width, ctx1.canvas.height);
         ctx1.font = '13px Noto Sans KR';
         ctx1.fillStyle = '#9ca3af';
         ctx1.textAlign = 'center';
@@ -670,8 +774,6 @@
       }
 
       const isGrade9 = gt0 === 'grade9';
-      const yLabels  = isGrade9 ? ['1등급','2등급','3등급','4등급','5등급','6등급','7등급','8등급','9등급']
-                                : ['A','B','C','D','E'];
       trendChartObj = new Chart(ctx1, {
         type:'line',
         data: {
@@ -696,32 +798,33 @@
             tooltip:{ callbacks:{ label: ctx => {
               const v = ctx.parsed.y;
               return isGrade9 ? v+'등급' : (['','A','B','C','D','E'][Math.round(v)]||v);
-            }}}
-          }
+            }}} }
         }
       });
 
-      // ── 모의고사 추이 ──
-      const mkData = getChildMockGrades(cid).slice().sort((a,b)=>a.examDate.localeCompare(b.examDate));
+      const mkData = getChildMockGrades(cid).slice().map(normalizeMockRecord).sort((a,b)=>String(a.examDate||'').localeCompare(String(b.examDate||'')));
       const ctx2 = document.getElementById('pgMockChart').getContext('2d');
       if (mockChartObj) mockChartObj.destroy();
       if (!mkData.length) {
+        ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
         ctx2.font = '13px Noto Sans KR';
         ctx2.fillStyle = '#9ca3af';
         ctx2.textAlign = 'center';
         ctx2.fillText('등록된 모의고사 성적 데이터가 없습니다', ctx2.canvas.width/2, ctx2.canvas.height/2);
         return;
       }
-      const hasSci = mkData.some(m => m.sci1 != null && m.sci1 !== '');
+      const hasSci1 = mkData.some(m => m.sci1 != null && m.sci1 !== '');
+      const hasSci2 = mkData.some(m => m.sci2 != null && m.sci2 !== '');
       mockChartObj = new Chart(ctx2, {
         type:'line',
         data: {
-          labels: mkData.map(m=>(m.examType||m.exam_type||'').replace(' 전국연합','').replace(' 학력평가','')),
+          labels: mkData.map(m=>String(m.examType||m.exam_type||'').replace(' 전국연합','').replace(' 학력평가','')),
           datasets: [
-            { label:'국어', data:mkData.map(m=>m.kor||null), borderColor:'#a78bfa', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true },
-            { label:'수학', data:mkData.map(m=>m.math||null), borderColor:'#60a5fa', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true },
-            { label:'영어', data:mkData.map(m=>m.eng||null), borderColor:'#34d399', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true },
-            ...(hasSci ? [{ label:'탐구①', data:mkData.map(m=>m.sci1||null), borderColor:'#fb923c', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true }] : [])
+            { label:'국어', data:mkData.map(m=>m.kor??null), borderColor:'#a78bfa', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true },
+            { label:'수학', data:mkData.map(m=>m.math??null), borderColor:'#60a5fa', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true },
+            { label:'영어', data:mkData.map(m=>m.eng??null), borderColor:'#34d399', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true },
+            ...(hasSci1 ? [{ label:'탐구①', data:mkData.map(m=>m.sci1??null), borderColor:'#fb923c', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true }] : []),
+            ...(hasSci2 ? [{ label:'탐구②', data:mkData.map(m=>m.sci2??null), borderColor:'#f87171', borderWidth:2, pointRadius:4, tension:.35, spanGaps:true }] : []),
           ]
         },
         options: {
@@ -817,24 +920,20 @@
         ]);
         if (sgR.status==='fulfilled' && sgR.value.ok) {
           const d = await sgR.value.json();
-          ALL_SCHOOL_GRADES = (d.data||[]).filter(g =>
-            childIds.includes(g.student_id) || childIds.includes(g.studentId)
-          );
+          ALL_SCHOOL_GRADES = (d.data||[])
+            .filter(g => childIds.includes(g.student_id) || childIds.includes(g.studentId))
+            .map(normalizeSchoolGradeRecord);
         }
         if (mkR.status==='fulfilled' && mkR.value.ok) {
           const d = await mkR.value.json();
-          ALL_MOCK_GRADES = (d.data||[]).filter(g =>
-            childIds.includes(g.student_id) || childIds.includes(g.studentId)
-          );
+          ALL_MOCK_GRADES = (d.data||[])
+            .filter(g => childIds.includes(g.student_id) || childIds.includes(g.studentId))
+            .map(normalizeMockRecord);
         }
       } catch(e) {}
 
       // 4. 학년도 드롭다운 자동 구성
-      const years = [...new Set(ALL_SCHOOL_GRADES.map(g=>String(g.year)).filter(Boolean))].sort().reverse();
-      const yrSel = document.getElementById('pgYear');
-      if (years.length) {
-        yrSel.innerHTML = years.map(y=>`<option value="${y}">${y}년</option>`).join('');
-      }
+      fillParentYearOptions();
 
       // 5. 최초 렌더
       renderAll();
@@ -851,5 +950,6 @@
       <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
     </div>
   </nav>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
