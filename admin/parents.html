@@ -229,9 +229,65 @@
 
   <script src="../js/dvl-session.js?v=20260430"></script>
   <script src="../js/admin-common.js?v=20260430"></script>
+  
   <script>
   const TABLE_PARENTS = 'parent_profiles';
   let allParents = [], filtered = [];
+
+  function normalizeParentStatus(v) {
+    const raw = String(v || '').trim();
+    if (!raw) return 'pending';
+    if (['pending', '승인 대기'].includes(raw)) return 'pending';
+    if (['active', '활성', '재원'].includes(raw)) return 'active';
+    if (['inactive', '비활성', '휴원'].includes(raw)) return 'inactive';
+    return raw;
+  }
+
+  function parentStatusLabel(v) {
+    const s = normalizeParentStatus(v);
+    if (s === 'pending') return '승인 대기';
+    if (s === 'active') return '활성';
+    if (s === 'inactive') return '비활성';
+    return v || '-';
+  }
+
+  function isSchemaColumnError(msg='') {
+    return /schema cache|Could not find the .* column|column .* does not exist|operator does not exist/i.test(String(msg));
+  }
+
+  async function patchParentWithFallback(recordId, payloadCandidates) {
+    let lastError = null;
+    for (const payload of payloadCandidates) {
+      try {
+        const res = await fetch(`/tables/${TABLE_PARENTS}/${recordId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) return res;
+        const errText = await res.text();
+        const err = new Error(`서버 오류 ${res.status}: ${errText}`);
+        lastError = err;
+        if (isSchemaColumnError(errText)) continue;
+        throw err;
+      } catch (e) {
+        lastError = e;
+        if (isSchemaColumnError(e.message || e)) continue;
+        throw e;
+      }
+    }
+    throw lastError || new Error('PATCH 실패');
+  }
+
+  function normalizeParentRecord(r) {
+    return {
+      ...r,
+      _status: normalizeParentStatus(r.status),
+      _statusLabel: parentStatusLabel(r.status),
+      _childIdText: r.child_id || r.child_ids || '-',
+      _childNameText: r.child_name || '-',
+    };
+  }
 
   document.addEventListener('DOMContentLoaded', async () => {
     const session = window._dvlAdminSession;
@@ -244,39 +300,31 @@
 
   async function loadParents() {
     try {
-      const res = await fetch(`/tables/${TABLE_PARENTS}?limit=200&sort=parent_id`);
+      const res = await fetch(`/tables/${TABLE_PARENTS}?limit=500&sort=parent_id`);
+      if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
       const data = await res.json();
-      allParents = data.data || [];
+      allParents = (data.data || []).map(normalizeParentRecord);
       filtered = [...allParents];
       renderSummary();
       renderTable();
-    } catch(e) { showToast('⚠️ 데이터 로드 실패'); }
+    } catch(e) { showToast('⚠️ 데이터 로드 실패: ' + e.message); }
   }
 
   function renderSummary() {
-    const pendingParents = allParents.filter(p => p.status === 'pending');
-
-    document.getElementById('sumTotal').textContent  = allParents.length;
-    document.getElementById('sumActive').textContent = allParents.filter(p => p.status === '활성').length;
-    document.getElementById('sumMom').textContent    = allParents.filter(p => p.relationship === '모').length;
+    const pendingParents = allParents.filter(p => p._status === 'pending');
+    document.getElementById('sumTotal').textContent   = allParents.length;
+    document.getElementById('sumActive').textContent  = allParents.filter(p => p._status === 'active').length;
+    document.getElementById('sumMom').textContent     = allParents.filter(p => p.relationship === '모').length;
     document.getElementById('sumPending').textContent = pendingParents.length;
 
-    // 승인 대기 카드 강조
     const pendingSumCard = document.getElementById('pendingSumCard');
     if (pendingSumCard) {
-      if (pendingParents.length > 0) {
-        pendingSumCard.style.boxShadow = '0 0 0 3px #fde68a';
-        pendingSumCard.style.opacity = '1';
-        pendingSumCard.style.cursor = 'pointer';
-      } else {
-        pendingSumCard.style.boxShadow = '';
-        pendingSumCard.style.opacity = '0.6';
-        pendingSumCard.style.cursor = 'default';
-        pendingSumCard.onclick = null;
-      }
+      pendingSumCard.style.boxShadow = pendingParents.length ? '0 0 0 3px #fde68a' : '';
+      pendingSumCard.style.opacity = pendingParents.length ? '1' : '0.6';
+      pendingSumCard.style.cursor = pendingParents.length ? 'pointer' : 'default';
+      if (!pendingParents.length) pendingSumCard.onclick = null;
     }
 
-    // 승인 대기 배지 (테이블 위) — display:none → block으로 전환 (flex는 인라인 중첩 충돌 방지)
     const pendingBadge = document.getElementById('parentPendingBadge');
     const pendingBadgeText = document.getElementById('parentPendingBadgeText');
     if (pendingBadge) {
@@ -289,10 +337,8 @@
     }
   }
 
-  // 승인 대기 섹션으로 스크롤
   function scrollToPending() {
-    const target = document.getElementById('pendingSection')
-                || document.querySelector('#parentTableBody tr[data-pending="true"]');
+    const target = document.getElementById('pendingSection') || document.querySelector('#parentTableBody tr[data-pending="true"]');
     if (target) {
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const rows = document.querySelectorAll('#parentTableBody tr[data-pending="true"]');
@@ -305,26 +351,24 @@
 
   function renderTable() {
     const tbody = document.getElementById('parentTableBody');
-    // pending 항목이 있으면 filtered가 0이어도 조기 리턴하지 않음
-    const pendingAll = allParents.filter(p => p.status === 'pending');
+    const pendingAll = allParents.filter(p => p._status === 'pending');
     if (filtered.length === 0 && pendingAll.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">검색 결과가 없습니다.</td></tr>`;
       return;
     }
-    // filtered에 pending이 없는데 allParents에 pending이 있으면, pending을 강제로 표시
-    const filteredHasPending = filtered.some(p => p.status === 'pending');
+
+    const filteredHasPending = filtered.some(p => p._status === 'pending');
     const displayList = (!filteredHasPending && pendingAll.length > 0)
       ? [...new Map([...pendingAll, ...filtered].map(p => [p.id, p])).values()]
       : filtered;
 
-    // pending 항목 먼저 상단에 표시
     const sorted = [...displayList].sort((a, b) => {
-      if (a.status === 'pending' && b.status !== 'pending') return -1;
-      if (a.status !== 'pending' && b.status === 'pending') return 1;
-      return 0;
+      if (a._status === 'pending' && b._status !== 'pending') return -1;
+      if (a._status !== 'pending' && b._status === 'pending') return 1;
+      return String(a.parent_name || '').localeCompare(String(b.parent_name || ''), 'ko');
     });
 
-    const pendingCount = sorted.filter(p => p.status === 'pending').length;
+    const pendingCount = sorted.filter(p => p._status === 'pending').length;
     const pendingHeader = pendingCount > 0
       ? `<tr id="pendingSection"><td colspan="7" style="background:#fffbeb;padding:8px 16px;border-bottom:2px solid #f59e0b;">
            <span style="font-size:12px;font-weight:700;color:#92400e;">
@@ -334,32 +378,31 @@
       : '';
 
     tbody.innerHTML = pendingHeader + sorted.map(p => {
-      const isPending = p.status === 'pending';
-      const statusBg    = isPending ? '#fef3c7' : (p.status==='활성'?'#d1fae5':'#f3f4f6');
-      const statusColor = isPending ? '#92400e' : (p.status==='활성'?'#065f46':'#6b7280');
-      const statusLabel = isPending ? '승인 대기' : (p.status || '-');
+      const isPending = p._status === 'pending';
+      const statusBg    = isPending ? '#fef3c7' : (p._status==='active' ? '#d1fae5' : '#f3f4f6');
+      const statusColor = isPending ? '#92400e' : (p._status==='active' ? '#065f46' : '#6b7280');
       return `
       <tr style="${isPending ? 'background:#fffbeb;' : ''}" ${isPending ? 'data-pending="true"' : ''}>
         <td><span class="pm-id-badge">${p.parent_id || '-'}</span></td>
         <td><strong>${p.parent_name || '-'}</strong></td>
         <td><span class="pm-rel-badge ${p.relationship==='모'?'mom':'dad'}">${p.relationship || '-'}</span></td>
         <td>
-          <strong>${p.child_name || '-'}</strong>
-          <small style="color:#9ca3af;margin-left:4px">${p.child_id || p.child_ids || '-'}</small>
+          <strong>${p._childNameText}</strong>
+          <small style="color:#9ca3af;margin-left:4px">${p._childIdText}</small>
         </td>
         <td>${p.phone || '-'}</td>
         <td>
           <span style="font-size:.78rem;padding:3px 9px;border-radius:99px;font-weight:700;background:${statusBg};color:${statusColor};">
-            ${statusLabel}
+            ${p._statusLabel}
           </span>
         </td>
         <td>
           <div style="display:flex;gap:5px;flex-wrap:wrap;">
             ${isPending ? `
-              <button class="btn-pm" style="background:#22c55e;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;" onclick="approveParent('${p.id}', '${p.parent_name}')">
+              <button class="btn-pm" style="background:#22c55e;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;" onclick="approveParent('${p.id}', '${(p.parent_name || '').replace(/'/g, '&#39;')}')">
                 <i class="fas fa-check"></i> 승인
               </button>
-              <button class="btn-pm" style="background:#fff;color:#ef4444;border:1.5px solid #ef4444;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;" onclick="rejectParent('${p.id}', '${p.parent_name}')">
+              <button class="btn-pm" style="background:#fff;color:#ef4444;border:1.5px solid #ef4444;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;" onclick="rejectParent('${p.id}', '${(p.parent_name || '').replace(/'/g, '&#39;')}')">
                 <i class="fas fa-times"></i> 거절
               </button>
             ` : `
@@ -376,12 +419,10 @@
   async function approveParent(recordId, name) {
     if (!confirm(`'${name}' 학부모 가입을 승인하시겠습니까?`)) return;
     try {
-      const res = await fetch(`/tables/parent_profiles/${recordId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'active' }),
-      });
-      if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+      await patchParentWithFallback(recordId, [
+        { status: 'active', approval_status: 'approved', approved_at: new Date().toISOString(), is_active: true },
+        { status: 'active' }
+      ]);
       showToast(`✅ ${name} 학부모 승인 완료!`);
       await loadParents();
     } catch(e) {
@@ -390,10 +431,14 @@
   }
 
   async function rejectParent(recordId, name) {
-    if (!confirm(`'${name}' 학부모 가입 신청을 거절하시겠습니까?\n해당 계정이 삭제됩니다.`)) return;
+    if (!confirm(`'${name}' 학부모 가입 신청을 거절하시겠습니까?
+해당 계정이 삭제됩니다.`)) return;
     try {
-      const res = await fetch(`/tables/parent_profiles/${recordId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
+      const res = await fetch(`/tables/${TABLE_PARENTS}/${recordId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`서버 오류 ${res.status}: ${errText}`);
+      }
       showToast(`${name} 학부모 가입 신청이 거절되었습니다.`);
       await loadParents();
     } catch(e) {
@@ -402,12 +447,13 @@
   }
 
   function filterList() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
+    const q = (document.getElementById('searchInput').value || '').toLowerCase();
     filtered = q
       ? allParents.filter(p =>
-          (p.parent_name||'').includes(q) ||
-          (p.child_name||'').includes(q) ||
-          (p.parent_id||'').includes(q))
+          (p.parent_name||'').toLowerCase().includes(q) ||
+          (p.child_name||'').toLowerCase().includes(q) ||
+          (p.parent_id||'').toLowerCase().includes(q) ||
+          (p.child_ids||'').toLowerCase().includes(q))
       : [...allParents];
     renderTable();
   }
@@ -420,35 +466,35 @@
     document.getElementById('editRel').value    = p.relationship || '모';
     document.getElementById('editPhone').value  = p.phone || '';
     document.getElementById('editPw').value     = '';
-    document.getElementById('editStatus').value = p.status || '활성';
+    document.getElementById('editStatus').value = p._status === 'active' ? 'active' : (p._status === 'inactive' ? 'inactive' : 'pending');
     document.getElementById('editMemo').value   = p.memo || '';
     document.getElementById('editModal').classList.add('open');
   }
 
   async function saveEdit() {
-    const id      = document.getElementById('editId').value;
-    const newName = document.getElementById('editName').value.trim();
-    const newRel  = document.getElementById('editRel').value;
-    const newPhone= document.getElementById('editPhone').value.trim();
-    const newPw   = document.getElementById('editPw').value.trim();
-    const newSt   = document.getElementById('editStatus').value;
-    const newMemo = document.getElementById('editMemo').value.trim();
+    const id       = document.getElementById('editId').value;
+    const newName  = document.getElementById('editName').value.trim();
+    const newRel   = document.getElementById('editRel').value;
+    const newPhone = document.getElementById('editPhone').value.trim();
+    const newPw    = document.getElementById('editPw').value.trim();
+    const newSt    = document.getElementById('editStatus').value;
+    const newMemo  = document.getElementById('editMemo').value.trim();
 
     const patch = { parent_name: newName, relationship: newRel, phone: newPhone, status: newSt, memo: newMemo };
     if (newPw) patch.password = newPw;
 
     try {
-      await fetch(`/tables/${TABLE_PARENTS}/${id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(patch),
-      });
+      await patchParentWithFallback(id, [patch]);
       const idx = allParents.findIndex(p => p.id === id);
-      if (idx >= 0) allParents[idx] = { ...allParents[idx], ...patch };
+      if (idx >= 0) allParents[idx] = normalizeParentRecord({ ...allParents[idx], ...patch });
       filtered = [...allParents];
-      renderSummary(); renderTable();
+      renderSummary();
+      renderTable();
       closeModal();
       showToast('✅ 저장되었습니다!');
-    } catch(e) { showToast('⚠️ 저장 실패'); }
+    } catch(e) {
+      showToast('⚠️ 저장 실패: ' + e.message);
+    }
   }
 
   function closeModal() { document.getElementById('editModal').classList.remove('open'); }
@@ -458,6 +504,7 @@
     setTimeout(() => el.classList.remove('show'), 2500);
   }
   </script>
+
 
   <!-- 모바일 하단 네비게이션 -->
   <nav class="mobile-nav mobile-nav--admin" id="mobileNav">
@@ -471,5 +518,6 @@
   </nav>
   <div class="sidebar-dim" id="sidebarDim"></div>
   <!-- admin-common.js는 위의 인라인 스크립트 앞에서 로드됨 -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
