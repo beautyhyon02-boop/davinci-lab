@@ -1,898 +1,1210 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>학생 관리 – 다빈치랩</title>
-  <link rel="manifest" href="../admin-manifest.json" />
-  <meta name="theme-color" content="#163A33" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="DVL관리자" />
-  <link rel="apple-touch-icon" href="../images/icon-180.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../images/icon-192.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="../css/admin.css" />
-  <link rel="stylesheet" href="../css/students.css" />
-  <link rel="stylesheet" href="../css/mobile.css" />
-</head>
-<body class="admin-body">
+/* =============================================
+   다빈치랩 – 학생 관리 JavaScript v4
+   완전 DB 연동 / 하드코딩 데이터 제거
+   ============================================= */
 
-  <!-- ===== SIDEBAR ===== -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <a href="../index.html" class="sidebar-logo">
-        <span class="sidebar-logo-icon">◈</span>
-        <span class="sidebar-logo-text">DaVinci LaB</span>
-      </a>
-      <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
-    </div>
-    <nav class="sidebar-nav">
-      <div class="nav-section">
-        <span class="nav-section-label">메인</span>
-        <a href="dashboard.html" class="nav-item" data-page="dashboard">
-          <i class="fas fa-th-large"></i><span>대시보드</span>
-        </a>
-      </div>
-      <div class="nav-section">
-        <span class="nav-section-label">학생 관리</span>
-        <a href="students.html" class="nav-item active" data-page="students">
-          <i class="fas fa-user-graduate"></i><span>학생 관리</span>
-        </a>
-        <a href="student-courses.html" class="nav-item">
-  <i class="fas fa-book-open"></i><span>학생 강좌 관리</span>
-</a>
-        <a href="attendance.html" class="nav-item" data-page="attendance">
-          <i class="fas fa-clipboard-list"></i><span>출결 관리</span>
-        </a>
-       <a href="plan.html" class="nav-item active"><i class="fas fa-tasks"></i><span>학습 플랜 관리</span></a>
-      <a href="student-courses.html" class="nav-item" data-page="student-courses"><i class="fas fa-book-open"></i><span>학생 강좌 관리</span></a>
-      <a href="daily.html" class="nav-item" data-page="daily"><i class="fas fa-pen-alt"></i><span>일일 학습 기록</span></a>
-      </div>
-      <div class="nav-section">
-        <span class="nav-section-label">컨설팅</span>
-        <a href="assessment.html" class="nav-item" data-page="assessment">
-          <i class="fas fa-clipboard-check"></i><span>수행평가 관리</span>
-          <span class="nav-badge nav-badge--alert">3</span>
-        </a>
-        <a href="grades.html" class="nav-item" data-page="grades">
-          <i class="fas fa-chart-line"></i><span>성적 조회</span>
-        </a>
-        <a href="record.html" class="nav-item" data-page="record">
-          <i class="fas fa-book-open"></i><span>학생부 열람</span>
-        </a>
-        <a href="report.html" class="nav-item" data-page="report">
-          <i class="fas fa-file-alt"></i><span>심화탐구보고서</span>
-        </a>
-        <a href="exam.html" class="nav-item" data-page="exam">
-          <i class="fas fa-calendar-alt"></i><span>시험 플래너</span>
-        </a>
-      </div>
-      <div class="nav-section">
-        <span class="nav-section-label">학부모 / 공지</span>
-        <a href="parents.html" class="nav-item" data-page="parents">
-          <i class="fas fa-users"></i><span>학부모 관리</span>
-        </a>
-        <a href="notice.html" class="nav-item" data-page="notice">
-          <i class="fas fa-bullhorn"></i><span>공지 / 알림</span>
-        </a>
-        <a href="consult.html" class="nav-item" data-page="consult">
-          <i class="fas fa-comments"></i><span>상담 관리</span>
-        </a>
-      </div>
-      <div class="nav-section">
-        <span class="nav-section-label">시스템</span>
-        <a href="archive.html" class="nav-item" data-page="archive">
-          <i class="fas fa-archive"></i><span>졸업생 / 아카이브</span>
-        </a>
-        <a href="admins.html" class="nav-item" data-page="admins">
-          <i class="fas fa-user-shield"></i><span>관리자 관리</span>
-        </a>
-      </div>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-user-avatar">박</div>
-        <div class="sidebar-user-info">
-          <span class="sidebar-user-name" id="sidebarAdminName">박소현 대표</span>
-          <span class="sidebar-user-role" id="sidebarAdminRole">총괄 관리자</span>
-        </div>
-        <a href="../login.html" class="sidebar-logout" title="로그아웃">
-          <i class="fas fa-sign-out-alt"></i>
-        </a>
-      </div>
-    </div>
-  </aside>
+/* ★ Genspark DB API — 루트 기준 상대경로 사용 */
+const _API = '/tables';
 
-  <!-- ===== MAIN ===== -->
-  <div class="admin-main" id="adminMain">
+const TABLE_PROFILES = 'student_profiles';
 
-    <header class="admin-topbar">
-      <div class="topbar-left">
-        <button class="topbar-menu-btn" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-        <div class="topbar-breadcrumb">
-          <span>다빈치랩</span><i class="fas fa-chevron-right"></i>
-          <span class="active">학생 관리</span>
-        </div>
-      </div>
-      <div class="topbar-right">
-        <div class="topbar-search">
-          <i class="fas fa-search"></i>
-          <input type="text" placeholder="이름·학교 검색..." id="globalSearch" />
-        </div>
-        <button class="topbar-icon-btn" id="notifBtn" title="알림">
-          <i class="fas fa-bell"></i><span class="notif-dot"></span>
-        </button>
-        <button class="topbar-icon-btn" title="홈페이지">
-          <a href="../index.html" style="color:inherit"><i class="fas fa-home"></i></a>
-        </button>
-      </div>
-    </header>
+const attendLabels = { attend:'등원', absent:'미등원', late:'지각', '-':'-' };
+/* 단계 구분 폐지 — consulting(true/false) 만 사용 */
 
-    <div class="admin-content">
+let allStudents    = [];  // API에서 로드한 전체 데이터
+let currentFilter  = 'active';
+let currentStudent = null;
+let selectedIds    = new Set();
 
-      <!-- ★ 디버그 배너 (문제 해결 후 삭제) -->
-      <div id="sessionDebugBanner" style="display:none;background:#fef3c7;border:1.5px solid #f59e0b;border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:12.5px;color:#92400e;">
-        <strong>⚠️ 세션 정보:</strong> <span id="sessionDebugText">확인 중...</span>
-        <button onclick="document.getElementById('sessionDebugBanner').style.display='none'" style="float:right;border:none;background:none;cursor:pointer;color:#92400e;font-size:14px;">✕</button>
-      </div>
-      <script>
-      (function() {
-        const raw = localStorage.getItem('dvl_admin_session') || sessionStorage.getItem('dvl_user');
-        const banner = document.getElementById('sessionDebugBanner');
-        const text = document.getElementById('sessionDebugText');
-        if (!raw) {
-          banner.style.display = '';
-          banner.style.background = '#fee2e2';
-          banner.style.borderColor = '#ef4444';
-          banner.style.color = '#b91c1c';
-          text.textContent = '❌ 세션 없음 — 로그인 후 다시 시도하세요. localStorage: ' + Object.keys(localStorage).join(', ');
-        } else {
-          try {
-            const s = JSON.parse(raw);
-            if (s && s.id && (s.role === 'admin' || s.role === 'master')) {
-              // 정상 — 배너 숨김 (5초 후 자동)
-              text.textContent = '✅ 세션 정상: ' + s.name + ' (' + s.role + ')';
-              banner.style.display = '';
-              setTimeout(() => { banner.style.display = 'none'; }, 5000);
-            } else {
-              banner.style.display = '';
-              text.textContent = '⚠️ 세션 역할 오류: ' + JSON.stringify(s);
-            }
-          } catch(e) {
-            banner.style.display = '';
-            text.textContent = '⚠️ 세션 파싱 오류: ' + e.message;
-          }
-        }
-      })();
-      </script>
+const TABLE_PARENTS  = 'parent_profiles';
+let parentPendingQuick = [];
 
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>\"']/g, ch => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[ch]));
+}
 
-      <!-- Page Title -->
-      <div class="page-title-row">
-        <div>
-          <h1 class="page-title">학생 관리</h1>
-          <p class="page-subtitle">전체 활성 학생 현황을 확인하고 관리합니다</p>
-        </div>
-        <button class="btn-add" id="addStudentBtn">
-          <i class="fas fa-user-plus"></i> 학생 추가
-        </button>
-      </div>
+function isSchemaColumnError(msg='') {
+  return /schema cache|Could not find the .* column|column .* does not exist|operator does not exist/i.test(String(msg));
+}
 
-      <!-- Summary Cards -->
-      <div class="summary-bar" id="summaryBar">
-        <div class="sum-card sum-all active-sum" data-filter="active">
-          <span class="sum-num" id="sumAll">0</span>
-          <span class="sum-label">전체 활성</span>
-        </div>
-        <div class="sum-card" data-filter="consulting">
-          <span class="sum-num" id="sum1">0</span>
-          <span class="sum-label">컨설팅</span>
-        </div>
-        <div class="sum-card" data-filter="general">
-          <span class="sum-num" id="sum2">0</span>
-          <span class="sum-label">일반</span>
-        </div>
-        <div class="sum-card sum-break" data-filter="break">
-          <span class="sum-num" id="sumBreak">0</span>
-          <span class="sum-label">휴원</span>
-        </div>
-        <div class="sum-card" data-filter="pending" style="border:2px solid #f59e0b;background:#fffbeb;">
-          <span class="sum-num" id="sumPending" style="color:#d97706;">0</span>
-          <span class="sum-label" style="color:#92400e;">승인 대기</span>
-        </div>
-      </div>
-
-      <!-- Filters Row -->
-      <div class="filter-row">
-        <div class="filter-left">
-          <select class="filter-select" id="filterGrade">
-            <option value="">학년 전체</option>
-            <option value="1">고1</option>
-            <option value="2">고2</option>
-            <option value="3">고3</option>
-          </select>
-          <select class="filter-select" id="filterConsult">
-            <option value="">컨설팅 여부</option>
-            <option value="yes">컨설팅 포함</option>
-            <option value="no">일반</option>
-          </select>
-          <select class="filter-select" id="filterAttend">
-            <option value="">출결 상태</option>
-            <option value="attend">등원</option>
-            <option value="absent">미등원</option>
-            <option value="late">지각</option>
-          </select>
-        </div>
-        <div class="filter-right">
-          <span class="result-count" id="resultCount">0명 표시 중</span>
-          <button class="btn-reset" id="filterReset"><i class="fas fa-undo"></i> 초기화</button>
-        </div>
-      </div>
-
-
-      <div id="approvalQuickPanel" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:0 0 16px 0;">
-        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <div>
-              <div style="font-size:13px;font-weight:800;color:#163A33;display:flex;align-items:center;gap:7px;">
-                <i class="fas fa-user-check" style="color:#22c55e;"></i> 학생 가입 승인
-              </div>
-              <div style="font-size:12px;color:#64748b;margin-top:4px;">학생 승인은 아래 표의 승인 대기 섹션에서 바로 처리됩니다.</div>
-            </div>
-            <span id="studentPendingQuickCount" style="background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;white-space:nowrap;">0명 대기</span>
-          </div>
-        </div>
-        <div id="parentPendingQuickPanel" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:14px 16px;display:none;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <div>
-              <div style="font-size:13px;font-weight:800;color:#92400e;display:flex;align-items:center;gap:7px;">
-                <i class="fas fa-users" style="color:#f59e0b;"></i> 학부모 가입 승인
-              </div>
-              <div style="font-size:12px;color:#92400e;margin-top:4px;">여기서 빠르게 승인하거나, 학부모 관리 페이지로 이동해 전체 목록을 확인할 수 있습니다.</div>
-            </div>
-            <span id="parentPendingQuickCount" style="background:#fff;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;white-space:nowrap;">0명 대기</span>
-          </div>
-          <div id="parentPendingQuickList" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;"></div>
-          <div style="margin-top:12px;">
-            <a id="parentApprovalNavLink" href="parents.html" style="display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:10px;background:#fff;color:#92400e;border:1px solid #fcd34d;font-size:12.5px;font-weight:700;text-decoration:none;">
-              <i class="fas fa-arrow-right"></i> 학부모 관리 전체 열기
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Student Table -->
-      <div class="dash-panel full-panel">
-        <div class="panel-body" style="padding:0;">
-          <div class="table-wrap">
-            <table class="admin-table" id="studentTable">
-              <thead>
-                <tr>
-                  <th><input type="checkbox" id="checkAll" /></th>
-                  <th>이름</th>
-                  <th>학교 / 학년</th>
-                  <th>구분</th>
-                  <th>오늘 출결</th>
-                  <th>학습 플랜</th>
-                  <th>수행평가</th>
-                  <th>담당 관리자</th>
-                  <th>상태</th>
-                  <th>액션</th>
-                </tr>
-              </thead>
-              <tbody id="studentTbody"></tbody>
-            </table>
-          </div>
-          <!-- Empty state -->
-          <div class="empty-state" id="emptyState" style="display:none;">
-            <i class="fas fa-user-graduate"></i>
-            <p>조건에 맞는 학생이 없습니다.</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ═══ 관리자 계정 관리 (마스터 전용) ═══ -->
-      <div id="adminAccountSection" style="display:none;margin-top:28px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div>
-            <h2 style="font-size:17px;font-weight:700;color:#163A33;display:flex;align-items:center;gap:8px;">
-              <i class="fas fa-user-shield" style="color:#34d399;"></i> 관리자 계정 관리
-            </h2>
-            <p style="font-size:12.5px;color:#6b7280;margin-top:3px;">마스터 전용 메뉴입니다. 가입 신청 승인 및 계정 관리를 할 수 있습니다.</p>
-          </div>
-          <span id="adminPendingBadge" style="display:none;background:#fef3c7;color:#92400e;border:1.5px solid #fde68a;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">
-            <i class="fas fa-clock" style="margin-right:5px;"></i>승인 대기 <span id="pendingAdminCount">0</span>명
-          </span>
-        </div>
-
-        <!-- 탭 -->
-        <div style="display:flex;gap:6px;margin-bottom:14px;border-bottom:2px solid #e5e7eb;padding-bottom:0;">
-          <button class="adm-tab-btn active" onclick="switchAdmTab('pending',this)"
-            style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">
-            <i class="fas fa-clock" style="margin-right:5px;color:#f59e0b;"></i>승인 대기
-          </button>
-          <button class="adm-tab-btn" onclick="switchAdmTab('active',this)"
-            style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">
-            <i class="fas fa-check-circle" style="margin-right:5px;color:#34d399;"></i>활성 관리자
-          </button>
-          <button class="adm-tab-btn" onclick="switchAdmTab('inactive',this)"
-            style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">
-            <i class="fas fa-ban" style="margin-right:5px;color:#ef4444;"></i>비활성
-          </button>
-        </div>
-
-        <!-- 대기 목록 -->
-        <div id="admTabPending">
-          <div id="adminPendingList" style="display:flex;flex-direction:column;gap:10px;"></div>
-        </div>
-        <!-- 활성 목록 -->
-        <div id="admTabActive" style="display:none;">
-          <div id="adminActiveList" style="display:flex;flex-direction:column;gap:10px;"></div>
-        </div>
-        <!-- 비활성 목록 -->
-        <div id="admTabInactive" style="display:none;">
-          <div id="adminInactiveList" style="display:flex;flex-direction:column;gap:10px;"></div>
-        </div>
-      </div>
-
-      <!-- 아카이브 섹션 토글 버튼 -->
-      <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
-        <button onclick="toggleArchive()" id="archiveToggleBtn" style="display:flex;align-items:center;gap:7px;padding:8px 16px;border-radius:9px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#64748b;font-size:13px;font-weight:600;cursor:pointer;">
-          <i class="fas fa-archive"></i> 졸업/비활성 학생 보기
-        </button>
-        <span id="archiveCountLabel" style="font-size:12.5px;color:#94a3b8;"></span>
-      </div>
-      <div id="archiveSection" style="display:none;margin-top:14px;">
-        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px 20px;">
-          <h4 style="font-size:14px;font-weight:700;color:#475569;margin-bottom:12px;"><i class="fas fa-graduation-cap" style="margin-right:7px;color:#a0aec0;"></i>졸업/비활성 학생 목록</h4>
-          <div id="archiveList"></div>
-        </div>
-      </div>
-
-      <!-- Bulk action bar -->
-      <div class="bulk-bar" id="bulkBar">
-        <span id="bulkCount">0명 선택됨</span>
-        <div class="bulk-actions">
-          <button class="bulk-btn" onclick="bulkAction('step')"><i class="fas fa-exchange-alt"></i> 단계 변경</button>
-          <button class="bulk-btn" onclick="bulkAction('notice')"><i class="fas fa-bullhorn"></i> 공지 발송</button>
-          <button class="bulk-btn bulk-danger" onclick="bulkAction('break')"><i class="fas fa-pause-circle"></i> 휴원 처리</button>
-        </div>
-      </div>
-
-    </div><!-- /admin-content -->
-  </div><!-- /admin-main -->
-
-  <!-- ===== 학생 상세 모달 ===== -->
-  <div class="modal-overlay" id="studentDetailModal">
-    <div class="modal modal-lg" id="studentDetailContent">
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <div class="modal-avatar" id="detailAvatar">김</div>
-          <div>
-            <h3 id="detailName">김지수</h3>
-            <p id="detailMeta" class="modal-meta"></p>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:12px;">
-          <button onclick="if(window._currentStudentId)adminLoginAsStudent(window._currentStudentId)"
-            style="background:#163A33;color:#fff;border:none;border-radius:8px;padding:7px 15px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap;"
-            onmouseover="this.style.background='#245A4E'" onmouseout="this.style.background='#163A33'"
-            title="이 학생의 대시보드를 새 탭으로 열기">
-            <i class="fas fa-user-circle"></i> 학생 화면 열기
-          </button>
-        </div>
-        <button class="modal-close" id="detailClose"><i class="fas fa-times"></i></button>
-      </div>
-
-      <!-- Detail Tabs -->
-      <div class="detail-tabs" id="detailTabs">
-        <button class="detail-tab active" data-tab="info">기본 정보</button>
-        <button class="detail-tab" data-tab="attend">출결 이력</button>
-        <button class="detail-tab" data-tab="plan">학습 플랜</button>
-        <button class="detail-tab" data-tab="assess">수행평가</button>
-        <button class="detail-tab" data-tab="memo">관리 메모</button>
-      </div>
-
-      <div class="modal-body detail-body">
-
-        <!-- Tab: 기본 정보 -->
-        <div class="tab-panel active" id="tab-info">
-          <div class="info-grid">
-            <div class="info-section">
-              <h4 class="info-section-title">학생 정보</h4>
-              <div class="info-rows" id="infoRows"></div>
-            </div>
-            <div class="info-section">
-              <h4 class="info-section-title">관리 설정</h4>
-              <div class="setting-rows" id="settingRows"></div>
-            </div>
-          </div>
-          <div class="info-section" style="margin-top:20px;">
-            <h4 class="info-section-title">수강 이력</h4>
-            <div class="history-pills" id="historyPills"></div>
-          </div>
-        </div>
-
-        <!-- Tab: 출결 이력 -->
-        <div class="tab-panel" id="tab-attend">
-          <div class="attend-stats" id="attendStats"></div>
-          <div class="attend-table-wrap">
-            <table class="admin-table" id="attendTable">
-              <thead>
-                <tr><th>날짜</th><th>등원</th><th>퇴원</th><th>상태</th><th>메모</th></tr>
-              </thead>
-              <tbody id="attendTbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Tab: 학습 플랜 -->
-        <div class="tab-panel" id="tab-plan">
-          <div class="plan-header-row">
-            <p class="plan-week-label" id="planWeekLabel">이번 주 학습 플랜</p>
-            <button class="btn-sm-green" id="editPlanBtn"><i class="fas fa-edit"></i> 플랜 수정</button>
-          </div>
-          <div class="plan-list" id="planList"></div>
-        </div>
-
-        <!-- Tab: 수행평가 -->
-        <div class="tab-panel" id="tab-assess">
-          <div class="assess-list" id="assessList"></div>
-        </div>
-
-        <!-- Tab: 관리 메모 -->
-        <div class="tab-panel" id="tab-memo">
-          <div class="memo-area">
-            <textarea id="memoText" rows="6" placeholder="학생에 대한 관리 메모를 입력하세요...&#10;(학부모에게 공유되지 않는 내부 메모입니다)"></textarea>
-            <button class="btn-sm-green" id="saveMemoBtn"><i class="fas fa-save"></i> 저장</button>
-          </div>
-          <div class="memo-history" id="memoHistory"></div>
-        </div>
-
-      </div><!-- /detail-body -->
-
-      <div class="modal-footer detail-footer">
-        <div class="detail-footer-left">
-          <button class="btn-step-change" id="stepChangeBtn"><i class="fas fa-exchange-alt"></i> 단계 변경</button>
-          <button class="btn-break" id="breakBtn"><i class="fas fa-pause-circle"></i> 휴원 처리</button>
-          <button class="btn-archive" id="archiveBtn" style="background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fas fa-graduation-cap"></i> 졸업/비활성화</button>
-          <button id="deleteStudentBtn" style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;border-radius:8px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            <i class="fas fa-trash-alt"></i> 학생 삭제
-          </button>
-        </div>
-        <div class="detail-footer-right">
-          <button class="btn-cancel" id="detailCancel">닫기</button>
-          <button id="viewDashboardBtn"
-            style="background:#0f766e;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s;"
-            onmouseover="this.style.background='#0d9488'" onmouseout="this.style.background='#0f766e'">
-            <i class="fas fa-external-link-alt"></i> 대시보드 새 탭으로 열기
-          </button>
-          <a class="btn-submit" href="attendance.html" style="text-decoration:none; display:inline-flex; align-items:center; gap:7px;">
-            <i class="fas fa-clipboard-list"></i> 출결 바로가기
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 학생 추가 모달 ===== -->
-  <div class="modal-overlay" id="addStudentModal">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>신규 학생 등록</h3>
-        <button class="modal-close" id="addStudentClose"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <div class="add-form-grid">
-          <div class="form-group">
-            <label>이름 <span class="required">*</span></label>
-            <input type="text" id="newName" placeholder="학생 이름" />
-          </div>
-          <div class="form-group">
-            <label>학교 <span class="required">*</span></label>
-            <input type="text" id="newSchool" placeholder="○○고등학교" />
-          </div>
-          <div class="form-group">
-            <label>학년 <span class="required">*</span></label>
-            <select id="newGrade">
-              <option value="">선택</option>
-              <optgroup label="고등학교">
-                <option value="고1">고1</option>
-                <option value="고2">고2</option>
-                <option value="고3">고3</option>
-              </optgroup>
-              <optgroup label="중학교">
-                <option value="중1">중1</option>
-                <option value="중2">중2</option>
-                <option value="중3">중3</option>
-              </optgroup>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>컨설팅 여부 <span class="required">*</span></label>
-            <select id="newStep">
-              <option value="gen">일반 수강</option>
-              <option value="con">컨설팅 포함</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>아이디 <span class="required">*</span></label>
-            <input type="text" id="newStudentId" placeholder="로그인 아이디 (영문+숫자)"
-              oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'')" />
-          </div>
-          <div class="form-group">
-            <label>임시 비밀번호 <span class="required">*</span></label>
-            <input type="text" id="newStudentPw" placeholder="임시 비밀번호 (8자 이상)" value="davinci1!" />
-          </div>
-          <div class="form-group">
-            <label>학부모 연락처</label>
-            <input type="text" id="newParentPhone" placeholder="010-0000-0000" />
-          </div>
-          <div class="form-group" style="grid-column:1/-1;">
-            <label>등록 메모</label>
-            <textarea id="newMemo" rows="2" placeholder="특이사항, 상담 내용 등"></textarea>
-          </div>
-        </div>
-        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-top:4px;font-size:12px;color:#166534;">
-          <i class="fas fa-info-circle"></i> 등록 후 학생에게 아이디와 임시 비밀번호를 전달하세요. 학생은 로그인 후 비밀번호를 변경할 수 있습니다.
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" id="addStudentCancel">취소</button>
-        <button class="btn-submit" id="addStudentSubmit">
-          <i class="fas fa-user-plus"></i> 등록하기
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 단계 변경 모달 -->
-  <div class="modal-overlay" id="stepModal">
-    <div class="modal modal-sm">
-      <div class="modal-header">
-        <h3>단계 변경</h3>
-        <button class="modal-close" id="stepModalClose"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <p class="step-modal-student" id="stepModalStudent"></p>
-        <div class="step-options" id="stepOptions">
-          <label class="step-option-item">
-            <input type="radio" name="newStep" value="gen" />
-            <span class="step-opt-content">
-              <strong>일반 수강</strong><span>컨설팅 미포함</span>
-            </span>
-          </label>
-          <label class="step-option-item">
-            <input type="radio" name="newStep" value="con" />
-            <span class="step-opt-content">
-              <strong>컨설팅 포함</strong><span>학생부 컨설팅</span>
-            </span>
-          </label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" id="stepModalCancel">취소</button>
-        <button class="btn-submit" id="stepModalSubmit"><i class="fas fa-check"></i> 변경 저장</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 가입 승인 모달 ===== -->
-  <div class="modal-overlay" id="approveModal">
-    <div class="modal-box" style="max-width:480px;width:92%;padding:32px 28px;border-radius:18px;background:#fff;position:relative;">
-      <button onclick="closeApproveModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#888;">
-        <i class="fas fa-times"></i>
-      </button>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);display:flex;align-items:center;justify-content:center;">
-          <i class="fas fa-user-check" style="color:#fff;font-size:18px;"></i>
-        </div>
-        <div>
-          <div style="font-size:17px;font-weight:700;color:#1a1a1a;" id="apv-name">학생명</div>
-          <div style="font-size:12px;color:#888;" id="apv-id">계정 ID</div>
-        </div>
-      </div>
-
-      <div style="background:#f8fafb;border-radius:12px;padding:18px;margin-bottom:18px;display:flex;flex-direction:column;gap:14px;">
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">학교명 <span style="color:#999;">(선택)</span></label>
-          <input id="apv-school" type="text" placeholder="예: ○○고등학교"
-            style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:14px;box-sizing:border-box;outline:none;transition:border-color .2s;"
-            onfocus="this.style.borderColor='#22c55e'" onblur="this.style.borderColor='#e2e8f0'" />
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px;">학년 <span style="color:#999;">(선택)</span></label>
-          <select id="apv-grade"
-            style="width:100%;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:14px;box-sizing:border-box;outline:none;background:#fff;">
-            <option value="">선택 안함</option>
-            <option value="고1">고1</option>
-            <option value="고2">고2</option>
-            <option value="고3">고3</option>
-            <option value="중1">중1</option>
-            <option value="중2">중2</option>
-            <option value="중3">중3</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:600;color:#111;display:block;margin-bottom:8px;">수강 단계 <span style="color:#ef4444;">*</span></label>
-          <select id="apv-stage"
-            style="width:100%;border:1.5px solid #22c55e;border-radius:8px;padding:10px 12px;font-size:14px;font-weight:600;box-sizing:border-box;outline:none;background:#fff;color:#16a34a;">
-            <option value="1단계">1단계 – 일반 수강</option>
-            <option value="2단계">2단계 – 일반 수강</option>
-            <option value="3단계">3단계 – 일반 수강</option>
-            <option value="3단계+컨설팅">3단계+컨설팅 포함</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="background:#fef3c7;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:12.5px;color:#92400e;line-height:1.5;">
-        <i class="fas fa-info-circle"></i>
-        승인 후 학생은 즉시 로그인이 가능합니다. 수강 단계는 이후에도 언제든 변경할 수 있습니다.
-      </div>
-
-      <div style="display:flex;gap:10px;">
-        <button id="apv-cancel-btn"
-          style="flex:1;padding:12px;border:1.5px solid #e2e8f0;background:#fff;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:#555;">
-          취소
-        </button>
-        <button id="apv-confirm-btn"
-          style="flex:2;padding:12px;border:none;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">
-          <i class="fas fa-check-circle"></i> 승인 완료
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script src="../js/dvl-session.js?v=20260430"></script>
-  <script src="../js/admin-common.js?v=20260430"></script>
-  <script src="../js/students.js?v=20260527a"></script>
-  <script>
-  /* ════════════════════════════════════════
-     관리자 계정 관리 (마스터 전용)
-  ════════════════════════════════════════ */
-  const TABLE_ADMIN_ACC = 'admin_accounts';
-  let ALL_ADMIN_ACCOUNTS = [];
-
-  /* ── 세션에서 현재 로그인 관리자 role 확인 (DVL_SESSION 통일) ── */
-  function getCurrentAdminRole() {
-    return window._dvlAdminSession?.role || '';
-  }
-  function getCurrentAdminId() {
-    return window._dvlAdminSession?.id || '';
-  }
-
-  /* ── 마스터만 섹션 표시 + 데이터 로드 ── */
-  async function initAdminAccountSection() {
-    const role = getCurrentAdminRole();
-    if (role !== 'master') return;
-    document.getElementById('adminAccountSection').style.display = '';
-    await loadAdminAccounts();
-  }
-
-  async function loadAdminAccounts() {
+async function patchRecordWithFallback(table, recordId, payloadCandidates) {
+  let lastError = null;
+  for (const payload of payloadCandidates) {
     try {
-      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}?limit=100`);
-      if (!res.ok) throw new Error();
+      const res = await fetch(`${_API}/${table}/${recordId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) return res;
+      const errText = await res.text();
+      const err = new Error(`서버 오류 (${res.status}): ${errText}`);
+      lastError = err;
+      if (isSchemaColumnError(errText)) continue;
+      throw err;
+    } catch (e) {
+      lastError = e;
+      if (isSchemaColumnError(e.message || e)) continue;
+      throw e;
+    }
+  }
+  throw lastError || new Error('PATCH 요청에 실패했습니다.');
+}
+
+function normalizeParentRecord(r) {
+  return {
+    id: r.id,
+    parent_id: r.parent_id || '',
+    parent_name: r.parent_name || r.name || '-',
+    phone: r.phone || '-',
+    relationship: r.relationship || '-',
+    child_name: r.child_name || '-',
+    child_ids: r.child_ids || r.child_id || '-',
+    status: r.status || 'pending',
+  };
+}
+
+function renderParentPendingQuick() {
+  const panel = document.getElementById('parentPendingQuickPanel');
+  const countEl = document.getElementById('parentPendingQuickCount');
+  const listEl = document.getElementById('parentPendingQuickList');
+  if (!panel || !countEl || !listEl) return;
+
+  const cnt = parentPendingQuick.length;
+  countEl.textContent = `${cnt}명 대기`;
+  panel.style.display = cnt ? '' : 'none';
+  if (!cnt) {
+    listEl.innerHTML = '';
+    return;
+  }
+
+  listEl.innerHTML = parentPendingQuick.slice(0, 4).map(p => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #fde68a;border-radius:12px;padding:10px 12px;">
+      <div style="min-width:0;">
+        <div style="font-size:13px;font-weight:700;color:#78350f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.parent_name)}</div>
+        <div style="font-size:11.5px;color:#a16207;margin-top:3px;">${escapeHtml(p.parent_id || '-')} · 자녀 ${escapeHtml(p.child_name || '-')} (${escapeHtml(p.child_ids || '-')})</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button onclick="approveParentQuick('${escapeHtml(p.id)}','${escapeHtml(p.parent_name)}')" style="border:none;background:#22c55e;color:#fff;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;">승인</button>
+        <button onclick="rejectParentQuick('${escapeHtml(p.id)}','${escapeHtml(p.parent_name)}')" style="border:1px solid #fca5a5;background:#fff;color:#dc2626;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;">거절</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadParentPendingQuickStats() {
+  const countEl = document.getElementById('parentPendingQuickCount');
+  if (countEl) countEl.textContent = '불러오는 중...';
+  try {
+    const res = await fetch(`${_API}/${TABLE_PARENTS}?limit=500`);
+    if (!res.ok) throw new Error(`API 오류 (${res.status})`);
+    const data = await res.json();
+    parentPendingQuick = (data.data || []).map(normalizeParentRecord).filter(p => p.status === 'pending');
+  } catch (e) {
+    console.warn('[parentsQuick] 로드 실패:', e);
+    parentPendingQuick = [];
+  }
+  renderParentPendingQuick();
+}
+
+async function approveParentQuick(recordId, name) {
+  if (!confirm(`'${name}' 학부모 가입을 승인하시겠습니까?`)) return;
+  try {
+    await patchRecordWithFallback(TABLE_PARENTS, recordId, [
+      { status: 'active', approval_status: 'approved', approved_at: new Date().toISOString(), is_active: true },
+      { status: 'active' }
+    ]);
+    showToast(`✅ ${name} 학부모 승인 완료!`);
+    await loadParentPendingQuickStats();
+  } catch (e) {
+    showToast('학부모 승인 처리 오류: ' + e.message, 'warn');
+  }
+}
+
+async function rejectParentQuick(recordId, name) {
+  if (!confirm(`'${name}' 학부모 가입 신청을 거절하시겠습니까?\n해당 계정이 삭제됩니다.`)) return;
+  try {
+    const res = await fetch(`${_API}/${TABLE_PARENTS}/${recordId}`, { method: 'DELETE' });
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`서버 오류 (${res.status}): ${errText}`);
+    }
+    showToast(`${name} 학부모 가입 신청이 거절되었습니다.`);
+    await loadParentPendingQuickStats();
+  } catch (e) {
+    showToast('학부모 거절 처리 오류: ' + e.message, 'warn');
+  }
+}
+
+
+/* ── 컨설팅 여부 판별 (stage 값이 무엇이든 '컨설팅' 포함이면 true) ── */
+function isConsulting(r) {
+  if (r.consulting === true) return true;
+  if (typeof r.consulting === 'string' && r.consulting === 'true') return true;
+  if ((r.stage || '').includes('컨설팅')) return true;
+  return false;
+}
+
+/* ═══════════════════════════════════════
+   API 연동
+═══════════════════════════════════════ */
+async function loadStudentsFromAPI() {
+  try {
+    showLoadingState();
+    const res = await fetch(`${_API}/${TABLE_PROFILES}?limit=500`);
+    if (!res.ok) throw new Error(`API 오류 (${res.status})`);
+    const data = await res.json();
+    const rows = data.data || [];
+    console.log('[students] API 응답:', rows.length, '건, pending:', rows.filter(r=>r.status==='pending').length);
+
+    /* API 데이터를 내부 포맷으로 변환 */
+    allStudents = rows.map(r => ({
+      _id:      r.id,           // REST API 레코드 ID
+      id:       r.student_id,
+      name:     r.name,
+      school:   r.school,
+      grade:    r.grade,
+      gradeNum: r.grade_num || 0,
+      classNum: r.class_num || 0,
+      studentNum: r.student_num || 0,
+      stage:    r.stage || '',
+      status:   r.status || 'pending',  // status 미설정은 승인 대기로 처리
+      memo:     r.memo || '',
+      consulting: isConsulting(r),
+      attend:   'attend',   // 출결은 별도 테이블 (추후 연동)
+      plan:     '-',
+      assess:   '-',
+      manager:  '박소현 대표',
+      joinDate: r.created_at ? new Date(r.created_at).toLocaleDateString('ko-KR') : '-',
+    }));
+
+    updateSummaryBar();
+    renderTable();
+  } catch (err) {
+    console.warn('[students] API 로드 실패, 폴백 데이터 사용:', err);
+    loadFallbackData();
+  }
+}
+
+function loadFallbackData() {
+  /* API 실패 시 빈 목록으로 시작 */
+  allStudents = [];
+  console.warn('[students] 폴백 데이터 사용 중 — API 연결 실패');
+  updateSummaryBar();
+  renderTable();
+}
+
+function showLoadingState() {
+  const tbody = document.getElementById('studentTbody');
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--text-300);">
+      <i class="fas fa-spinner fa-spin" style="font-size:24px;margin-bottom:12px;display:block;"></i>
+      학생 데이터를 불러오는 중...
+    </td></tr>`;
+  }
+}
+
+/* ═══════════════════════════════════════
+   필터링
+═══════════════════════════════════════ */
+function getPendingStudents() {
+  return allStudents.filter(s => s.status === 'pending');
+}
+function getActiveStudents() {
+  return allStudents.filter(s =>
+    s.status !== '휴원' && s.status !== '졸업' && s.status !== 'pending' &&
+    s.status !== 'inactive' && s.status !== 'graduated' && s.status !== '비활성' && s.status !== '퇴원'
+  );
+}
+function getBreakStudents() {
+  return allStudents.filter(s => s.status === '휴원' || s.status === 'inactive');
+}
+
+/* ═══════════════════════════════════════
+   가입 승인 모달
+═══════════════════════════════════════ */
+let _approveTarget = null; // { _id, id, name, school, grade, stage }
+
+function openApproveModal(dbId, studentId) {
+  // allStudents에서 해당 학생 찾기
+  const s = allStudents.find(x => x._id === dbId || x.id === studentId);
+  if (!s) { showToast('학생 정보를 찾을 수 없습니다.', 'warn'); return; }
+
+  _approveTarget = s;
+
+  // 모달 필드 채우기
+  const el = id => document.getElementById(id);
+  el('apv-name').textContent  = s.name;
+  el('apv-id').textContent    = s.id || '-';
+  el('apv-school').value      = s.school || '';
+  el('apv-grade').value       = s.grade  || '';
+  /* DB 스키마 options: 1단계|2단계|3단계|3단계+컨설팅 */
+  const curStage = s.stage || '1단계';
+  const apvEl = el('apv-stage');
+  if (apvEl) {
+    // 기존 stage 값이 있으면 그대로 선택, 없으면 기본값
+    apvEl.value = curStage;
+    if (!apvEl.value) apvEl.value = '1단계'; // 매칭 실패 시 기본값
+  }
+
+  el('approveModal').classList.add('open');
+}
+
+function closeApproveModal() {
+  document.getElementById('approveModal')?.classList.remove('open');
+  _approveTarget = null;
+}
+
+async function confirmApprove() {
+  if (!_approveTarget) return;
+
+  const school = document.getElementById('apv-school').value.trim();
+  const grade  = document.getElementById('apv-grade').value.trim();
+  const stage  = document.getElementById('apv-stage').value;
+
+  if (!stage) { showToast('수강 구분을 선택해주세요.', 'warn'); return; }
+
+  const btn = document.getElementById('apv-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 처리 중...';
+
+  try {
+    // DB 레코드 ID(_id) 확보 — 없으면 student_id로 재검색
+    let dbId = _approveTarget._id;
+    if (!dbId || dbId === 'null' || dbId === 'undefined') {
+      const res  = await fetch(`${_API}/${TABLE_PROFILES}?search=${encodeURIComponent(_approveTarget.id)}&limit=10`);
       const data = await res.json();
-      ALL_ADMIN_ACCOUNTS = data.data || [];
-    } catch(e) {
-      ALL_ADMIN_ACCOUNTS = [];
+      const found = (data.data || []).find(r =>
+        r.student_id === _approveTarget.id || r.id === _approveTarget.id
+      );
+      if (!found) throw new Error('학생 레코드를 찾을 수 없습니다.');
+      dbId = found.id;
     }
-    renderAdminAccountLists();
+
+        const primaryPayload = {
+      status:          'active',
+      approval_status: 'approved',
+      approved:        true,
+      approved_at:     new Date().toISOString(),
+      is_active:       true,
+      stage,
+      ...(school && { school }),
+      ...(grade  && { grade  }),
+    };
+    const fallbackPayload = {
+      status: 'active',
+      stage,
+      ...(school && { school }),
+      ...(grade  && { grade  }),
+    };
+
+    await patchRecordWithFallback(TABLE_PROFILES, dbId, [primaryPayload, fallbackPayload]);
+
+    const stageLabel = stage.includes('컨설팅') ? '컨설팅 포함' : '일반 수강';
+    showToast(`✅ ${_approveTarget.name} (${_approveTarget.id}) 승인 완료! (${stageLabel})`, 'ok');
+    closeApproveModal();
+    await Promise.allSettled([loadStudentsFromAPI(), loadParentPendingQuickStats()]);
+
+  } catch(e) {
+    showToast('승인 처리 오류: ' + e.message, 'warn');
+    console.error('[approveStudent]', e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check-circle"></i> 승인 완료';
   }
+}
 
-  /* ── 탭 전환 ── */
-  function switchAdmTab(tab, btn) {
-    document.querySelectorAll('.adm-tab-btn').forEach(b => {
-      b.style.color = '#6b7280';
-      b.style.borderBottomColor = 'transparent';
-    });
-    btn.style.color = '#163A33';
-    btn.style.borderBottomColor = '#163A33';
-    ['admTabPending','admTabActive','admTabInactive'].forEach(id => {
-      document.getElementById(id).style.display = 'none';
-    });
-    document.getElementById(`admTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = '';
+/* 가입 거절 */
+async function rejectStudent(dbId, studentId) {
+  const s = allStudents.find(x => x._id === dbId || x.id === studentId);
+  const name = s ? s.name : studentId;
+  if (!confirm(`'${name}' 가입 신청을 거절하시겠습니까?\n해당 계정이 삭제됩니다.`)) return;
+  try {
+    let targetId = dbId;
+    if (!targetId || targetId === 'null' || targetId === 'undefined') {
+      const res  = await fetch(`${_API}/${TABLE_PROFILES}?search=${encodeURIComponent(studentId)}&limit=10`);
+      const data = await res.json();
+      const found = (data.data || []).find(r => r.student_id === studentId || r.id === studentId);
+      if (!found) { showToast('학생 정보를 찾을 수 없습니다.', 'warn'); return; }
+      targetId = found.id;
+    }
+    await fetch(`${_API}/${TABLE_PROFILES}/${targetId}`, { method: 'DELETE' });
+    showToast(`${name} 가입 신청이 거절되었습니다.`, 'ok');
+    await Promise.allSettled([loadStudentsFromAPI(), loadParentPendingQuickStats()]);
+  } catch(e) {
+    showToast('처리 중 오류가 발생했습니다: ' + e.message, 'warn');
   }
+}
 
-  /* ── 목록 렌더링 ── */
-  function renderAdminAccountLists() {
-    const pending  = ALL_ADMIN_ACCOUNTS.filter(a => a.status === 'pending');
-    const active   = ALL_ADMIN_ACCOUNTS.filter(a => a.status === 'active');
-    const inactive = ALL_ADMIN_ACCOUNTS.filter(a => a.status === 'inactive');
+// 승인 모달 닫기 이벤트 + URL 파라미터 처리
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('apv-cancel-btn')?.addEventListener('click', closeApproveModal);
+  document.getElementById('apv-confirm-btn')?.addEventListener('click', confirmApprove);
+  document.getElementById('approveModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('approveModal')) closeApproveModal();
+  });
 
-    // 대기 배지
-    const badge = document.getElementById('adminPendingBadge');
-    const cntEl = document.getElementById('pendingAdminCount');
+  // URL ?filter=pending 처리: 대시보드 배너에서 넘어온 경우 pending 필터 자동 선택
+  const urlParams = new URLSearchParams(window.location.search);
+  const filterParam = urlParams.get('filter');
+  if (filterParam === 'pending') {
+    currentFilter = 'pending';
+    // pending 카드 활성화
+    document.querySelectorAll('.sum-card').forEach(c => c.classList.remove('active-sum'));
+    const pendingCard = document.querySelector('.sum-card[data-filter="pending"]');
+    if (pendingCard) pendingCard.classList.add('active-sum');
+    // 데이터 로드 후 자동으로 pending 섹션이 보임 (renderTable에서 항상 표시)
+  }
+});
+
+function filterStudents() {
+  const q      = document.getElementById('globalSearch')?.value.trim().toLowerCase() || '';
+  const grade  = document.getElementById('filterGrade')?.value  || '';
+
+  let list;
+  if      (currentFilter === 'break')   list = getBreakStudents();
+  else if (currentFilter === 'pending') list = [];  // pending은 renderTable 상단 섹션에서 별도 표시
+  else if (currentFilter === 'active')  list = getActiveStudents();
+  else if (currentFilter === 'consulting') list = getActiveStudents().filter(s => s.consulting);
+  else if (currentFilter === 'general')    list = getActiveStudents().filter(s => !s.consulting);
+  else list = getActiveStudents();
+
+  if (q)     list = list.filter(s => s.name.includes(q) || s.school.includes(q));
+  if (grade) list = list.filter(s => s.grade === grade || s.grade === '고'+grade);
+
+  return list;
+}
+
+/* ═══════════════════════════════════════
+   요약 바 업데이트
+═══════════════════════════════════════ */
+function updateSummaryBar() {
+  const active  = getActiveStudents();
+  const breaks  = getBreakStudents();
+  const pending = getPendingStudents();
+  const elAll     = document.getElementById('sumAll');
+  const el1       = document.getElementById('sum1');
+  const el2       = document.getElementById('sum2');
+  const el3       = document.getElementById('sum3');
+  const el3c      = document.getElementById('sum3c');
+  const elBreak   = document.getElementById('sumBreak');
+  const elPending = document.getElementById('sumPending');
+  if (elAll)     elAll.textContent     = active.length;
+  if (el1)       el1.textContent       = active.filter(s =>  s.consulting).length;  // 컨설팅
+  if (el2)       el2.textContent       = active.filter(s => !s.consulting).length;  // 일반
+  if (el3)       el3.style && (el3.closest('.sum-card') || el3).parentElement?.style && (el3.parentElement.style.display = 'none');
+  if (el3c)      el3c.style && (el3c.closest('.sum-card') || el3c).parentElement?.style && (el3c.parentElement.style.display = 'none');
+  if (elBreak)   elBreak.textContent   = breaks.length;
+  if (elPending) elPending.textContent = pending.length;
+  const studentPendingQuick = document.getElementById('studentPendingQuickCount');
+  if (studentPendingQuick) studentPendingQuick.textContent = `${pending.length}명 대기`; 
+
+  /* 승인 대기 카드 강조 */
+  const pendingCard = document.querySelector('.sum-card[data-filter="pending"]');
+  if (pendingCard) {
+    pendingCard.style.display = pending.length > 0 ? '' : '';
     if (pending.length > 0) {
-      badge.style.display = '';
-      cntEl.textContent = pending.length;
+      pendingCard.style.boxShadow = '0 0 0 2px #f59e0b';
     } else {
-      badge.style.display = 'none';
+      pendingCard.style.boxShadow = '';
     }
+  }
+}
 
-    renderAdmList('adminPendingList',  pending,  'pending');
-    renderAdmList('adminActiveList',   active,   'active');
-    renderAdmList('adminInactiveList', inactive, 'inactive');
+/* ═══════════════════════════════════════
+   테이블 렌더링
+═══════════════════════════════════════ */
+function renderTable() {
+  const list  = filterStudents();
+  const tbody = document.getElementById('studentTbody');
+  const empty = document.getElementById('emptyState');
+  const rc    = document.getElementById('resultCount');
+  if (rc) rc.textContent = `${list.length}명 표시 중`;
+
+  /* 가입 대기 학생 섹션 */
+  const pending = getPendingStudents();
+  let pendingHtml = '';
+  if (pending.length > 0) {
+    pendingHtml = `
+      <tr>
+        <td colspan="11" style="background:#fffbeb;padding:8px 14px;border-bottom:2px solid #f59e0b;">
+          <span style="font-size:12px;font-weight:700;color:#92400e;">
+            <i class="fas fa-user-clock"></i> 가입 승인 대기 (${pending.length}명)
+          </span>
+        </td>
+      </tr>
+      ${pending.map(s => `
+        <tr style="background:#fffbeb;" data-id="${s.id}">
+                    <td><input type="checkbox" class="row-check" data-id="${s.id}" ${selectedIds.has(s.id)?'checked':''}/></td>
+          <td><span style="color:#92400e;font-weight:700;">${s.name}</span><br><span style="font-size:11px;color:#b45309;">${s.id}</span></td>
+          <td>${s.school || '미입력'}</td>
+          <td>${s.grade || '미입력'}</td>
+          <td><span class="step-pill step-1">${s.stage || '미설정'}</span></td>
+          <td>–</td>
+          <td><span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">승인 대기</span></td>
+          <td>–</td>
+          <td>–</td>
+          <td>–</td>
+          <td>
+            <div class="tbl-action-btns">
+              <button class="tbl-btn tbl-btn-primary" style="background:#22c55e;border-color:#22c55e;white-space:nowrap;" onclick="openApproveModal('${s._id}','${s.id}')">
+                <i class="fas fa-user-check"></i> 승인
+              </button>
+              <button class="tbl-btn tbl-btn-outline" style="color:#ef4444;border-color:#ef4444;white-space:nowrap;" onclick="rejectStudent('${s._id}','${s.id}')">
+                <i class="fas fa-times"></i> 거절
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('')}
+    `;
   }
 
-  function renderAdmList(containerId, list, type) {
-    const el = document.getElementById(containerId);
-    if (!list.length) {
-      el.innerHTML = `<div style="text-align:center;padding:28px;color:#9ca3af;font-size:13.5px;">
-        <i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;"></i>
-        ${type === 'pending' ? '승인 대기 중인 신청이 없습니다.' :
-          type === 'active'  ? '활성 관리자가 없습니다.' : '비활성 계정이 없습니다.'}
-      </div>`;
+  if (!list.length && !pending.length) {
+    if (tbody) tbody.innerHTML = pendingHtml;
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  tbody.innerHTML = pendingHtml + list.map(s => `
+    <tr data-id="${s.id}">
+      <td><input type="checkbox" class="row-check" data-id="${s.id}" ${selectedIds.has(s.id)?'checked':''}/></td>
+      <td>
+        <span class="student-name" style="cursor:pointer;color:var(--green-700);font-weight:700;" onclick="adminLoginAsStudent('${s.id}')" title="클릭하면 학생 대시보드로 바로 이동합니다">${s.name}</span>
+        <span style="display:inline-block;margin-left:5px;font-size:10px;color:#94a3b8;vertical-align:middle;" title="대시보드 바로 열기"><i class="fas fa-external-link-alt"></i></span>
+      </td>
+      <td>${s.school}</td>
+      <td>${s.consulting
+        ? '<span class="step-pill step-con">재원 <em style="font-style:normal;font-weight:800;color:#7c3aed;">(컨)</em></span>'
+        : '<span class="step-pill step-gen">재원</span>'
+      }</td>
+      <td><span class="status-dot status-attend">등원</span></td>
+      <td>${s.plan}</td>
+      <td>${s.assess !== '-' ? `<span style="color:var(--red);font-weight:600;">${s.assess}</span>` : s.assess}</td>
+      <td>${s.manager}</td>
+            <td>${(s.status === '휴원' || s.status === 'inactive')
+        ? '<span style="background:#fef3c7;color:#92400e;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">휴원</span>'
+        : '<span style="background:rgba(34,197,94,.12);color:#16a34a;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;">활성</span>'
+      }</td>
+      <td>
+        <div class="tbl-action-btns">
+          <button class="tbl-btn tbl-btn-primary" onclick="openDetail('${s.id}')" title="학생 상세 정보">상세</button>
+          <button class="tbl-btn tbl-btn-outline" onclick="openStepModal('${s.id}')">단계변경</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('.row-check').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const id = e.target.dataset.id;
+      if (e.target.checked) selectedIds.add(id);
+      else selectedIds.delete(id);
+      updateBulkBar();
+    });
+  });
+}
+
+/* ═══════════════════════════════════════
+   요약 바 클릭
+═══════════════════════════════════════ */
+document.querySelectorAll('.sum-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.sum-card').forEach(c => c.classList.remove('active-sum'));
+    card.classList.add('active-sum');
+    currentFilter = card.dataset.filter;
+    selectedIds.clear();
+    updateBulkBar();
+    renderTable();
+  });
+});
+
+/* ═══════════════════════════════════════
+   필터
+═══════════════════════════════════════ */
+['filterGrade','filterConsult','filterAttend'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', renderTable);
+});
+
+document.getElementById('globalSearch')?.addEventListener('input', () => {
+  clearTimeout(window._searchT);
+  window._searchT = setTimeout(renderTable, 250);
+});
+
+document.getElementById('filterReset')?.addEventListener('click', () => {
+  ['filterGrade','filterConsult','filterAttend'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const gs = document.getElementById('globalSearch');
+  if (gs) gs.value = '';
+  renderTable();
+});
+
+/* ═══════════════════════════════════════
+   전체 체크박스
+═══════════════════════════════════════ */
+document.getElementById('checkAll')?.addEventListener('change', (e) => {
+  const list = filterStudents();
+  if (e.target.checked) list.forEach(s => selectedIds.add(s.id));
+  else selectedIds.clear();
+  renderTable();
+  updateBulkBar();
+});
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const cnt = document.getElementById('bulkCount');
+  if (selectedIds.size > 0) {
+    bar?.classList.add('show');
+    if (cnt) cnt.textContent = `${selectedIds.size}명 선택됨`;
+  } else {
+    bar?.classList.remove('show');
+  }
+}
+
+/* ═══════════════════════════════════════
+   Bulk actions
+═══════════════════════════════════════ */
+window.bulkAction = (type) => {
+  const labels = { step:'단계 변경', notice:'공지 발송', break:'휴원 처리' };
+  showToast(`💡 일괄 "${labels[type]}" 기능은 다음 업데이트에 추가됩니다.`, 'info');
+};
+
+/* ═══════════════════════════════════════
+   학생 상세 모달
+═══════════════════════════════════════ */
+window.openDetail = (id) => {
+  const s = allStudents.find(x => x.id === id);
+  if (!s) return;
+  currentStudent = s;
+  window._currentStudentId = s.id; // 모달 헤더 인라인 onclick에서 접근용
+
+  document.getElementById('detailAvatar').textContent = s.name[0];
+  document.getElementById('detailName').textContent   = s.name;
+  document.getElementById('detailMeta').textContent   = `${s.school}${s.consulting ? ' · 컨설팅 포함' : ''}`;  
+
+  document.getElementById('infoRows').innerHTML = [
+    { l:'계정 ID', v: s.id },
+    { l:'학교',    v: s.school },
+    { l:'학년',    v: s.grade || '-' },
+    { l:'등록일',  v: s.joinDate },
+    { l:'상태',    v: s.status },
+  ].map(r=>`<div class="info-row"><span class="info-row-label">${r.l}</span><span class="info-row-val">${r.v}</span></div>`).join('');
+
+  document.getElementById('settingRows').innerHTML = [
+    { l:'담당 관리자', v: s.manager },
+    { l:'컨설팅',     v: s.consulting ? '포함' : '미포함' },
+    { l:'계정 상태',  v: s.status === '휴원' ? '휴원' : '활성' },
+    { l:'학생부 입력', v: s.consulting ? '활성' : '일반' },
+    { l:'학부모 공유', v: '활성' },
+  ].map(r=>`<div class="info-row"><span class="info-row-label">${r.l}</span><span class="info-row-val">${r.v}</span></div>`).join('');
+
+  document.getElementById('historyPills').innerHTML = [
+    `<span class="history-pill"><i class="fas fa-check" style="color:var(--mint-400)"></i> 재원 중</span>`,
+    s.consulting ? `<span class="history-pill"><i class="fas fa-star" style="color:var(--blue)"></i> 학생부 컨설팅</span>` : '',
+    `<span class="history-pill"><i class="fas fa-calendar" style="color:var(--text-300)"></i> 등록 ${s.joinDate}</span>`,
+    `<span class="history-pill" onclick="viewStudentRecord('${s.id}')" style="cursor:pointer;background:var(--mint-50);color:var(--mint-700);border-color:var(--mint-300);">
+      <i class="fas fa-book-open" style="color:var(--mint-500)"></i> 학생부 보기
+    </span>`,
+  ].filter(Boolean).join('');
+
+  // 출결 탭 — 실제 DB 조회
+  document.getElementById('attendStats').innerHTML = `
+    <div class="att-stat-card"><div class="att-stat-num" id="detailAttCount">–</div><div class="att-stat-label">이번 달 등원</div></div>
+    <div class="att-stat-card"><div class="att-stat-num" id="detailLateCount">–</div><div class="att-stat-label">지각</div></div>
+    <div class="att-stat-card"><div class="att-stat-num" id="detailAbsentCount">–</div><div class="att-stat-label">결석</div></div>
+    <div class="att-stat-card"><div class="att-stat-num" id="detailAttRate" style="color:var(--mint-400)">–</div><div class="att-stat-label">출석률</div></div>
+  `;
+  document.getElementById('attendTbody').innerHTML =
+    '<tr><td colspan="5" style="text-align:center;color:var(--text-300);padding:20px;">불러오는 중...</td></tr>';
+
+  // 비동기로 출결 데이터 조회
+  (async () => {
+    try {
+      const thisMonth = new Date().toISOString().slice(0,7); // YYYY-MM
+      const res  = await fetch(`${_API}/attendance?limit=100&search=${s.id}`);
+      const data = await res.json();
+      const rows = (data.data || []).filter(r => r.student_id === s.id);
+      const monthly = rows.filter(r => (r.att_date||'').startsWith(thisMonth));
+
+      const attend = monthly.filter(r => r.status === 'attend' || r.status === '등원').length;
+      const late   = monthly.filter(r => r.status === 'late'   || r.status === '지각').length;
+      const absent = monthly.filter(r => r.status === 'absent' || r.status === '결석').length;
+      const total  = attend + late + absent;
+      const rate   = total > 0 ? Math.round((attend + late) / total * 100) : 0;
+
+      const elAtt    = document.getElementById('detailAttCount');
+      const elLate   = document.getElementById('detailLateCount');
+      const elAbsent = document.getElementById('detailAbsentCount');
+      const elRate   = document.getElementById('detailAttRate');
+      if (elAtt)    elAtt.textContent    = attend;
+      if (elLate)   elLate.textContent   = late;
+      if (elAbsent) elAbsent.textContent = absent;
+      if (elRate)   elRate.textContent   = total > 0 ? rate + '%' : '–';
+
+      const tbody = document.getElementById('attendTbody');
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-300);padding:20px;">출결 기록이 없습니다.</td></tr>';
+      } else {
+        const sorted = [...rows].sort((a,b) => (b.att_date||'').localeCompare(a.att_date||'')).slice(0,20);
+        tbody.innerHTML = sorted.map(a => `<tr>
+          <td>${a.att_date||'-'}</td>
+          <td>${a.in_time||'-'}</td>
+          <td>${a.out_time||'-'}</td>
+          <td><span class="status-dot status-${a.status}">${attendLabels[a.status]||a.status||'-'}</span></td>
+          <td>${a.memo||'-'}</td>
+        </tr>`).join('');
+      }
+    } catch(e) {
+      document.getElementById('attendTbody').innerHTML =
+        '<tr><td colspan="5" style="text-align:center;color:var(--text-300);padding:20px;">출결 데이터를 불러올 수 없습니다.</td></tr>';
+    }
+  })();
+
+  // 학습 플랜 탭
+  document.getElementById('planList').innerHTML = `
+    <p style="color:var(--text-300);font-size:14px;padding:12px;">
+      학습 플랜은 학생별 페이지에서 확인하세요.
+    </p>`;
+
+  // 수행평가 탭
+  document.getElementById('assessList').innerHTML = `
+    <p style="color:var(--text-300);font-size:14px;padding:12px;">
+      등록된 수행평가가 없습니다.
+    </p>`;
+
+  // 메모 탭
+  document.getElementById('memoText').value = s.memo || '';
+  document.getElementById('memoHistory').innerHTML = s.memo ? `
+    <div class="memo-entry">
+      <div class="memo-entry-date">최근 메모</div>
+      <div class="memo-entry-text">${s.memo}</div>
+    </div>
+  ` : '<p style="color:var(--text-300);font-size:13px;padding:8px;">저장된 메모가 없습니다.</p>';
+
+  // Detail 탭 초기화
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.detail-tab[data-tab="info"]')?.classList.add('active');
+  document.getElementById('tab-info')?.classList.add('active');
+
+  document.getElementById('studentDetailModal').classList.add('open');
+};
+
+/* ─ 학생부 보기 (관리자용) ─ */
+window.viewStudentRecord = (studentId) => {
+  sessionStorage.setItem('admin_viewing_student', studentId);
+  window.open(`record.html?student=${studentId}`, '_blank');
+};
+
+/* ═══════════════════════════════════════
+   관리자 → 학생 대시보드 대리 열람
+   : DB에서 학생 비밀번호를 조회해 세션 생성 후
+     student/dashboard.html을 새 탭으로 오픈
+═══════════════════════════════════════ */
+window.adminLoginAsStudent = async (studentId) => {
+  const s = allStudents.find(x => x.id === studentId);
+  if (!s) return;
+
+  // 로딩 표시
+  showToast('🔄 학생 대시보드 불러오는 중...', 'info');
+
+  try {
+    /* DB에서 비밀번호 포함 전체 프로필 조회 */
+    const res  = await fetch(`${_API}/${TABLE_PROFILES}?limit=500`);
+    const data = await res.json();
+    const profile = (data.data || []).find(r => r.student_id === studentId);
+
+    if (!profile) {
+      showToast('⚠️ 학생 정보를 찾을 수 없습니다.', 'error');
       return;
     }
-    el.innerHTML = list.map(a => {
-      const isMaster = a.role === 'master';
-      const lastLogin = a.last_login ? new Date(a.last_login).toLocaleString('ko-KR') : '없음';
-      const approvedAt = a.approved_at ? new Date(a.approved_at).toLocaleDateString('ko-KR') : '–';
 
-      const actionBtns = isMaster ? `
-        <span style="font-size:11.5px;color:#163A33;font-weight:700;padding:5px 12px;background:#e8f5f0;border-radius:20px;">
-          <i class="fas fa-crown" style="margin-right:4px;color:#f59e0b;"></i>마스터
-        </span>` :
-        type === 'pending' ? `
-        <button onclick="approveAdmin('${a.id}')"
-          style="padding:6px 14px;border:none;border-radius:8px;background:#059669;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;margin-right:6px;">
-          <i class="fas fa-check" style="margin-right:4px;"></i>승인
-        </button>
-        <button onclick="rejectAdmin('${a.id}')"
-          style="padding:6px 14px;border:1.5px solid #ef4444;border-radius:8px;background:#fff;color:#ef4444;font-size:12.5px;font-weight:700;cursor:pointer;">
-          <i class="fas fa-times" style="margin-right:4px;"></i>거절
-        </button>` :
-        type === 'active' ? `
-        <button onclick="deactivateAdmin('${a.id}')"
-          style="padding:6px 14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;font-size:12.5px;font-weight:600;cursor:pointer;">
-          <i class="fas fa-ban" style="margin-right:4px;"></i>비활성화
-        </button>` :
-        `<button onclick="reactivateAdmin('${a.id}')"
-          style="padding:6px 14px;border:none;border-radius:8px;background:#163A33;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;">
-          <i class="fas fa-redo" style="margin-right:4px;"></i>재활성화
-        </button>`;
+    /* 학생 세션 객체 생성 */
+    const studentSession = {
+      id:       profile.student_id,
+      name:     profile.name,
+      role:     'student',
+      school:   profile.school   || '',
+      grade:    profile.grade    || '',
+      gradeNum: profile.grade_num || 0,
+      stage:    profile.stage    || '',
+      child:    '',
+      childName:'',
+    };
+    const sessionJson = JSON.stringify(studentSession);
 
-      return `
-      <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:14px;">
-          <div style="width:42px;height:42px;border-radius:50%;background:${isMaster ? '#163A33' : '#e8f5f0'};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:${isMaster ? '#34d399' : '#163A33'};flex-shrink:0;">
-            ${(a.name||'?')[0]}
-          </div>
-          <div>
-            <div style="font-size:14px;font-weight:700;color:#111827;">${a.name || '–'}
-              <span style="font-size:11.5px;color:#6b7280;font-weight:400;margin-left:6px;">@${a.admin_id}</span>
-            </div>
-            <div style="font-size:12px;color:#6b7280;margin-top:2px;">
-              ${a.title || '직책 없음'}
-              ${a.phone ? ` · ${a.phone}` : ''}
-            </div>
-            <div style="font-size:11.5px;color:#9ca3af;margin-top:3px;">
-              ${type === 'pending'
-                ? `<i class="fas fa-clock" style="color:#f59e0b;margin-right:3px;"></i>신청일: ${a.created_at ? new Date(a.created_at).toLocaleDateString('ko-KR') : '–'}`
-                : type === 'active'
-                ? `<i class="fas fa-check" style="color:#34d399;margin-right:3px;"></i>승인일: ${approvedAt} · 최근 로그인: ${lastLogin}`
-                : `<i class="fas fa-ban" style="color:#ef4444;margin-right:3px;"></i>비활성 계정`}
-              ${a.memo ? ` · <em>${a.memo}</em>` : ''}
-            </div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          ${actionBtns}
-        </div>
-      </div>`;
-    }).join('');
+    /* 관리자가 대리 열람 중임을 표시 — 기존 admin 세션은 보존 */
+    sessionStorage.setItem('dvl_admin_proxy_view', 'true');
+    sessionStorage.setItem('dvl_admin_proxy_name', window._dvlAdminSession?.name || '관리자');
+
+    /* 학생 세션 저장 (새 탭에서 읽을 수 있도록 localStorage 사용) */
+    localStorage.setItem('dvl_student_session', sessionJson);
+    localStorage.setItem('dvl_admin_proxy_view', 'true');
+    localStorage.setItem('dvl_admin_proxy_name', window._dvlAdminSession?.name || '관리자');
+
+    /* 새 탭으로 학생 대시보드 오픈 */
+    window.open('../student/dashboard.html', '_blank');
+
+    showToast(`✅ ${s.name} 학생 대시보드를 새 탭으로 열었습니다.`, 'success');
+  } catch(e) {
+    console.error('[adminLoginAsStudent] 오류:', e);
+    showToast('⚠️ 대시보드를 여는 중 오류가 발생했습니다.', 'error');
   }
+};
 
-  /* ── 승인 ── */
-  async function approveAdmin(recordId) {
-    if (!confirm('이 관리자 신청을 승인하시겠습니까?')) return;
-    const masterId = getCurrentAdminId();
-    try {
-      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          status: 'active',
-          approved_by: masterId,
-          approved_at: new Date().toISOString()
-        })
-      });
-      if (!res.ok) throw new Error();
-      await loadAdminAccounts();
-      showAdmToast('✅ 관리자 계정이 승인되었습니다.');
-    } catch(e) {
-      alert('승인 처리 중 오류가 발생했습니다.');
-    }
-  }
+/* ═══════════════════════════════════════
+   상세 모달 탭 전환
+═══════════════════════════════════════ */
+document.getElementById('detailTabs')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.detail-tab');
+  if (!btn) return;
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`tab-${btn.dataset.tab}`)?.classList.add('active');
+});
 
-  /* ── 거절 (삭제) ── */
-  async function rejectAdmin(recordId) {
-    if (!confirm('이 가입 신청을 거절하고 삭제하시겠습니까?')) return;
-    try {
-      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, { method: 'DELETE' });
-      if (res.ok || res.status === 204) {
-        await loadAdminAccounts();
-        showAdmToast('가입 신청이 거절되었습니다.');
-      } else throw new Error();
-    } catch(e) {
-      alert('처리 중 오류가 발생했습니다.');
-    }
-  }
-
-  /* ── 비활성화 ── */
-  async function deactivateAdmin(recordId) {
-    if (!confirm('이 관리자 계정을 비활성화하시겠습니까?\n해당 관리자는 로그인할 수 없게 됩니다.')) return;
-    try {
-      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ status: 'inactive' })
-      });
-      if (!res.ok) throw new Error();
-      await loadAdminAccounts();
-      showAdmToast('계정이 비활성화되었습니다.');
-    } catch(e) {
-      alert('처리 중 오류가 발생했습니다.');
-    }
-  }
-
-  /* ── 재활성화 ── */
-  async function reactivateAdmin(recordId) {
-    if (!confirm('이 계정을 다시 활성화하시겠습니까?')) return;
-    try {
-      const res = await fetch(`/tables/${TABLE_ADMIN_ACC}/${recordId}`, {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ status: 'active' })
-      });
-      if (!res.ok) throw new Error();
-      await loadAdminAccounts();
-      showAdmToast('✅ 계정이 재활성화되었습니다.');
-    } catch(e) {
-      alert('처리 중 오류가 발생했습니다.');
-    }
-  }
-
-  /* ── 토스트 ── */
-  function showAdmToast(msg) {
-    let t = document.getElementById('admToast');
-    if (!t) {
-      t = document.createElement('div'); t.id = 'admToast';
-      t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#163A33;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s;';
-      document.body.appendChild(t);
-    }
-    t.textContent = msg; t.style.opacity = '1';
-    setTimeout(() => { t.style.opacity = '0'; }, 2800);
-  }
-
-  /* ── 페이지 로드 시 실행 ── */
-  document.addEventListener('DOMContentLoaded', () => {
-    if (!window._dvlSessionFailed) initAdminAccountSection();
+/* ═══════════════════════════════════════
+   모달 닫기
+═══════════════════════════════════════ */
+['detailClose','detailCancel'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', () => {
+    document.getElementById('studentDetailModal').classList.remove('open');
   });
-  // students.js 로드 후에도 실행될 수 있도록 fallback
-  if (document.readyState !== 'loading' && !window._dvlSessionFailed) {
-    initAdminAccountSection();
-  }
-  </script>
+});
 
-  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
-  <nav class="mobile-nav mobile-nav--admin">
-    <div class="mobile-nav-inner">
-      <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
-      <a href="students.html" class="mobile-nav-item active"><i class="fas fa-users"></i><span>학생</span></a>
-      <a href="attendance.html" class="mobile-nav-item"><i class="fas fa-calendar-check"></i><span>출결</span></a>
-      <a href="grades.html" class="mobile-nav-item"><i class="fas fa-chart-line"></i><span>성적</span></a>
-      <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
-    </div>
-  </nav>
-  <div class="sidebar-dim" id="sidebarDim"></div>
-  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-</body>
-</html>
+/* 학생 화면 열기 버튼 */
+document.getElementById('viewDashboardBtn')?.addEventListener('click', () => {
+  if (!currentStudent) return;
+  adminLoginAsStudent(currentStudent.id);
+});
+
+document.getElementById('studentDetailModal')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+/* ═══════════════════════════════════════
+   학생 삭제
+═══════════════════════════════════════ */
+document.getElementById('deleteStudentBtn')?.addEventListener('click', async () => {
+  if (!currentStudent) return;
+
+  const confirmed = confirm(
+    `⚠️ 정말로 '${currentStudent.name}' 학생을 삭제하시겠습니까?\n\n` +
+    `• 학생 계정 및 모든 기본 정보가 삭제됩니다.\n` +
+    `• 성적, 출결, 수행평가 데이터는 별도 테이블에 보관됩니다.\n\n` +
+    `이 작업은 되돌릴 수 없습니다.`
+  );
+  if (!confirmed) return;
+
+  // 한 번 더 확인
+  const reConfirmed = confirm(`'${currentStudent.name}' 삭제를 최종 확인합니다.`);
+  if (!reConfirmed) return;
+
+  try {
+    if (currentStudent._id) {
+      await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
+        method: 'DELETE'
+      });
+    }
+
+    // 로컬 목록에서도 제거
+    allStudents = allStudents.filter(s => s.id !== currentStudent.id);
+
+    document.getElementById('studentDetailModal').classList.remove('open');
+    updateSummaryBar();
+    renderTable();
+    showToast(`🗑️ ${currentStudent.name} 학생이 삭제되었습니다.`, 'info');
+    currentStudent = null;
+  } catch(e) {
+    showToast('삭제 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
+  }
+});
+
+/* ═══════════════════════════════════════
+   단계 변경 모달
+═══════════════════════════════════════ */
+window.openStepModal = (id) => {
+  const s = allStudents.find(x => x.id === id);
+  if (!s) return;
+  currentStudent = s;
+  document.getElementById('stepModalStudent').textContent = `${s.name} (${s.school})`;
+  // 현재 단계 라디오 선택
+  const val = (s.stage || '').includes('컨설팅') ? 'con' : 'gen';
+  const radio = document.querySelector(`input[name="newStep"][value="${val}"]`);
+  if (radio) radio.checked = true;
+  document.getElementById('stepModal').classList.add('open');
+};
+
+['stepModalClose','stepModalCancel'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', () => {
+    document.getElementById('stepModal').classList.remove('open');
+  });
+});
+
+document.getElementById('stepChangeBtn')?.addEventListener('click', () => {
+  if (currentStudent) openStepModal(currentStudent.id);
+});
+
+document.getElementById('stepModalSubmit')?.addEventListener('click', async () => {
+  const radio = document.querySelector('input[name="newStep"]:checked');
+  if (!radio || !currentStudent) return;
+  const isCon   = radio.value === 'con';
+  /* DB 스키마 stage options: 1단계|2단계|3단계|3단계+컨설팅 */
+  const newStage = isCon ? '3단계+컨설팅' : '3단계';
+  const label    = isCon ? '컨설팅 포함' : '일반 수강';
+
+  /* API 업데이트 */
+  if (currentStudent._id) {
+    try {
+      await patchRecordWithFallback(TABLE_PROFILES, currentStudent._id, [{ stage: newStage }]);
+    } catch(e) { console.warn('컨설팅 변경 API 오류:', e); }
+  }
+
+  /* 로컬 데이터 업데이트 */
+  const s = allStudents.find(x => x.id === currentStudent.id);
+  if (s) {
+    s.stage      = newStage;
+    s.consulting = isCon;
+  }
+
+  document.getElementById('stepModal').classList.remove('open');
+  document.getElementById('studentDetailModal').classList.remove('open');
+  updateSummaryBar();
+  renderTable();
+  showToast(`✅ ${currentStudent.name} → ${label}으로 변경되었습니다.`);
+});
+
+/* ═══════════════════════════════════════
+   학생 추가 모달
+═══════════════════════════════════════ */
+document.getElementById('addStudentBtn')?.addEventListener('click', () => {
+  document.getElementById('addStudentModal').classList.add('open');
+});
+
+['addStudentClose','addStudentCancel'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', () => {
+    document.getElementById('addStudentModal').classList.remove('open');
+  });
+});
+
+document.getElementById('addStudentSubmit')?.addEventListener('click', async () => {
+  const name     = document.getElementById('newName')?.value.trim();
+  const school   = document.getElementById('newSchool')?.value.trim();
+  const grade    = document.getElementById('newGrade')?.value;
+  const step     = document.getElementById('newStep')?.value;
+  const memo     = document.getElementById('newMemo')?.value.trim();
+  const inputId  = document.getElementById('newStudentId')?.value.trim();
+  const inputPw  = document.getElementById('newStudentPw')?.value.trim();
+
+  if (!name || !school || !grade || !step) {
+    showToast('⚠️ 이름, 학교, 학년, 단계는 필수 입력 항목입니다.', 'warn');
+    return;
+  }
+
+  /* ── ID: 입력값 우선, 없으면 자동 생성 ── */
+  let newId = inputId;
+  if (!newId) {
+    const maxNum = allStudents
+      .map(s => parseInt((s.id || '').replace(/^s0*/,'')) || 0)
+      .reduce((a, b) => Math.max(a, b), 0);
+    newId = 's' + String(maxNum + 1).padStart(3, '0');
+  } else {
+    /* 아이디 중복 체크 */
+    try {
+      const dupRes = await fetch(`${_API}/${TABLE_PROFILES}?search=${encodeURIComponent(newId)}&limit=5`);
+      const dupData = await dupRes.json();
+      const dup = (dupData.data || []).find(r => r.student_id === newId);
+      if (dup) {
+        showToast(`⚠️ 아이디 '${newId}'는 이미 사용 중입니다.`, 'warn');
+        return;
+      }
+    } catch(e) { /* 중복 체크 실패 시 계속 진행 */ }
+  }
+
+  /* ── 비밀번호: 입력값 우선, 없으면 기본값 ── */
+  const newPw = inputPw || 'dvl2024!';
+
+  /* ── grade 값은 이미 "고1", "중1" 형태로 옴 ── */
+  const gradeVal   = grade; // 예: "고1", "중1"
+  const gradeNum   = parseInt(grade.replace(/[^0-9]/g, '')) || 0;
+  const isConsult  = step === 'con';
+  /* DB 스키마 stage options: 1단계 | 2단계 | 3단계 | 3단계+컨설팅 */
+  const stageVal   = isConsult ? '3단계+컨설팅' : '1단계';
+  const parentPhone = (document.getElementById('newParentPhone')?.value || '').trim();
+
+  const newProfile = {
+    student_id:   newId,
+    name,
+    school,
+    grade:        gradeVal,
+    grade_num:    gradeNum,
+    class_num:    1,
+    student_num:  1,
+    stage:        stageVal,        // DB 스키마 options에 맞는 값
+       status:       'active',
+    password:     newPw,
+    parent_phone: parentPhone,
+    memo:         memo || '',
+  };
+
+  try {
+    const res = await fetch(`${_API}/${TABLE_PROFILES}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProfile),
+    });
+
+    /* 실패 시 서버 오류 메시지까지 표시 */
+    if (!res.ok) {
+      let errMsg = `서버 오류 (${res.status})`;
+      try { const errData = await res.json(); errMsg = errData.message || errMsg; } catch(e) {}
+      throw new Error(errMsg);
+    }
+    const created = await res.json();
+
+    /* 로컬 배열에 추가 (화면 즉시 반영) */
+    allStudents.push({
+      _id:        created.id,
+      id:         newId,
+      name,
+      school,
+      grade:      gradeVal,
+      gradeNum,
+      stage:      stageVal,
+      status:     'active',
+      memo:       memo || '',
+      attend:     'attend',
+      plan:       '-',
+      assess:     '-',
+      manager:    '박소현 대표',
+      joinDate:   new Date().toLocaleDateString('ko-KR'),
+    });
+
+    updateSummaryBar();
+    renderTable();
+    document.getElementById('addStudentModal').classList.remove('open');
+    ['newName','newSchool','newParentPhone','newMemo','newStudentId','newStudentPw'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = id === 'newStudentPw' ? 'davinci1!' : '';
+    });
+    showToast(`✅ ${name} 학생 등록 완료! 아이디: ${newId} / 비밀번호: ${newPw}`);
+  } catch(err) {
+    showToast(`❌ 학생 등록 실패: ${err.message}`, 'warn');
+    console.error('[addStudent] 오류:', err);
+  }
+});
+
+/* ═══════════════════════════════════════
+   메모 저장
+═══════════════════════════════════════ */
+document.getElementById('saveMemoBtn')?.addEventListener('click', async () => {
+  if (!currentStudent) return;
+  const memo = document.getElementById('memoText')?.value || '';
+
+  if (currentStudent._id) {
+    try {
+      await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memo }),
+      });
+    } catch(e) { console.warn('메모 저장 API 실패:', e); }
+  }
+
+  const s = allStudents.find(x => x.id === currentStudent.id);
+  if (s) s.memo = memo;
+  showToast('✅ 메모가 저장되었습니다.');
+});
+
+/* ═══════════════════════════════════════
+   사이드바 & 상단바 — admin.js에서 통합 처리
+═══════════════════════════════════════ */
+// 사이드바 토글은 admin.js에서 전역 처리 (중복 바인딩 방지)
+
+/* ── 사용자 정보 표시 ── */
+(function () {
+  try {
+    const u = JSON.parse(sessionStorage.getItem('dvl_user') || '{}');
+    if (u.name) {
+      const first = u.name.charAt(0);
+      ['sidebarAdminName'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=u.name; });
+      ['sidebarAdminRole'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=u.title||'관리자'; });
+      const av = document.querySelector('.sidebar-user-avatar');
+      if (av) av.textContent = first;
+    }
+  } catch(e) {}
+})();
+
+/* ── 토스트 ── */
+function showToast(msg, type='ok') {
+  let el = document.getElementById('dvl-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'dvl-toast';
+    el.style.cssText = `position:fixed;bottom:28px;right:28px;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;color:#fff;z-index:9999;transition:all .3s ease;pointer-events:none;opacity:0;transform:translateY(10px);max-width:320px;`;
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.background = type === 'warn' ? '#b91c1c' : '#163A33';
+  el.style.opacity = '1';
+  el.style.transform = 'translateY(0)';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(10px)';
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════
+   아카이브 (졸업/비활성화) 기능
+═══════════════════════════════════════ */
+
+// 모달에서 아카이브 버튼 클릭
+document.getElementById('archiveBtn')?.addEventListener('click', () => {
+  if (!currentStudent) return;
+  const name = currentStudent.name;
+  const confirmMsg = `${name} 학생을 졸업/비활성화 처리하시겠습니까?\n비활성화 후에는 활성 학생 목록에서 제외됩니다.`;
+  if (!confirm(confirmMsg)) return;
+  archiveStudent(currentStudent._id || currentStudent.id, currentStudent.id, '졸업');
+});
+
+// 파라미터: dbId = REST API id, localId = student_id (s001 등), statusVal = '졸업'|'비활성'
+async function archiveStudent(dbId, localId, statusVal = '졸업') {
+  try {
+    if (dbId) {
+      await patchRecordWithFallback(TABLE_PROFILES, dbId, [
+        { status: statusVal === '졸업' ? 'graduated' : 'inactive', is_active: false },
+        { status: statusVal === '졸업' ? 'graduated' : 'inactive' }
+      ]);
+    }
+
+    const s = allStudents.find(x => x.id === localId || x._id === dbId);
+    if (s) s.status = statusVal === '졸업' ? 'graduated' : 'inactive';
+    document.getElementById('studentDetailModal')?.classList.remove('open');
+    updateSummaryBar();
+    renderTable();
+    updateArchiveList();
+    showToast(`🎓 ${(s&&s.name)||localId} 학생이 ${statusVal} 처리되었습니다.`);
+  } catch(e) {
+    showToast('❌ 처리 중 오류가 발생했습니다.', 'warn');
+    console.error(e);
+  }
+}
+
+// 아카이브 섹션 토글
+window.toggleArchive = function() {
+  const sec = document.getElementById('archiveSection');
+  const btn = document.getElementById('archiveToggleBtn');
+  if (!sec) return;
+  const isOpen = sec.style.display !== 'none';
+  sec.style.display = isOpen ? 'none' : '';
+  if (btn) btn.innerHTML = isOpen
+    ? '<i class="fas fa-archive"></i> 졸업/비활성 학생 보기'
+    : '<i class="fas fa-archive"></i> 졸업/비활성 학생 닫기';
+  if (!isOpen) updateArchiveList();
+};
+
+// 아카이브 목록 렌더
+function updateArchiveList() {
+  const archived = allStudents.filter(s =>
+    s.status === '졸업' || s.status === '비활성' || s.status === 'inactive' || s.status === '퇴원'
+  );
+  const label = document.getElementById('archiveCountLabel');
+  if (label) label.textContent = `총 ${archived.length}명`;
+
+  const list = document.getElementById('archiveList');
+  if (!list) return;
+  if (!archived.length) {
+    list.innerHTML = '<p style="color:#94a3b8;font-size:13px;text-align:center;padding:20px;">졸업/비활성 학생이 없습니다.</p>';
+    return;
+  }
+  list.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f1f5f9;">
+          <th style="padding:8px 12px;text-align:left;font-weight:700;color:#64748b;font-size:11.5px;border-bottom:1px solid #e2e8f0;">이름</th>
+          <th style="padding:8px 12px;text-align:left;font-weight:700;color:#64748b;font-size:11.5px;border-bottom:1px solid #e2e8f0;">학교</th>
+          <th style="padding:8px 12px;text-align:left;font-weight:700;color:#64748b;font-size:11.5px;border-bottom:1px solid #e2e8f0;">학년</th>
+          <th style="padding:8px 12px;text-align:center;font-weight:700;color:#64748b;font-size:11.5px;border-bottom:1px solid #e2e8f0;">상태</th>
+          <th style="padding:8px 12px;text-align:center;font-weight:700;color:#64748b;font-size:11.5px;border-bottom:1px solid #e2e8f0;">복원</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${archived.map(s => `
+          <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:9px 12px;color:#374151;font-weight:600;">${s.name}</td>
+            <td style="padding:9px 12px;color:#6b7280;">${s.school||'–'}</td>
+            <td style="padding:9px 12px;color:#6b7280;">${s.grade||'–'}</td>
+            <td style="padding:9px 12px;text-align:center;">
+              <span style="padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#f1f5f9;color:#64748b;">${s.status||'비활성'}</span>
+            </td>
+            <td style="padding:9px 12px;text-align:center;">
+              <button onclick="restoreStudent('${s._id||''}','${s.id}')"
+                style="padding:4px 12px;border-radius:7px;border:1px solid #bbf7d0;background:#f0fdf4;color:#16a34a;font-size:12px;font-weight:600;cursor:pointer;">
+                <i class="fas fa-undo"></i> 복원
+              </button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// 아카이브 → 활성 복원
+window.restoreStudent = async function(dbId, localId) {
+  try {
+    if (dbId) {
+      await fetch(`${_API}/${TABLE_PROFILES}/${dbId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active', is_active: true }),
+      });
+    }
+    const s = allStudents.find(x => x.id === localId || x._id === dbId);
+    if (s) s.status = 'active';
+    updateSummaryBar();
+    renderTable();
+    updateArchiveList();
+    showToast(`✅ ${(s&&s.name)||localId} 학생이 활성 복원되었습니다.`);
+  } catch(e) {
+    showToast('❌ 복원 중 오류가 발생했습니다.', 'warn');
+  }
+};
+
+// 휴원 처리 버튼 연결
+document.getElementById('breakBtn')?.addEventListener('click', async () => {
+  if (!currentStudent) return;
+  if (!confirm(`${currentStudent.name} 학생을 휴원 처리하시겠습니까?`)) return;
+  try {
+    if (currentStudent._id) {
+      await fetch(`${_API}/${TABLE_PROFILES}/${currentStudent._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'inactive', is_active: false }),
+      });
+    }
+    const s = allStudents.find(x => x.id === currentStudent.id);
+        if (s) s.status = 'inactive';
+    document.getElementById('studentDetailModal')?.classList.remove('open');
+    updateSummaryBar();
+    renderTable();
+    showToast(`⏸ ${currentStudent.name} 학생이 휴원 처리되었습니다.`);
+  } catch(e) {
+    showToast('❌ 처리 중 오류가 발생했습니다.', 'warn');
+  }
+});
+
+/* ═══════════════════════════════════════
+   페이지 초기화
+   admin-common.js IIFE 완료 후 즉시 실행:
+   - 세션 OK  → loadStudentsFromAPI() 호출
+   - 세션 실패 → location.replace() 가 이미 실행 중이므로 아무것도 하지 않음
+═══════════════════════════════════════ */
+if (!window._dvlSessionFailed) {
+  Promise.allSettled([loadStudentsFromAPI(), loadParentPendingQuickStats()]);
+}
