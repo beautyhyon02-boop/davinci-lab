@@ -18,199 +18,178 @@
   <link rel="stylesheet" href="../css/admin.css" />
   <link rel="stylesheet" href="../css/mobile.css" />
   <style>
-    :root {
-      --ep-main: #4f46e5; --ep-light: #e0e7ff; --ep-accent: #818cf8;
-      --ep-success: #10b981; --ep-warn: #f59e0b; --ep-danger: #ef4444;
+    :root{
+      --ep-main:#4f46e5; --ep-light:#e0e7ff; --ep-accent:#818cf8;
+      --ep-success:#10b981; --ep-warn:#f59e0b; --ep-danger:#ef4444;
+      --ep-gray:#6b7280; --ep-border:#e5e7eb; --ep-bg:#f9fafb;
+    }
+    .ep-wrap{padding:24px;max-width:1400px;margin:0 auto}
+    .ep-summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+    @media(max-width:900px){.ep-summary-row{grid-template-columns:repeat(2,1fr)}}
+    .ep-sum-card{background:#fff;border-radius:14px;padding:20px 22px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;align-items:center;gap:16px}
+    .ep-sum-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+    .ep-sum-card .sc-val{font-size:1.8rem;font-weight:800;color:#1e1b4b}
+    .ep-sum-card .sc-label{font-size:.82rem;color:#6b7280}
+
+    .ep-actionbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+    .ep-actionbar h2{font-size:1.15rem;font-weight:700;color:#1e1b4b}
+    .ep-search-wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .ep-search-wrap input,.ep-search-wrap select{
+      padding:9px 14px;border:1.5px solid var(--ep-border);border-radius:8px;font-size:.9rem;font-family:inherit;background:#fff
+    }
+    .ep-search-wrap input{width:220px}
+    .ep-search-wrap input:focus,.ep-search-wrap select:focus,
+    .modal-form input:focus,.modal-form select:focus,.modal-form textarea:focus,
+    .dp-input:focus,.dp-select:focus,.dp-textarea:focus{
+      outline:none;border-color:var(--ep-main)
     }
 
-    .ep-wrap { padding: 24px; max-width: 1400px; margin: 0 auto; }
+    .btn-ep-create,.btn-modal-save{
+      background:var(--ep-main);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:700
+    }
+    .btn-ep-create{padding:10px 20px;font-size:.9rem}
+    .btn-ep-create:hover,.btn-modal-save:hover{background:#4338ca}
+    .btn-modal-cancel{
+      flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--ep-border);
+      background:#fff;color:#374151;font-weight:600;cursor:pointer
+    }
+    .btn-modal-save{flex:2;padding:12px;border-radius:10px}
 
-    /* 상단 요약 카드 */
-    .ep-summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-    @media(max-width:900px){ .ep-summary-row { grid-template-columns: repeat(2,1fr); } }
-    .ep-sum-card {
-      background: white; border-radius: 14px; padding: 20px 22px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.06); display: flex; align-items: center; gap: 16px;
+    .ep-table-wrap{background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden}
+    .ep-table{width:100%;border-collapse:collapse;font-size:.88rem}
+    .ep-table th{
+      background:#f9fafb;padding:12px 16px;text-align:left;font-weight:700;color:#374151;
+      border-bottom:1.5px solid var(--ep-border);white-space:nowrap
     }
-    .ep-sum-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0;
-    }
-    .ep-sum-card .sc-val { font-size: 1.8rem; font-weight: 800; color: #1e1b4b; }
-    .ep-sum-card .sc-label { font-size: .82rem; color: #6b7280; }
+    .ep-table td{padding:13px 16px;border-bottom:1px solid #f3f4f6;color:#4b5563;vertical-align:middle}
+    .ep-table tr:hover td{background:#fafafa}
+    .ep-table tr:last-child td{border-bottom:none}
 
-    /* 상단 액션바 */
-    .ep-actionbar {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
-    }
-    .ep-actionbar h2 { font-size: 1.15rem; font-weight: 700; color: #1e1b4b; }
-    .ep-search-wrap { display: flex; gap: 8px; align-items: center; }
-    .ep-search-wrap input {
-      padding: 9px 14px; border: 1.5px solid #e5e7eb; border-radius: 8px;
-      font-size: .9rem; font-family: inherit; width: 220px;
-    }
-    .ep-search-wrap input:focus { outline: none; border-color: var(--ep-main); }
-    .ep-search-wrap select {
-      padding: 9px 14px; border: 1.5px solid #e5e7eb; border-radius: 8px;
-      font-size: .9rem; font-family: inherit;
-    }
-    .btn-ep-create {
-      background: var(--ep-main); color: white; border: none; padding: 10px 20px;
-      border-radius: 8px; font-size: .9rem; font-weight: 700; cursor: pointer;
-    }
-    .btn-ep-create:hover { background: #4338ca; }
+    .status-badge{font-size:.75rem;padding:3px 10px;border-radius:99px;font-weight:700;white-space:nowrap}
+    .status-badge.ongoing{background:#dbeafe;color:#1d4ed8}
+    .status-badge.done{background:#d1fae5;color:#065f46}
+    .status-badge.pending{background:#fef3c7;color:#92400e}
 
-    /* 학생 플래너 테이블 */
-    .ep-table-wrap { background: white; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
-    .ep-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-    .ep-table th {
-      background: #f9fafb; padding: 12px 16px; text-align: left;
-      font-weight: 700; color: #374151; border-bottom: 1.5px solid #e5e7eb;
-      white-space: nowrap;
+    .sync-badge{
+      display:inline-flex;align-items:center;gap:4px;font-size:.68rem;padding:3px 8px;border-radius:999px;
+      background:#f3f4f6;color:#4b5563;font-weight:700
     }
-    .ep-table td { padding: 13px 16px; border-bottom: 1px solid #f3f4f6; color: #4b5563; vertical-align: middle; }
-    .ep-table tr:hover td { background: #fafafa; }
-    .ep-table tr:last-child td { border-bottom: none; }
+    .sync-badge.bridge{background:#ede9fe;color:#5b21b6}
+    .sync-badge.table{background:#d1fae5;color:#065f46}
+    .sync-badge.legacy{background:#fef3c7;color:#92400e}
 
-    /* 상태 배지 */
-    .status-badge {
-      font-size: .75rem; padding: 3px 10px; border-radius: 99px; font-weight: 700; white-space: nowrap;
+    .dday-tag{
+      font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:99px;background:#ede9fe;color:#5b21b6
     }
-    .status-badge.ongoing  { background: #dbeafe; color: #1d4ed8; }
-    .status-badge.done     { background: #d1fae5; color: #065f46; }
-    .status-badge.pending  { background: #fef3c7; color: #92400e; }
-    .dday-tag {
-      font-size: .78rem; font-weight: 700; padding: 3px 10px; border-radius: 99px;
-      background: #ede9fe; color: #5b21b6;
-    }
-    .dday-tag.urgent { background: #fee2e2; color: #991b1b; }
-    .dday-tag.done   { background: #f3f4f6; color: #6b7280; }
+    .dday-tag.urgent{background:#fee2e2;color:#991b1b}
+    .dday-tag.done{background:#f3f4f6;color:#6b7280}
 
-    /* 진도 바 */
-    .prog-mini { height: 6px; background: #f3f4f6; border-radius: 99px; width: 100px; overflow: hidden; }
-    .prog-mini-fill { height: 100%; border-radius: 99px; background: var(--ep-success); }
+    .prog-mini{height:6px;background:#f3f4f6;border-radius:99px;width:100px;overflow:hidden}
+    .prog-mini-fill{height:100%;border-radius:99px;background:var(--ep-success)}
 
-    /* 액션 버튼 */
-    .btn-ep-action {
-      padding: 5px 12px; border-radius: 6px; font-size: .78rem; font-weight: 600;
-      cursor: pointer; border: none; transition: background .15s;
+    .btn-ep-action{
+      padding:5px 12px;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;transition:background .15s
     }
-    .btn-ep-view { background: var(--ep-light); color: var(--ep-main); }
-    .btn-ep-view:hover { background: #c7d2fe; }
-    .btn-ep-edit { background: #fef3c7; color: #92400e; }
-    .btn-ep-edit:hover { background: #fde68a; }
-    .btn-ep-del  { background: #fee2e2; color: #991b1b; }
-    .btn-ep-del:hover  { background: #fecaca; }
-    .btn-ep-new  { background: #d1fae5; color: #065f46; }
-    .btn-ep-new:hover  { background: #a7f3d0; }
+    .btn-ep-view{background:var(--ep-light);color:var(--ep-main)}
+    .btn-ep-view:hover{background:#c7d2fe}
+    .btn-ep-del{background:#fee2e2;color:#991b1b}
+    .btn-ep-del:hover{background:#fecaca}
 
-    /* 상세 패널 (슬라이드 오버) */
-    .detail-panel {
-      position: fixed; top: 0; right: -600px; width: 580px; height: 100vh;
-      background: white; box-shadow: -4px 0 24px rgba(0,0,0,.12);
-      z-index: 9000; overflow-y: auto; transition: right .3s;
+    .detail-panel{
+      position:fixed;top:0;right:-620px;width:600px;max-width:92vw;height:100vh;background:#fff;
+      box-shadow:-4px 0 24px rgba(0,0,0,.12);z-index:9000;overflow-y:auto;transition:right .3s
     }
-    .detail-panel.open { right: 0; }
-    .dp-header {
-      padding: 24px; border-bottom: 1.5px solid #f3f4f6;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; background: white; z-index: 1;
+    .detail-panel.open{right:0}
+    .dp-header{
+      padding:24px;border-bottom:1.5px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;background:#fff;z-index:1
     }
-    .dp-header h3 { font-size: 1.1rem; font-weight: 700; color: #1e1b4b; }
-    .dp-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #9ca3af; }
-    .dp-close:hover { color: #374151; }
-    .dp-body { padding: 24px; }
+    .dp-header h3{font-size:1.08rem;font-weight:700;color:#1e1b4b}
+    .dp-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:#9ca3af}
+    .dp-close:hover{color:#374151}
+    .dp-body{padding:24px}
+    .dp-section-title{
+      font-size:.85rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin:20px 0 10px;
+      display:flex;align-items:center;gap:6px
+    }
+    .dp-section-title::after{content:'';flex:1;height:1px;background:#f3f4f6}
+    .dp-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+    .dp-input,.dp-select,.dp-textarea{
+      width:100%;padding:8px 10px;border:1.5px solid var(--ep-border);border-radius:7px;
+      font-family:inherit;font-size:.9rem;box-sizing:border-box;background:#fff
+    }
+    .dp-textarea{resize:vertical}
+    .dp-save-btn{
+      margin-top:10px;width:100%;padding:10px;border-radius:8px;border:none;background:var(--ep-main);
+      color:#fff;font-weight:700;cursor:pointer
+    }
 
-    /* 플래너 생성 모달 */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.5);
-      display: none; align-items: center; justify-content: center; z-index: 9999;
+    .week-date-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+    .week-date-tab{
+      padding:5px 12px;border-radius:7px;font-size:.8rem;font-weight:600;cursor:pointer;
+      border:1.5px solid var(--ep-border);background:#fff;color:#6b7280;transition:all .2s
     }
-    .modal-overlay.open { display: flex; }
-    .modal-box {
-      background: white; border-radius: 16px; padding: 32px;
-      width: 90%; max-width: 560px; max-height: 90vh; overflow-y: auto; position: relative;
-    }
-    .modal-box h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; color: #1e1b4b; }
-    .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #9ca3af; }
-    .modal-form { display: flex; flex-direction: column; gap: 14px; }
-    .modal-form label { font-size: .85rem; font-weight: 600; color: #374151; margin-bottom: 4px; display: block; }
-    .modal-form input, .modal-form select, .modal-form textarea {
-      width: 100%; padding: 10px 14px; border: 1.5px solid #e5e7eb;
-      border-radius: 8px; font-size: .95rem; font-family: inherit; box-sizing: border-box;
-    }
-    .modal-form input:focus, .modal-form select:focus { outline: none; border-color: var(--ep-main); }
-    .modal-form .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
-    .btn-modal-cancel { flex: 1; padding: 12px; border-radius: 10px; border: 1.5px solid #e5e7eb; background: white; color: #374151; font-weight: 600; cursor: pointer; }
-    .btn-modal-save { flex: 2; padding: 12px; border-radius: 10px; border: none; background: var(--ep-main); color: white; font-weight: 700; cursor: pointer; }
+    .week-date-tab.active{background:var(--ep-main);color:#fff;border-color:var(--ep-main)}
 
-    /* 태스크 편집 */
-    .task-edit-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-    .task-edit-row {
-      display: grid; grid-template-columns: 80px 1fr 70px 30px;
-      gap: 6px; align-items: center;
+    .task-edit-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+    .task-date-title{font-size:.8rem;font-weight:700;color:#6b7280;margin:8px 0 4px;padding-left:4px}
+    .task-card{
+      display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--ep-border);margin-bottom:6px
     }
-    .task-edit-row input, .task-edit-row select {
-      padding: 7px 10px; border: 1.5px solid #e5e7eb; border-radius: 7px;
-      font-size: .83rem; font-family: inherit;
+    .task-card.done{background:#f0fdf4;border-left:3px solid #34d399}
+    .task-card.pending{border-left:3px solid transparent}
+    .task-top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .task-pill{
+      font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;flex-shrink:0;background:#f3f4f6;color:#6b7280
     }
-    .task-edit-row input:focus, .task-edit-row select:focus { outline: none; border-color: var(--ep-main); }
-    .btn-del-task { background: none; border: none; color: #d1d5db; cursor: pointer; font-size: .9rem; }
-    .btn-del-task:hover { color: var(--ep-danger); }
-    .btn-add-task {
-      width: 100%; padding: 8px; border: 1.5px dashed #d1d5db; border-radius: 7px;
-      background: none; color: #9ca3af; cursor: pointer; font-size: .85rem; transition: all .2s;
+    .task-pill.done{background:#d1fae5;color:#047857}
+    .task-comment-row{display:flex;align-items:center;gap:6px}
+    .task-meta-note{
+      font-size:11.5px;color:#6b7280;background:#f9fafb;border-radius:6px;padding:5px 8px
     }
-    .btn-add-task:hover { border-color: var(--ep-main); color: var(--ep-main); }
+    .btn-del-task{background:none;border:none;color:#d1d5db;cursor:pointer;font-size:.9rem;margin-left:auto}
+    .btn-del-task:hover{color:var(--ep-danger)}
+    .btn-add-task{
+      width:100%;padding:8px;border:1.5px dashed #d1d5db;border-radius:7px;background:none;color:#9ca3af;cursor:pointer;
+      font-size:.85rem;transition:all .2s
+    }
+    .btn-add-task:hover{border-color:var(--ep-main);color:var(--ep-main)}
 
-    /* 섹션 타이틀 */
-    .dp-section-title {
-      font-size: .85rem; font-weight: 700; color: #6b7280;
-      text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 10px;
-      display: flex; align-items: center; gap: 6px;
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9999
     }
-    .dp-section-title::after { content: ''; flex: 1; height: 1px; background: #f3f4f6; }
+    .modal-overlay.open{display:flex}
+    .modal-box{
+      background:#fff;border-radius:16px;padding:32px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto;position:relative
+    }
+    .modal-box h3{font-size:1.2rem;font-weight:700;margin-bottom:20px;color:#1e1b4b}
+    .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:1.2rem;cursor:pointer;color:#9ca3af}
+    .modal-form{display:flex;flex-direction:column;gap:14px}
+    .modal-form label{font-size:.85rem;font-weight:600;color:#374151;margin-bottom:4px;display:block}
+    .modal-form input,.modal-form select,.modal-form textarea{
+      width:100%;padding:10px 14px;border:1.5px solid var(--ep-border);border-radius:8px;font-size:.95rem;font-family:inherit;box-sizing:border-box
+    }
+    .modal-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .modal-actions{display:flex;gap:10px;margin-top:8px}
+    .student-select-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:220px;overflow-y:auto}
+    .student-chip{
+      padding:7px 10px;border-radius:8px;border:1.5px solid var(--ep-border);cursor:pointer;font-size:.83rem;font-weight:600;
+      color:#374151;transition:all .2s;text-align:center;background:#fff
+    }
+    .student-chip:hover{border-color:var(--ep-main);color:var(--ep-main)}
+    .student-chip.selected{background:var(--ep-light);border-color:var(--ep-main);color:var(--ep-main)}
 
-    /* 주간 날짜 선택 */
-    .week-date-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
-    .week-date-tab {
-      padding: 5px 12px; border-radius: 7px; font-size: .8rem; font-weight: 600;
-      cursor: pointer; border: 1.5px solid #e5e7eb; background: white; color: #6b7280; transition: all .2s;
+    .ep-toast{
+      position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1e1b4b;color:#fff;padding:12px 24px;border-radius:30px;
+      font-size:.9rem;font-weight:600;z-index:99999;opacity:0;transition:opacity .3s;pointer-events:none
     }
-    .week-date-tab.active { background: var(--ep-main); color: white; border-color: var(--ep-main); }
-
-    /* 학생 선택 */
-    .student-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 8px; max-height: 200px; overflow-y: auto; }
-    .student-chip {
-      padding: 7px 10px; border-radius: 8px; border: 1.5px solid #e5e7eb;
-      cursor: pointer; font-size: .83rem; font-weight: 600; color: #374151;
-      transition: all .2s; text-align: center;
-    }
-    .student-chip:hover { border-color: var(--ep-main); color: var(--ep-main); }
-    .student-chip.selected { background: var(--ep-light); border-color: var(--ep-main); color: var(--ep-main); }
-
-    /* 토스트 */
-    .ep-toast {
-      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-      background: #1e1b4b; color: white; padding: 12px 24px;
-      border-radius: 30px; font-size: .9rem; font-weight: 600;
-      z-index: 99999; opacity: 0; transition: opacity .3s; pointer-events: none;
-    }
-    .ep-toast.show { opacity: 1; }
-
-    /* 공백 상태 */
-    .ep-empty {
-      text-align: center; padding: 60px 24px; color: #9ca3af;
-    }
-    .ep-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-    .ep-empty p { font-size: .95rem; }
+    .ep-toast.show{opacity:1}
+    .ep-empty{text-align:center;padding:60px 24px;color:#9ca3af}
+    .ep-empty i{font-size:2.5rem;margin-bottom:12px;display:block}
+    .ep-empty p{font-size:.95rem}
   </style>
 </head>
 <body class="admin-body">
-
-  <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <a href="../index.html" class="sidebar-logo">
@@ -236,12 +215,11 @@
       </div>
     </nav>
     <div class="sidebar-footer">
-      <span id="sidebarAdminName" style="font-size:.85rem;color:#6b7280;padding:12px 16px">박소현 대표</span>
+      <span id="sidebarAdminName" style="font-size:.85rem;color:#6b7280;padding:12px 16px">관리자</span>
       <a href="../login.html" class="nav-item" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>로그아웃</span></a>
     </div>
   </aside>
 
-  <!-- ===== MAIN ===== -->
   <div class="admin-main" id="mainContent">
     <header class="topbar">
       <div class="topbar-left">
@@ -250,15 +228,13 @@
       </div>
       <div class="topbar-right">
         <div class="topbar-user">
-          <div class="topbar-avatar">박</div>
-          <span id="topbarAdminName">박소현</span>
+          <div class="topbar-avatar">관</div>
+          <span id="topbarAdminName">관리자</span>
         </div>
       </div>
     </header>
 
     <div class="ep-wrap">
-
-      <!-- 요약 카드 -->
       <div class="ep-summary-row">
         <div class="ep-sum-card">
           <div class="ep-sum-icon" style="background:#e0e7ff"><i class="fas fa-calendar-alt" style="color:var(--ep-main)"></i></div>
@@ -278,16 +254,15 @@
         </div>
       </div>
 
-      <!-- 액션바 -->
       <div class="ep-actionbar">
         <h2><i class="fas fa-calendar-alt" style="color:var(--ep-main);margin-right:8px"></i>학생별 시험 플래너</h2>
         <div class="ep-search-wrap">
           <input type="text" id="searchInput" placeholder="학생 이름 검색..." oninput="filterPlanners()" />
           <select id="filterStatus" onchange="filterPlanners()">
             <option value="">전체 상태</option>
-            <option value="진행중">진행 중</option>
-            <option value="준비중">준비 중</option>
-            <option value="완료">완료</option>
+            <option value="active">진행 중</option>
+            <option value="draft">준비 중</option>
+            <option value="completed">완료</option>
           </select>
           <button class="btn-ep-create" onclick="openCreateModal()">
             <i class="fas fa-plus"></i> 플래너 생성
@@ -295,7 +270,6 @@
         </div>
       </div>
 
-      <!-- 플래너 테이블 -->
       <div class="ep-table-wrap">
         <table class="ep-table">
           <thead>
@@ -307,6 +281,7 @@
               <th>진도율</th>
               <th>과목 수</th>
               <th>상태</th>
+              <th>연동</th>
               <th>액션</th>
             </tr>
           </thead>
@@ -320,7 +295,6 @@
     </div>
   </div>
 
-  <!-- ===== 상세 편집 패널 ===== -->
   <div class="detail-panel" id="detailPanel">
     <div class="dp-header">
       <h3 id="dpTitle">플래너 상세</h3>
@@ -328,27 +302,24 @@
     </div>
     <div class="dp-body" id="dpBody"></div>
   </div>
-  <div id="panelOverlay" style="display:none;position:fixed;inset:0;z-index:8999;background:rgba(0,0,0,.3)"
-    onclick="closeDetailPanel()"></div>
+  <div id="panelOverlay" style="display:none;position:fixed;inset:0;z-index:8999;background:rgba(0,0,0,.3)" onclick="closeDetailPanel()"></div>
 
-  <!-- ===== 플래너 생성 모달 ===== -->
   <div class="modal-overlay" id="createModal">
     <div class="modal-box">
       <h3><i class="fas fa-magic" style="color:var(--ep-main);margin-right:8px"></i>새 플래너 생성</h3>
       <button class="modal-close" onclick="closeModal('createModal')"><i class="fas fa-times"></i></button>
       <div class="modal-form">
-        <!-- 학생 선택 -->
         <div>
-          <label>학생 선택 <span style="color:#9ca3af;font-weight:400">(여러 명 선택 가능 – 동시 생성)</span></label>
+          <label>학생 선택 <span style="color:#9ca3af;font-weight:400">(여러 명 동시 생성 가능)</span></label>
           <input type="text" id="studentSearch" placeholder="학생 이름 검색..." oninput="filterStudentChips()" />
           <div class="student-select-grid" id="studentChips" style="margin-top:8px"></div>
         </div>
         <div>
           <label>시험 종류</label>
           <select id="createExamType">
-            <option value="중간고사">중간고사 (3일)</option>
-            <option value="기말고사">기말고사 (4일)</option>
-            <option value="모의고사">모의고사 (1일)</option>
+            <option value="중간고사">중간고사</option>
+            <option value="기말고사">기말고사</option>
+            <option value="모의고사">모의고사</option>
             <option value="기타">기타</option>
           </select>
         </div>
@@ -365,11 +336,7 @@
         <div class="form-row">
           <div>
             <label>학년도</label>
-            <select id="createYear">
-              <option value="2025">2025년</option>
-              <option value="2026" selected>2026년</option>
-              <option value="2027">2027년</option>
-            </select>
+            <select id="createYear"></select>
           </div>
           <div>
             <label>학기</label>
@@ -385,663 +352,1257 @@
         </div>
         <div class="modal-actions">
           <button class="btn-modal-cancel" onclick="closeModal('createModal')">취소</button>
-          <button class="btn-modal-save" onclick="batchCreatePlanners()">
-            <i class="fas fa-magic"></i> 플래너 생성
-          </button>
+          <button class="btn-modal-save" onclick="batchCreatePlanners()"><i class="fas fa-magic"></i> 플래너 생성</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 토스트 -->
   <div class="ep-toast" id="epToast"></div>
 
   <script>
-  const TABLE_PLANNERS  = 'exam_planners';
-  const TABLE_TASKS     = 'planner_tasks';
-  const TABLE_SCHEDULES = 'exam_schedules';
-  const TABLE_PROFILES  = 'student_profiles';
+    const TABLE_PLANNERS = 'exam_planners';
+    const TABLE_TASKS = 'planner_tasks';
+    const TABLE_SCHEDULES = 'exam_schedules';
+    const TABLE_PROFILES = 'student_profiles';
 
-  let allPlanners  = [];
-  let allStudents  = [];
-  let filteredPlanners = [];
-  let selectedStudentIds = new Set();
-  let currentDetailPlanner = null;
-  let detailTasks = [];
+    const SUBJECT_COLORS = {
+      '수학':'math','영어':'eng','국어':'kor','과학':'sci','사회':'soc','한국사':'hist'
+    };
+    const WEEK_DEFS = [
+      { id:'pre', cls:'pre', emoji:'🌱', name:'PRE주차', subtitle:'플래너 적응 & 범위 파악' },
+      { id:'w1', cls:'w1', emoji:'📘', name:'1주차', subtitle:'전체 범위 1회독' },
+      { id:'w2', cls:'w2', emoji:'📕', name:'2주차', subtitle:'약점 보완 & 심화' },
+      { id:'w3', cls:'w3', emoji:'📙', name:'3주차', subtitle:'실전 문제 풀이' },
+      { id:'w4', cls:'w4', emoji:'🔥', name:'4주차', subtitle:'최종 점검 & 시험' }
+    ];
 
-  const SUBJECT_COLORS = { '수학':'#3b82f6','영어':'#10b981','국어':'#8b5cf6','과학':'#f59e0b','사회':'#ec4899','한국사':'#ef4444' };
+    let allStudents = [];
+    let allPlannerRows = [];
+    let allTaskRows = [];
+    let filteredPlanners = [];
+    let selectedStudentIds = new Set();
+    let currentDetailPlanner = null;
+    let detailTasks = [];
+    let detailWeekKey = '';
 
-  // ===== 초기화 =====
-  // ★ 수정: _dvlAdminSession은 admin-common.js가 로드된 뒤 세팅됨
-  //   DOMContentLoaded 시점에 아직 없을 수 있으므로 polling으로 대기
-  function waitForSession(cb, timeout = 5000) {
-    const start = Date.now();
-    function check() {
-      const s = window._dvlAdminSession
-             || JSON.parse(sessionStorage.getItem('dvl_admin_tab_session') || 'null')
-             || JSON.parse(localStorage.getItem('dvl_admin_session') || 'null');
-      if (s && (s.role === 'admin' || s.role === 'master')) { cb(s); return; }
-      if (Date.now() - start > timeout) { cb(null); return; }
-      setTimeout(check, 100);
+    function safeParseJSON(value, fallback) {
+      if (value == null || value === '') return fallback;
+      if (typeof value === 'object') return value;
+      try { return JSON.parse(value); } catch (_) { return fallback; }
     }
-    check();
-  }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('createStartDate')?.addEventListener('change', autoSetEndDate);
-    document.getElementById('createExamType')?.addEventListener('change', autoSetEndDate);
-
-    waitForSession(async (_s) => {
-      if (_s) {
-        const adminName = _s.name || '관리자';
-        document.getElementById('topbarAdminName') && (document.getElementById('topbarAdminName').textContent = adminName);
-        document.getElementById('sidebarAdminName') && (document.getElementById('sidebarAdminName').textContent = adminName);
+    function normalizeArray(value) {
+      if (Array.isArray(value)) return value.filter(Boolean);
+      if (typeof value === 'string') {
+        const parsed = safeParseJSON(value, null);
+        if (Array.isArray(parsed)) return parsed.filter(Boolean);
+        return value.split(',').map(v => v.trim()).filter(Boolean);
       }
-      // 세션 유무와 관계없이 학생 목록과 플래너는 로드
-      await Promise.all([loadPlanners(), loadStudents()]);
-    });
-  });
-
-  function autoSetEndDate() {
-    const startVal = document.getElementById('createStartDate').value;
-    const typeVal  = document.getElementById('createExamType').value;
-    if (!startVal) return;
-    const start = new Date(startVal);
-    const days  = typeVal === '기말고사' ? 3 : typeVal === '중간고사' ? 2 : 0;
-    const end = new Date(start); end.setDate(end.getDate() + days);
-    document.getElementById('createEndDate').value = end.toISOString().split('T')[0];
-  }
-
-  // ===== 학생 목록 불러오기 =====
-  async function loadStudents() {
-    try {
-      const res = await fetch(`/tables/${TABLE_PROFILES}?limit=200&sort=student_id`);
-      const data = await res.json();
-      allStudents = (data.data || []).filter(s => s.status !== '졸업');
-    } catch(e) { allStudents = []; }
-    renderStudentChips('');
-  }
-
-  function renderStudentChips(query) {
-    const container = document.getElementById('studentChips');
-    const filtered  = query ? allStudents.filter(s => s.name?.includes(query)) : allStudents;
-    container.innerHTML = filtered.map(s => `
-      <div class="student-chip ${selectedStudentIds.has(s.student_id) ? 'selected' : ''}"
-        data-id="${s.student_id}" data-name="${s.name}"
-        onclick="toggleStudentChip('${s.student_id}', this)">
-        ${s.name}<br><small style="font-weight:400;opacity:.7">${s.student_id}</small>
-      </div>`).join('');
-  }
-
-  function filterStudentChips() {
-    const q = document.getElementById('studentSearch').value;
-    renderStudentChips(q);
-  }
-
-  function toggleStudentChip(id, el) {
-    if (selectedStudentIds.has(id)) { selectedStudentIds.delete(id); el.classList.remove('selected'); }
-    else { selectedStudentIds.add(id); el.classList.add('selected'); }
-  }
-
-  // ===== 플래너 목록 불러오기 =====
-  async function loadPlanners() {
-    try {
-      const res = await fetch(`/tables/${TABLE_PLANNERS}?limit=500`);
-      const data = await res.json();
-      allPlanners = data.data || [];
-    } catch(e) { allPlanners = []; }
-    filteredPlanners = [...allPlanners];
-    renderSummary();
-    renderTable();
-  }
-
-  function renderSummary() {
-    const today  = new Date(); today.setHours(0,0,0,0);
-    const ongoing = allPlanners.filter(p => p.status === '진행중');
-    const urgent  = ongoing.filter(p => {
-      const exam = new Date(p.exam_start_date); exam.setHours(0,0,0,0);
-      return Math.ceil((exam - today) / 86400000) <= 7;
-    });
-    document.getElementById('sumTotal').textContent   = allPlanners.length;
-    document.getElementById('sumOngoing').textContent = ongoing.length;
-    document.getElementById('sumUrgent').textContent  = urgent.length;
-    document.getElementById('sumHighProg').textContent = '–'; // tasks 없이는 계산 안함
-  }
-
-  function renderTable() {
-    const tbody = document.getElementById('plannerTableBody');
-    const empty = document.getElementById('plannerEmpty');
-    if (filteredPlanners.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-    empty.style.display = 'none';
-    const today = new Date(); today.setHours(0,0,0,0);
-    tbody.innerHTML = filteredPlanners.map(p => {
-      const exam  = new Date(p.exam_start_date); exam.setHours(0,0,0,0);
-      const diff  = Math.ceil((exam - today) / 86400000);
-      let ddayText, ddayClass;
-      if (diff > 0)       { ddayText = `D-${diff}`; ddayClass = diff <= 7 ? 'urgent' : ''; }
-      else if (diff === 0){ ddayText = 'D-DAY'; ddayClass = 'urgent'; }
-      else                { ddayText = `D+${Math.abs(diff)}`; ddayClass = 'done'; }
-
-      const subCount = Array.isArray(p.subjects) ? p.subjects.length : 0;
-      const statusClass = p.status === '진행중' ? 'ongoing' : p.status === '완료' ? 'done' : 'pending';
-
-      return `<tr>
-        <td><strong>${p.student_name || p.student_id}</strong><br>
-          <small style="color:#9ca3af">${p.student_id}</small></td>
-        <td>${p.exam_type}</td>
-        <td style="white-space:nowrap">${fmt(p.exam_start_date)}<br>
-          <small style="color:#9ca3af">~ ${fmt(p.exam_end_date)}</small></td>
-        <td><span class="dday-tag ${ddayClass}">${ddayText}</span></td>
-        <td>
-          <div style="display:flex;align-items:center;gap:6px">
-            <div class="prog-mini"><div class="prog-mini-fill" style="width:0%"></div></div>
-            <span style="font-size:.78rem;color:#6b7280">-</span>
-          </div>
-        </td>
-        <td style="text-align:center">${subCount}개</td>
-        <td><span class="status-badge ${statusClass}">${p.status}</span></td>
-        <td>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">
-            <button class="btn-ep-action btn-ep-view" onclick="openDetail('${p.id}')">
-              <i class="fas fa-edit"></i> 편집
-            </button>
-            <button class="btn-ep-action btn-ep-del" onclick="deletePlanner('${p.id}','${p.student_name}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  function filterPlanners() {
-    const q      = document.getElementById('searchInput').value.toLowerCase();
-    const status = document.getElementById('filterStatus').value;
-    filteredPlanners = allPlanners.filter(p => {
-      const matchQ = !q || (p.student_name || '').toLowerCase().includes(q) || (p.student_id || '').toLowerCase().includes(q);
-      const matchS = !status || p.status === status;
-      return matchQ && matchS;
-    });
-    renderTable();
-  }
-
-  // ===== 플래너 상세/편집 패널 =====
-  async function openDetail(plannerId) {
-    currentDetailPlanner = allPlanners.find(p => p.id === plannerId);
-    if (!currentDetailPlanner) return;
-    document.getElementById('dpTitle').textContent =
-      `${currentDetailPlanner.student_name} – ${currentDetailPlanner.exam_type} 편집`;
-
-    // tasks 불러오기
-    try {
-      const res = await fetch(`/tables/${TABLE_TASKS}?search=${currentDetailPlanner.student_id}&limit=500`);
-      const data = await res.json();
-      detailTasks = (data.data || []).filter(t =>
-        t.student_id === currentDetailPlanner.student_id &&
-        t.planner_id === plannerId
-      );
-    } catch(e) { detailTasks = []; }
-
-    renderDetailPanel();
-    document.getElementById('detailPanel').classList.add('open');
-    document.getElementById('panelOverlay').style.display = 'block';
-  }
-
-  function renderDetailPanel() {
-    const p = currentDetailPlanner;
-    const subjects = Array.isArray(p.subjects) ? p.subjects : [];
-    const today = new Date(); today.setHours(0,0,0,0);
-    const examD = new Date(p.exam_start_date); examD.setHours(0,0,0,0);
-    const diff  = Math.ceil((examD - today) / 86400000);
-    const done  = detailTasks.filter(t => t.is_done).length;
-    const total = detailTasks.length;
-    const pct   = total ? Math.round(done / total * 100) : 0;
-
-    const body = document.getElementById('dpBody');
-    body.innerHTML = `
-      <!-- 기본 정보 -->
-      <div class="dp-section-title"><i class="fas fa-info-circle"></i> 기본 정보</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div>
-          <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">시험 종류</label>
-          <select id="dpExamType" style="width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.9rem">
-            <option ${p.exam_type==='중간고사'?'selected':''}>중간고사</option>
-            <option ${p.exam_type==='기말고사'?'selected':''}>기말고사</option>
-            <option ${p.exam_type==='모의고사'?'selected':''}>모의고사</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">상태</label>
-          <select id="dpStatus" style="width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.9rem">
-            <option ${p.status==='준비중'?'selected':''}>준비중</option>
-            <option ${p.status==='진행중'?'selected':''}>진행중</option>
-            <option ${p.status==='완료'?'selected':''}>완료</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">시험 시작일</label>
-          <input type="date" id="dpStartDate" value="${p.exam_start_date}"
-            style="width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.9rem;box-sizing:border-box" />
-        </div>
-        <div>
-          <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">시험 종료일</label>
-          <input type="date" id="dpEndDate" value="${p.exam_end_date}"
-            style="width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.9rem;box-sizing:border-box" />
-        </div>
-      </div>
-      <div>
-        <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">과목 목록 (쉼표 구분)</label>
-        <input type="text" id="dpSubjects" value="${subjects.join(', ')}"
-          style="width:100%;padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.9rem;box-sizing:border-box" />
-      </div>
-      <button onclick="saveDetailBasic()" style="margin-top:10px;width:100%;padding:10px;border-radius:8px;border:none;background:var(--ep-main);color:white;font-weight:700;cursor:pointer">
-        <i class="fas fa-save"></i> 기본 정보 저장
-      </button>
-
-      <!-- 진도 요약 -->
-      <div class="dp-section-title" style="margin-top:24px"><i class="fas fa-chart-pie"></i> 진도 현황</div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#f9fafb;border-radius:10px;margin-bottom:8px">
-        <div style="font-size:2rem;font-weight:800;color:var(--ep-main)">${pct}%</div>
-        <div>
-          <div style="font-size:.85rem;font-weight:600;color:#374151">${done}개 완료 / 전체 ${total}개</div>
-          <div style="font-size:.78rem;color:#9ca3af">D-day: ${diff > 0 ? `D-${diff}` : diff === 0 ? 'D-DAY' : `D+${Math.abs(diff)}`}</div>
-        </div>
-        <div style="flex:1;height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">
-          <div style="width:${pct}%;height:100%;background:var(--ep-success);border-radius:99px"></div>
-        </div>
-      </div>
-
-      <!-- 날짜별 태스크 편집 -->
-      <div class="dp-section-title" style="margin-top:24px"><i class="fas fa-list-check"></i> 날짜별 할 일 편집</div>
-      <div id="dpTaskDatePicker" class="week-date-tabs"></div>
-      <div id="dpTaskList" class="task-edit-list"></div>
-      <button class="btn-add-task" onclick="addDetailTask()"><i class="fas fa-plus"></i> 할 일 추가</button>
-      <button onclick="saveDetailTasks()" style="margin-top:10px;width:100%;padding:10px;border-radius:8px;border:none;background:var(--ep-success);color:white;font-weight:700;cursor:pointer;font-size:14px;">
-        <i class="fas fa-save"></i> 할 일 + 코멘트 저장
-      </button>
-
-      <!-- 관리자 코멘트 -->
-      <div class="dp-section-title" style="margin-top:24px"><i class="fas fa-comment-dots"></i> 전체 플래너 메시지</div>
-      <p style="font-size:12px;color:#9ca3af;margin:0 0 8px;">학생 전체 플래너에 표시되는 격려 메시지입니다. 각 할일별 개별 코멘트는 위 할일 목록에서 입력하세요.</p>
-      <textarea id="dpAdminComment" rows="3"
-        style="width:100%;padding:10px;border:1.5px solid #ede9fe;border-radius:8px;font-family:inherit;font-size:.9rem;box-sizing:border-box;resize:vertical;background:#faf5ff"
-        placeholder="학생에게 전달할 전체 학습 격려 메시지를 입력하세요...">${p.scope || ''}</textarea>
-      <button onclick="saveAdminComment()" style="margin-top:8px;width:100%;padding:10px;border-radius:8px;border:none;background:#ede9fe;color:#6d28d9;font-weight:700;cursor:pointer;font-size:14px;">
-        <i class="fas fa-paper-plane"></i> 메시지 저장
-      </button>
-    `;
-
-    // 날짜 탭 생성 (플래너 전체 기간)
-    renderDetailDateTabs();
-  }
-
-  // 날짜 탭 (주별)
-  let detailSelectedDate = null;
-  function renderDetailDateTabs() {
-    const p = currentDetailPlanner;
-    const planStart = new Date(p.plan_start_date);
-    const container = document.getElementById('dpTaskDatePicker');
-    container.innerHTML = '';
-
-    // 오늘 날짜 선택 기본
-    const today = new Date().toISOString().split('T')[0];
-    detailSelectedDate = today;
-
-    // 주차별 버튼
-    for (let w = 0; w < 4; w++) {
-      const weekStart = new Date(planStart);
-      weekStart.setDate(weekStart.getDate() + w * 7);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const btn = document.createElement('button');
-      btn.className = 'week-date-tab';
-      btn.textContent = `${w+1}주차 (${weekStart.getMonth()+1}/${weekStart.getDate()})`;
-      btn.dataset.weekStart = weekStart.toISOString().split('T')[0];
-      btn.dataset.week = w;
-      btn.onclick = () => {
-        document.querySelectorAll('.week-date-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        detailSelectedDate = btn.dataset.weekStart;
-        renderDetailTaskList(btn.dataset.weekStart, btn.dataset.weekStart.slice(0,7));
-      };
-      container.appendChild(btn);
+      return [];
     }
-    // 첫 번째 주 기본 활성
-    container.firstChild?.classList.add('active');
-    const firstWeekStart = new Date(planStart).toISOString().split('T')[0];
-    renderDetailTaskList(firstWeekStart, firstWeekStart.slice(0,4));
-  }
 
-  function renderDetailTaskList(weekStartStr) {
-    const weekStart = new Date(weekStartStr);
-    const weekEnd   = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
-    const weekTasks = detailTasks.filter(t => {
-      const d = new Date(t.task_date);
-      return d >= weekStart && d <= weekEnd;
-    }).sort((a, b) => a.task_date.localeCompare(b.task_date));
+    function escapeHtml(str='') {
+      return String(str)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+    }
 
-    const container = document.getElementById('dpTaskList');
-    const subjects  = Array.isArray(currentDetailPlanner.subjects) ? currentDetailPlanner.subjects : [];
-    container.innerHTML = '';
+    function escapeAttr(str='') {
+      return escapeHtml(str).replace(/`/g, '&#096;');
+    }
 
-    // 날짜별 그룹
-    const groups = {};
-    weekTasks.forEach(t => {
-      if (!groups[t.task_date]) groups[t.task_date] = [];
-      groups[t.task_date].push(t);
-    });
+    function unwrapData(payload) {
+      return payload?.data || payload?.record || payload || null;
+    }
 
-    Object.entries(groups).forEach(([date, tasks]) => {
-      const dateLabel = document.createElement('div');
-      dateLabel.style.cssText = 'font-size:.8rem;font-weight:700;color:#6b7280;margin:8px 0 4px;padding-left:4px';
-      const d = new Date(date);
-      dateLabel.textContent = `${d.getMonth()+1}/${d.getDate()} (${['일','월','화','수','목','금','토'][d.getDay()]})`;
-      container.appendChild(dateLabel);
+    function unwrapList(payload) {
+      return payload?.data || payload?.records || payload || [];
+    }
 
-      tasks.forEach(t => {
-        const row = document.createElement('div');
-        row.className = 'task-edit-row';
-        row.dataset.taskId = t.id;
-        // 완료 여부 표시
-        const doneStyle = t.is_done
-          ? 'background:#f0fdf4;border-left:3px solid #34d399;'
-          : 'border-left:3px solid transparent;';
-        row.style.cssText = `flex-direction:column;gap:6px;padding:10px 12px;border-radius:10px;border:1.5px solid #e5e7eb;margin-bottom:6px;${doneStyle}`;
-        row.innerHTML = `
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:${t.is_done?'#d1fae5':'#f3f4f6'};color:${t.is_done?'#047857':'#6b7280'};flex-shrink:0">
-              ${t.is_done?'✅ 완료':'⬜ 미완료'}
-            </span>
-            <select class="dp-task-subject" style="padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.82rem">
-              ${subjects.map(s => `<option value="${s}" ${s===t.subject?'selected':''}>${s}</option>`).join('')}
-            </select>
-            <select class="dp-task-type" style="padding:6px 8px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.82rem">
-              <option ${t.subject_type==='주요'?'selected':''}>주요</option>
-              <option ${t.subject_type==='보조'?'selected':''}>보조</option>
-              <option ${t.subject_type==='암기'?'selected':''}>암기</option>
-            </select>
-            <button class="btn-del-task" onclick="removeDetailTask('${t.id}', this)" style="margin-left:auto">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-          <input type="text" class="dp-task-content" value="${t.task_content||''}" placeholder="할 일 내용"
-            style="width:100%;padding:7px 10px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.85rem;box-sizing:border-box" />
-          <div style="display:flex;align-items:center;gap:6px">
-            <i class="fas fa-comment-dots" style="color:#a78bfa;font-size:13px;flex-shrink:0;"></i>
-            <input type="text" class="dp-task-comment" value="${t.admin_comment||''}" placeholder="선생님 코멘트 (학생에게 표시)…"
-              style="flex:1;padding:6px 10px;border:1.5px solid #ede9fe;border-radius:7px;font-family:inherit;font-size:.82rem;background:#faf5ff;" />
-          </div>
-          ${t.student_memo ? `<div style="font-size:11.5px;color:#6b7280;background:#f9fafb;border-radius:6px;padding:5px 8px;"><i class="fas fa-pencil-alt" style="margin-right:4px;color:#9ca3af"></i>학생 메모: ${t.student_memo}</div>` : ''}
-        `;
-        container.appendChild(row);
-      });
-    });
-  }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function toYmd(input) {
+      const d = input instanceof Date ? new Date(input) : new Date(input);
+      if (Number.isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+    function addDays(input, days) {
+      const d = input instanceof Date ? new Date(input) : new Date(input);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+    function minToTime(min) {
+      const h = Math.floor(min / 60);
+      const m = min % 60;
+      return `${pad(h)}:${pad(m)}`;
+    }
+    function fmt(dateStr) {
+      if (!dateStr) return '';
+      const [y,m,d] = String(dateStr).split('-');
+      return `${y}.${m}.${d}`;
+    }
+    function getDayName(dateStr) {
+      const d = new Date(dateStr);
+      return ['일','월','화','수','목','금','토'][d.getDay()];
+    }
+    function getColorTag(subject='') {
+      for (const [k,v] of Object.entries(SUBJECT_COLORS)) {
+        if (String(subject).includes(k)) return v;
+      }
+      return 'etc';
+    }
+    function normalizeStatus(value) {
+      const v = String(value || '').trim().toLowerCase();
+      if (['active','진행중','진행 중','ongoing','in_progress'].includes(v)) return 'active';
+      if (['completed','완료','done','closed'].includes(v)) return 'completed';
+      if (['draft','준비중','준비 중','pending','대기'].includes(v)) return 'draft';
+      return 'active';
+    }
+    function statusLabel(code) {
+      return code === 'completed' ? '완료' : code === 'draft' ? '준비중' : '진행중';
+    }
+    function statusBadgeClass(code) {
+      return code === 'completed' ? 'done' : code === 'draft' ? 'pending' : 'ongoing';
+    }
+    function getProgressPct(done, total) {
+      return total > 0 ? Math.round((done / total) * 100) : 0;
+    }
 
-  function addDetailTask() {
-    const container = document.getElementById('dpTaskList');
-    const subjects  = Array.isArray(currentDetailPlanner.subjects) ? currentDetailPlanner.subjects : [];
-    const today     = new Date().toISOString().split('T')[0];
-    const TEMPLATES = ['개념 정리', '문제풀이', '오답 정리', '프린트·기출', '단어 암기', '회독·마무리', '범위 확인'];
-    const row = document.createElement('div');
-    row.className = 'task-edit-row';
-    row.dataset.taskId = 'new';
-    row.dataset.taskDate = today;
-    row.innerHTML = `
-      <input type="date" class="dp-task-date" value="${today}"
-        style="padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.82rem" />
-      <div style="flex:1;display:flex;flex-direction:column;gap:4px">
-        <input type="text" class="dp-task-content" placeholder="할 일 내용..." />
-        <div style="display:flex;gap:4px;flex-wrap:wrap">
-          ${TEMPLATES.map(t => `<button type="button" onclick="applyTemplate(this,'${t}')"
-            style="padding:2px 8px;border:1px solid #e5e7eb;border-radius:5px;background:#f9fafb;
-            font-size:.72rem;color:#6b7280;cursor:pointer;font-family:inherit;transition:all .15s"
-            onmouseover="this.style.borderColor='#4f46e5';this.style.color='#4f46e5'"
-            onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#6b7280'">${t}</button>`).join('')}
-        </div>
-      </div>
-      <select class="dp-task-subject" style="padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.82rem">
-        ${subjects.map(s => `<option>${s}</option>`).join('')}
-      </select>
-      <button class="btn-del-task" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
-    container.appendChild(row);
-    row.querySelector('.dp-task-content').focus();
-  }
+    function getDday(examDateStr) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const exam = new Date(examDateStr); exam.setHours(0,0,0,0);
+      const diff = Math.ceil((exam - today) / 86400000);
+      if (diff > 0) return { text:`D-${diff}`, className: diff <= 7 ? 'urgent' : '' };
+      if (diff === 0) return { text:'D-DAY', className:'urgent' };
+      return { text:`D+${Math.abs(diff)}`, className:'done' };
+    }
 
-  function applyTemplate(btn, tpl) {
-    const contentInput = btn.closest('[style*="flex-direction:column"]').querySelector('.dp-task-content');
-    const subjectSel   = btn.closest('.task-edit-row').querySelector('.dp-task-subject');
-    const subject      = subjectSel ? subjectSel.value : '';
-    contentInput.value = subject ? `${subject} – ${tpl}` : tpl;
-    contentInput.focus();
-  }
+    function computePlanStartDate(examStartDate) {
+      const d = new Date(examStartDate);
+      d.setDate(d.getDate() - 28);
+      return toYmd(d);
+    }
 
-  async function removeDetailTask(taskId, btn) {
-    if (!confirm('이 할 일을 삭제할까요?')) return;
-    try {
-      await fetch(`/tables/${TABLE_TASKS}/${taskId}`, { method: 'DELETE' });
-      detailTasks = detailTasks.filter(t => t.id !== taskId);
-      btn.closest('.task-edit-row').remove();
-      showToast('🗑️ 삭제되었습니다.');
-    } catch(e) { showToast('⚠️ 삭제 실패'); }
-  }
+    function buildWeeksData(planStartDate, examStartDate) {
+      const startDate = new Date(planStartDate);
+      const examDate = new Date(examStartDate);
+      const totalDays = Math.max(1, Math.ceil((examDate - startDate) / 86400000));
+      let weekConfigs;
 
-  async function saveDetailTasks() {
-    const rows = document.querySelectorAll('#dpTaskList .task-edit-row');
-    const promises = [];
-    rows.forEach(row => {
-      const taskId  = row.dataset.taskId;
-      const content = row.querySelector('.dp-task-content')?.value?.trim();
-      const subject = row.querySelector('.dp-task-subject')?.value;
-      const type    = row.querySelector('.dp-task-type')?.value || '주요';
-      if (!content) return;
-
-      if (taskId === 'new') {
-        const dateInput = row.querySelector('.dp-task-date');
-        const taskDate  = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
-        promises.push(
-          fetch(`/tables/${TABLE_TASKS}`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              planner_id: currentDetailPlanner.id,
-              student_id: currentDetailPlanner.student_id,
-              task_date: taskDate, subject, subject_type: type,
-              task_content: content, is_done: false, week_num: 1,
-              color_tag: 'etc', student_memo: '', admin_comment: '',
-            }),
-          })
-        );
+      if (totalDays >= 35) {
+        weekConfigs = [
+          { ...WEEK_DEFS[0], days: 7 }, { ...WEEK_DEFS[1], days: 7 },
+          { ...WEEK_DEFS[2], days: 7 }, { ...WEEK_DEFS[3], days: 7 },
+          { ...WEEK_DEFS[4], days: totalDays - 28 }
+        ];
+      } else if (totalDays >= 28) {
+        weekConfigs = [
+          { ...WEEK_DEFS[0], days: totalDays - 28 }, { ...WEEK_DEFS[1], days: 7 },
+          { ...WEEK_DEFS[2], days: 7 }, { ...WEEK_DEFS[3], days: 7 }, { ...WEEK_DEFS[4], days: 7 }
+        ].filter(w => w.days > 0);
+      } else if (totalDays >= 21) {
+        const per = Math.floor(totalDays / 4);
+        const extra = totalDays - per * 4;
+        weekConfigs = [
+          { ...WEEK_DEFS[1], days: per + (extra > 0 ? 1 : 0) },
+          { ...WEEK_DEFS[2], days: per + (extra > 1 ? 1 : 0) },
+          { ...WEEK_DEFS[3], days: per + (extra > 2 ? 1 : 0) },
+          { ...WEEK_DEFS[4], days: per }
+        ].filter(w => w.days > 0);
+      } else if (totalDays >= 14) {
+        const per = Math.floor(totalDays / 3);
+        const extra = totalDays - per * 3;
+        weekConfigs = [
+          { ...WEEK_DEFS[2], days: per + (extra > 0 ? 1 : 0) },
+          { ...WEEK_DEFS[3], days: per + (extra > 1 ? 1 : 0) },
+          { ...WEEK_DEFS[4], days: per }
+        ].filter(w => w.days > 0);
+      } else if (totalDays >= 7) {
+        const per = Math.floor(totalDays / 2);
+        weekConfigs = [
+          { ...WEEK_DEFS[3], days: per },
+          { ...WEEK_DEFS[4], days: totalDays - per }
+        ].filter(w => w.days > 0);
       } else {
-        promises.push(
-          fetch(`/tables/${TABLE_TASKS}/${taskId}`, {
-            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              task_content: content, subject, subject_type: type,
-              admin_comment: row.querySelector('.dp-task-comment')?.value?.trim() || '',
-            }),
-          })
-        );
+        weekConfigs = [{ ...WEEK_DEFS[4], days: totalDays }];
       }
-    });
-    await Promise.all(promises);
-    showToast('✅ 할 일이 저장되었습니다!');
-  }
 
-  // ===== 기본 정보 저장 =====
-  async function saveDetailBasic() {
-    const examType  = document.getElementById('dpExamType').value;
-    const status    = document.getElementById('dpStatus').value;
-    const startDate = document.getElementById('dpStartDate').value;
-    const endDate   = document.getElementById('dpEndDate').value;
-    const subjectsRaw = document.getElementById('dpSubjects').value;
-    const subjects  = subjectsRaw.split(',').map(s => s.trim()).filter(Boolean);
+      const weeks = [];
+      let cursor = new Date(startDate);
 
-    try {
-      const res = await fetch(`/tables/${TABLE_PLANNERS}/${currentDetailPlanner.id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exam_type: examType, status, exam_start_date: startDate, exam_end_date: endDate, subjects }),
+      weekConfigs.forEach(cfg => {
+        const weekStart = new Date(cursor);
+        const dayDates = [];
+        for (let i = 0; i < cfg.days; i++) {
+          dayDates.push(toYmd(cursor));
+          cursor.setDate(cursor.getDate() + 1);
+        }
+        const weekEnd = new Date(cursor);
+        weekEnd.setDate(weekEnd.getDate() - 1);
+        weeks.push({
+          id: cfg.id,
+          cls: cfg.cls,
+          emoji: cfg.emoji,
+          name: cfg.name,
+          subtitle: cfg.subtitle,
+          start_date: toYmd(weekStart),
+          end_date: toYmd(weekEnd),
+          day_count: cfg.days,
+          day_dates: dayDates
+        });
       });
-      const updated = await res.json();
-      const idx = allPlanners.findIndex(p => p.id === currentDetailPlanner.id);
-      if (idx >= 0) allPlanners[idx] = { ...allPlanners[idx], ...updated };
-      currentDetailPlanner = { ...currentDetailPlanner, ...updated };
-      renderTable();
-      showToast('✅ 저장되었습니다!');
-    } catch(e) { showToast('⚠️ 저장 실패'); }
-  }
 
-  // ===== 관리자 전체 메시지 저장 =====
-  async function saveAdminComment() {
-    const comment = document.getElementById('dpAdminComment').value;
-    try {
-      await fetch(`/tables/${TABLE_PLANNERS}/${currentDetailPlanner.id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scope: comment }),
+      return weeks;
+    }
+
+    function getWeekForDate(weeks, dateStr) {
+      return (weeks || []).find(w => dateStr >= w.start_date && dateStr <= w.end_date) || null;
+    }
+
+    function taskStrategyByWeek(weekId='w1') {
+      if (weekId === 'pre') return '범위 파악';
+      if (weekId === 'w1') return '개념 정리';
+      if (weekId === 'w2') return '문제풀이';
+      if (weekId === 'w3') return '기출·프린트';
+      return '오답·회독';
+    }
+
+    function stageNameByWeek(weekId='w1') {
+      if (weekId === 'pre') return '개념이해';
+      if (weekId === 'w1') return '개념완성';
+      if (weekId === 'w2') return '유형문제';
+      if (weekId === 'w3') return '심화문제';
+      return '최종문제';
+    }
+
+    function createDefaultTaskRows({ plannerId='', studentId='', subjects=[], planStartDate, examStartDate }) {
+      const rows = [];
+      const weeks = buildWeeksData(planStartDate, examStartDate);
+      const priority = subjects.filter(s => ['수학','영어','국어'].some(k => String(s).includes(k)));
+      const others = subjects.filter(s => !priority.includes(s));
+      const start = new Date(planStartDate);
+      const end = new Date(examStartDate);
+
+      for (let d = new Date(start), idx = 0; d <= end; d.setDate(d.getDate() + 1), idx++) {
+        const dateStr = toYmd(d);
+        const week = getWeekForDate(weeks, dateStr);
+        const weekNum = Math.max(1, weeks.findIndex(w => w.id === (week?.id || 'w1')) + 1);
+        const strategy = taskStrategyByWeek(week?.id || 'w1');
+        if (d.getDay() === 0) continue;
+
+        let col = 1;
+        if (priority.some(s => String(s).includes('수학'))) {
+          rows.push({
+            planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: '수학',
+            subject_type: '주요', week_num: weekNum, is_done: false,
+            task_content: `수학 – ${strategy}`, col_order: col++, color_tag: 'math',
+            student_memo: '', admin_comment: ''
+          });
+        }
+        if (priority.some(s => String(s).includes('영어'))) {
+          rows.push({
+            planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: '영어',
+            subject_type: '주요', week_num: weekNum, is_done: false,
+            task_content: `영어 – 단어 30개 + ${strategy}`, col_order: col++, color_tag: 'eng',
+            student_memo: '', admin_comment: ''
+          });
+        }
+        if (idx % 2 === 0 && priority.some(s => String(s).includes('국어'))) {
+          rows.push({
+            planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: '국어',
+            subject_type: '주요', week_num: weekNum, is_done: false,
+            task_content: `국어 – ${strategy}`, col_order: col++, color_tag: 'kor',
+            student_memo: '', admin_comment: ''
+          });
+        }
+        if (others.length > 0) {
+          const sub = others[idx % others.length];
+          rows.push({
+            planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: sub,
+            subject_type: '보조', week_num: weekNum, is_done: false,
+            task_content: `${sub} – ${strategy}`, col_order: col++, color_tag: getColorTag(sub),
+            student_memo: '', admin_comment: ''
+          });
+        }
+      }
+      return rows;
+    }
+
+    function extractLegacyTaskRows(planner) {
+      const daily = safeParseJSON(planner.daily_tasks, planner.daily_tasks || {});
+      const rows = [];
+      Object.entries(daily || {}).forEach(([dateStr, dayTask]) => {
+        const completed = Array.isArray(dayTask?.completed_slots) ? dayTask.completed_slots : [];
+        const slots = Array.isArray(dayTask?.slots) ? dayTask.slots : [];
+        slots.forEach((slot, idx) => {
+          if (!slot || slot.type === 'rest' || slot.type === 'meal') return;
+          const subject = slot.subject || '';
+          const taskText = slot.user_text || slot.task_text || slot.stage || '학습';
+          rows.push({
+            id: `legacy_${planner.id}_${dateStr}_${idx}`,
+            planner_id: planner.id,
+            student_id: planner.student_id,
+            task_date: dateStr,
+            subject,
+            subject_type: subject ? '주요' : '보조',
+            week_num: 1,
+            is_done: Boolean(slot.completed || completed.includes(idx)),
+            task_content: taskText,
+            col_order: idx + 1,
+            color_tag: getColorTag(subject),
+            student_memo: dayTask?.memo || '',
+            admin_comment: ''
+          });
+        });
       });
-      showToast('✅ 전체 메시지가 저장되었습니다!');
-    } catch(e) { showToast('⚠️ 저장 실패'); }
-  }
+      return rows.sort((a,b) => (a.task_date + String(a.col_order)).localeCompare(b.task_date + String(b.col_order)));
+    }
 
-  function closeDetailPanel() {
-    document.getElementById('detailPanel').classList.remove('open');
-    document.getElementById('panelOverlay').style.display = 'none';
-    loadPlanners(); // 목록 갱신
-  }
+    function buildDailyTasksFromTaskRows(taskRows, existingDailyTasks, planStartDate, examEndDate) {
+      const weeks = buildWeeksData(planStartDate, examEndDate);
+      const existing = safeParseJSON(existingDailyTasks, existingDailyTasks || {});
+      const grouped = {};
+      (taskRows || []).forEach(task => {
+        const key = task.task_date;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(task);
+      });
 
-  // ===== 플래너 생성 (일괄) =====
-  function openCreateModal() {
-    selectedStudentIds.clear();
-    renderStudentChips('');
-    document.getElementById('createModal').classList.add('open');
-  }
+      const daily = {};
+      for (let d = new Date(planStartDate); d <= new Date(examEndDate); d.setDate(d.getDate() + 1)) {
+        const dateStr = toYmd(d);
+        const week = getWeekForDate(weeks, dateStr);
+        const prev = existing[dateStr] || {};
+        const rows = (grouped[dateStr] || []).sort((a,b) => (a.col_order || 0) - (b.col_order || 0));
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        const startMin = Number.isFinite(prev.start_minutes) ? prev.start_minutes : (isWeekend ? 480 : 960);
 
-  async function batchCreatePlanners() {
-    if (selectedStudentIds.size === 0) { showToast('⚠️ 학생을 선택해주세요.'); return; }
-    const examType  = document.getElementById('createExamType').value;
-    const startDate = document.getElementById('createStartDate').value;
-    const endDate   = document.getElementById('createEndDate').value;
-    const year      = document.getElementById('createYear').value;
-    const semester  = document.getElementById('createSemester').value;
-    const subjectsRaw = document.getElementById('createSubjects').value;
-    if (!startDate || !endDate) { showToast('⚠️ 날짜를 입력해주세요.'); return; }
+        const slots = rows.map((task, idx) => {
+          const s = startMin + idx * 80;
+          const e = s + 70;
+          const subject = task.subject || '';
+          const stage = stageNameByWeek(week?.id || 'w1');
+          return {
+            type: 'study',
+            start_min: s,
+            end_min: e,
+            time: `${minToTime(s)}~${minToTime(e)}`,
+            subject,
+            subject_emoji: '📘',
+            stage,
+            stage_emoji: '📝',
+            stage_id: idx + 1,
+            task_text: task.task_content || (subject ? `${subject} 학습` : '학습'),
+            completed: !!task.is_done,
+            cornell_written: false,
+            editable: true,
+            user_text: ''
+          };
+        });
 
-    const subjects = subjectsRaw.split(',').map(s => s.trim()).filter(Boolean);
-    const planStart = new Date(startDate);
-    planStart.setDate(planStart.getDate() - 28);
+        daily[dateStr] = {
+          date: dateStr,
+          day_of_week: ['일','월','화','수','목','금','토'][d.getDay()],
+          is_weekend: isWeekend,
+          start_minutes: startMin,
+          week_id: week?.id || 'w1',
+          slots,
+          completed_slots: slots.map((slot, idx) => slot.completed ? idx : -1).filter(idx => idx >= 0),
+          memo: prev.memo || '',
+          mood: prev.mood || '',
+          vocab_done: prev.vocab_done || 0,
+          vocab_total: prev.vocab_total || 20
+        };
+      }
+      return daily;
+    }
 
-    showToast(`⏳ ${selectedStudentIds.size}명 플래너 생성 중...`);
-
-    const studentList = allStudents.filter(s => selectedStudentIds.has(s.student_id));
-    const promises = studentList.map(async student => {
-      const data = {
-        student_id: student.student_id,
-        student_name: student.name,
-        exam_type: examType,
-        exam_start_date: startDate,
-        exam_end_date: endDate,
-        exam_days: Math.round((new Date(endDate) - new Date(startDate)) / 86400000) + 1,
-        plan_start_date: planStart.toISOString().split('T')[0],
-        subjects,
-        schedule: '{}', scope: '',
-        status: '진행중',
-        created_by: sessionStorage.getItem('userId') || 'admin',
-        year, semester,
+    function normalizeTask(row) {
+      return {
+        id: row.id || '',
+        planner_id: row.planner_id || '',
+        student_id: row.student_id || '',
+        task_date: row.task_date || '',
+        subject: row.subject || '',
+        subject_type: row.subject_type || '주요',
+        week_num: Number(row.week_num || 1),
+        is_done: row.is_done === true || row.is_done === 'true',
+        task_content: row.task_content || '',
+        col_order: Number(row.col_order || 0),
+        color_tag: row.color_tag || getColorTag(row.subject || ''),
+        student_memo: row.student_memo || '',
+        admin_comment: row.admin_comment || ''
       };
-      const res = await fetch(`/tables/${TABLE_PLANNERS}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+    }
+
+    function getSyncMode(planner, taskRows) {
+      const hasTaskTable = (taskRows || []).length > 0;
+      const hasLegacy = !!planner.daily_tasks;
+      if (hasTaskTable && hasLegacy) return 'bridge';
+      if (hasTaskTable) return 'table';
+      if (hasLegacy) return 'legacy';
+      return 'table';
+    }
+
+    function normalizePlanner(row) {
+      const planner = { ...row };
+      planner.subjects = normalizeArray(planner.subjects);
+      planner.weeks_data = safeParseJSON(planner.weeks_data, planner.weeks_data || []);
+      planner.daily_tasks = safeParseJSON(planner.daily_tasks, planner.daily_tasks || {});
+      planner.year = String(planner.year || planner.school_year || new Date().getFullYear());
+      planner.school_year = planner.year;
+      planner.semester = planner.semester || '1학기';
+      planner.plan_start_date = planner.plan_start_date || computePlanStartDate(planner.exam_start_date);
+      planner.status_code = normalizeStatus(planner.status);
+      planner.status_label = statusLabel(planner.status_code);
+
+      const tableTasks = allTaskRows
+        .filter(t => String(t.planner_id) === String(planner.id))
+        .map(normalizeTask);
+
+      const effectiveTasks = tableTasks.length > 0 ? tableTasks : extractLegacyTaskRows(planner);
+      planner.task_rows = effectiveTasks;
+      planner.task_count = effectiveTasks.length;
+      planner.done_count = effectiveTasks.filter(t => t.is_done).length;
+      planner.progress_pct = getProgressPct(planner.done_count, planner.task_count);
+      if (!planner.subjects.length) {
+        planner.subjects = [...new Set(effectiveTasks.map(t => t.subject).filter(Boolean))];
+      }
+      planner.sync_mode = getSyncMode(planner, tableTasks);
+      return planner;
+    }
+
+    function chunk(array, size) {
+      const out = [];
+      for (let i = 0; i < array.length; i += size) out.push(array.slice(i, i + size));
+      return out;
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('epToast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id)?.classList.remove('open');
+    }
+
+    function waitForSession(cb, timeout = 5000) {
+      const started = Date.now();
+      function check() {
+        let s = window._dvlAdminSession;
+        if (!s) {
+          try { s = JSON.parse(sessionStorage.getItem('dvl_admin_tab_session') || 'null'); } catch(_) {}
+        }
+        if (!s) {
+          try { s = JSON.parse(localStorage.getItem('dvl_admin_session') || 'null'); } catch(_) {}
+        }
+        if (s && (s.role === 'admin' || s.role === 'master')) return cb(s);
+        if (Date.now() - started > timeout) return cb(null);
+        setTimeout(check, 120);
+      }
+      check();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fillYearOptions();
+      document.getElementById('createStartDate')?.addEventListener('change', autoSetEndDate);
+      document.getElementById('createExamType')?.addEventListener('change', autoSetEndDate);
+      waitForSession(async (session) => {
+        if (session) {
+          const adminName = session.name || '관리자';
+          document.getElementById('topbarAdminName').textContent = adminName;
+          document.getElementById('sidebarAdminName').textContent = adminName;
+        }
+        await refreshAllData();
       });
-      return await res.json();
     });
 
-    try {
-      const results = await Promise.allSettled(promises);
-      const created = results
-        .filter(r => r.status === 'fulfilled' && r.value && r.value.id)
-        .map(r => r.value);
-      const failed  = results.filter(r => r.status === 'rejected').length;
+    function fillYearOptions() {
+      const el = document.getElementById('createYear');
+      if (!el) return;
+      const now = new Date().getFullYear();
+      el.innerHTML = '';
+      [now - 1, now, now + 1].forEach(y => {
+        const option = document.createElement('option');
+        option.value = String(y);
+        option.textContent = `${y}년`;
+        if (y === now) option.selected = true;
+        el.appendChild(option);
+      });
+    }
 
-      if (created.length === 0) {
-        showToast('⚠️ 플래너 생성 실패. DB 테이블이 없을 수 있습니다. admin/db-setup.html 에서 초기화하세요.');
+    function autoSetEndDate() {
+      const startVal = document.getElementById('createStartDate').value;
+      const examType = document.getElementById('createExamType').value;
+      if (!startVal) return;
+      const start = new Date(startVal);
+      const extraDays = examType === '기말고사' ? 3 : examType === '중간고사' ? 2 : examType === '모의고사' ? 0 : 1;
+      start.setDate(start.getDate() + extraDays);
+      document.getElementById('createEndDate').value = toYmd(start);
+    }
+
+    async function refreshAllData() {
+      await Promise.all([loadStudents(), loadPlanners()]);
+    }
+
+    async function loadStudents() {
+      try {
+        const res = await fetch(`/tables/${TABLE_PROFILES}?limit=300&sort=student_id`);
+        const data = await res.json();
+        allStudents = unwrapList(data).filter(s => String(s.status || '').trim() !== '졸업');
+      } catch (_) {
+        allStudents = [];
+      }
+      renderStudentChips('');
+    }
+
+    function renderStudentChips(query='') {
+      const container = document.getElementById('studentChips');
+      const q = query.trim().toLowerCase();
+      const list = q ? allStudents.filter(s =>
+        String(s.name || '').toLowerCase().includes(q) ||
+        String(s.student_id || '').toLowerCase().includes(q)
+      ) : allStudents;
+
+      container.innerHTML = list.map(s => `
+        <div class="student-chip ${selectedStudentIds.has(String(s.student_id)) ? 'selected' : ''}"
+             onclick="toggleStudentChip('${escapeAttr(String(s.student_id))}', this)">
+          ${escapeHtml(s.name || '학생')}<br>
+          <small style="font-weight:400;opacity:.7">${escapeHtml(s.student_id || '')}</small>
+        </div>
+      `).join('');
+    }
+
+    function filterStudentChips() {
+      renderStudentChips(document.getElementById('studentSearch').value || '');
+    }
+
+    function toggleStudentChip(id, el) {
+      const key = String(id);
+      if (selectedStudentIds.has(key)) {
+        selectedStudentIds.delete(key);
+        el.classList.remove('selected');
+      } else {
+        selectedStudentIds.add(key);
+        el.classList.add('selected');
+      }
+    }
+
+    async function loadPlanners() {
+      try {
+        const [planRes, taskRes] = await Promise.all([
+          fetch(`/tables/${TABLE_PLANNERS}?limit=500`),
+          fetch(`/tables/${TABLE_TASKS}?limit=5000`)
+        ]);
+        const [planData, taskData] = await Promise.all([planRes.json(), taskRes.json()]);
+        allPlannerRows = unwrapList(planData);
+        allTaskRows = unwrapList(taskData).map(normalizeTask);
+      } catch (_) {
+        allPlannerRows = [];
+        allTaskRows = [];
+      }
+
+      filteredPlanners = allPlannerRows.map(normalizePlanner).sort((a, b) => {
+        const ad = new Date(a.exam_start_date || '2100-01-01').getTime();
+        const bd = new Date(b.exam_start_date || '2100-01-01').getTime();
+        return ad - bd;
+      });
+
+      renderSummary();
+      renderTable();
+    }
+
+    function renderSummary() {
+      const ongoing = filteredPlanners.filter(p => p.status_code === 'active');
+      const urgent = ongoing.filter(p => {
+        const exam = new Date(p.exam_start_date); exam.setHours(0,0,0,0);
+        const today = new Date(); today.setHours(0,0,0,0);
+        return Math.ceil((exam - today) / 86400000) <= 7;
+      });
+      const highProg = filteredPlanners.filter(p => p.progress_pct >= 70);
+
+      document.getElementById('sumTotal').textContent = filteredPlanners.length;
+      document.getElementById('sumOngoing').textContent = ongoing.length;
+      document.getElementById('sumUrgent').textContent = urgent.length;
+      document.getElementById('sumHighProg').textContent = highProg.length;
+    }
+
+    function renderSyncBadge(mode) {
+      if (mode === 'bridge') return '<span class="sync-badge bridge"><i class="fas fa-link"></i> 브릿지</span>';
+      if (mode === 'legacy') return '<span class="sync-badge legacy"><i class="fas fa-database"></i> 레거시</span>';
+      return '<span class="sync-badge table"><i class="fas fa-table"></i> 통합</span>';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('plannerTableBody');
+      const empty = document.getElementById('plannerEmpty');
+      const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      const status = document.getElementById('filterStatus').value || '';
+
+      const rows = filteredPlanners.filter(p => {
+        const matchQ = !search ||
+          String(p.student_name || '').toLowerCase().includes(search) ||
+          String(p.student_id || '').toLowerCase().includes(search);
+        const matchS = !status || p.status_code === status;
+        return matchQ && matchS;
+      });
+
+      if (!rows.length) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
         return;
       }
 
-      // 기본 task 생성
-      for (const planner of created) {
-        try {
-          await generateDefaultTasks(planner.id, planner.student_id, subjects, planStart, new Date(startDate));
-        } catch(te) { console.warn('[task생성실패]', planner.student_id, te.message); }
+      empty.style.display = 'none';
+      tbody.innerHTML = rows.map(p => {
+        const dday = getDday(p.exam_start_date);
+        return `
+          <tr>
+            <td>
+              <strong>${escapeHtml(p.student_name || p.student_id || '학생')}</strong><br>
+              <small style="color:#9ca3af">${escapeHtml(p.student_id || '')}</small>
+            </td>
+            <td>${escapeHtml(p.exam_type || '-')}</td>
+            <td style="white-space:nowrap
+            ${fmt(p.exam_start_date)}<br>
+              <small style="color:#9ca3af">~ ${fmt(p.exam_end_date)}</small>
+            </td>
+            <td><span class="dday-tag ${dday.className}">${dday.text}</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div class="prog-mini"><div class="prog-mini-fill" style="width:${p.progress_pct}%"></div></div>
+                <span style="font-size:.78rem;color:#6b7280">${p.progress_pct}%</span>
+              </div>
+            </td>
+            <td style="text-align:center">${p.subjects.length}개</td>
+            <td><span class="status-badge ${statusBadgeClass(p.status_code)}">${p.status_label}</span></td>
+            <td>${renderSyncBadge(p.sync_mode)}</td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                <button class="btn-ep-action btn-ep-view" onclick="openDetail('${escapeAttr(String(p.id))}')">
+                  <i class="fas fa-edit"></i> 편집
+                </button>
+                <button class="btn-ep-action btn-ep-del" onclick="deletePlanner('${escapeAttr(String(p.id))}','${escapeAttr(String(p.student_name || p.student_id || '학생'))}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterPlanners() {
+      renderTable();
+    }
+
+    function getPlannerFromState(plannerId) {
+      return filteredPlanners.find(p => String(p.id) === String(plannerId)) || null;
+    }
+
+    async function fetchTaskRowsForPlanner(studentId, plannerId) {
+      try {
+        const res = await fetch(`/tables/${TABLE_TASKS}?search=${encodeURIComponent(studentId)}&limit=5000`);
+        const data = await res.json();
+        return unwrapList(data)
+          .map(normalizeTask)
+          .filter(t => String(t.student_id) === String(studentId) && String(t.planner_id) === String(plannerId))
+          .sort((a,b) => {
+            if (a.task_date !== b.task_date) return String(a.task_date).localeCompare(String(b.task_date));
+            return Number(a.col_order || 0) - Number(b.col_order || 0);
+          });
+      } catch (_) {
+        return [];
       }
+    }
+
+    async function patchPlannerRecord(plannerId, payload) {
+      const res = await fetch(`/tables/${TABLE_PLANNERS}/${plannerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return await res.json().catch(() => ({}));
+    }
+
+    async function createTaskRowsBulk(rows) {
+      const groups = chunk(rows, 20);
+      for (const group of groups) {
+        await Promise.all(group.map(row =>
+          fetch(`/tables/${TABLE_TASKS}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(row)
+          })
+        ));
+      }
+    }
+
+    async function syncPlannerBridge(plannerLike, taskRows = null) {
+      if (!plannerLike || !plannerLike.id) return;
+      const planner = { ...plannerLike };
+      const effectiveTasks = Array.isArray(taskRows) ? taskRows : await fetchTaskRowsForPlanner(planner.student_id, planner.id);
+      const year = String(planner.year || planner.school_year || new Date().getFullYear());
+      const planStartDate = planner.plan_start_date || computePlanStartDate(planner.exam_start_date);
+      const weeks = buildWeeksData(planStartDate, planner.exam_start_date);
+      const dailyTasks = buildDailyTasksFromTaskRows(
+        effectiveTasks,
+        planner.daily_tasks || {},
+        planStartDate,
+        planner.exam_end_date || planner.exam_start_date
+      );
+
+      await patchPlannerRecord(planner.id, {
+        subjects: normalizeArray(planner.subjects),
+        year,
+        school_year: year,
+        semester: planner.semester || '1학기',
+        plan_start_date: planStartDate,
+        weeks_data: weeks,
+        daily_tasks: dailyTasks,
+        status: normalizeStatus(planner.status || planner.status_code || 'active'),
+        scope: planner.scope || ''
+      });
+    }
+
+    async function refreshPlannerDetail(plannerId) {
+      await loadPlanners();
+      currentDetailPlanner = getPlannerFromState(plannerId);
+      detailTasks = currentDetailPlanner ? [...currentDetailPlanner.task_rows] : [];
+    }
+
+    async function openDetail(plannerId) {
+      currentDetailPlanner = getPlannerFromState(plannerId);
+      if (!currentDetailPlanner) return;
+      detailTasks = [...currentDetailPlanner.task_rows];
+      renderDetailPanel();
+      document.getElementById('detailPanel').classList.add('open');
+      document.getElementById('panelOverlay').style.display = 'block';
+    }
+
+    function renderDetailPanel() {
+      const p = currentDetailPlanner;
+      if (!p) return;
+
+      const subjects = Array.isArray(p.subjects) ? p.subjects : [];
+      const dday = getDday(p.exam_start_date);
+      const pct = getProgressPct(detailTasks.filter(t => t.is_done).length, detailTasks.length);
+
+      const body = document.getElementById('dpBody');
+      body.innerHTML = `
+        <div class="dp-section-title"><i class="fas fa-info-circle"></i> 기본 정보</div>
+        <div class="dp-grid-2">
+          <div>
+            <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">시험 종류</label>
+            <select id="dpExamType" class="dp-select">
+              <option value="중간고사" ${p.exam_type === '중간고사' ? 'selected' : ''}>중간고사</option>
+              <option value="기말고사" ${p.exam_type === '기말고사' ? 'selected' : ''}>기말고사</option>
+              <option value="모의고사" ${p.exam_type === '모의고사' ? 'selected' : ''}>모의고사</option>
+              <option value="기타" ${p.exam_type === '기타' ? 'selected' : ''}>기타</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">상태</label>
+            <select id="dpStatus" class="dp-select">
+              <option value="draft" ${p.status_code === 'draft' ? 'selected' : ''}>준비중</option>
+              <option value="active" ${p.status_code === 'active' ? 'selected' : ''}>진행중</option>
+              <option value="completed" ${p.status_code === 'completed' ? 'selected' : ''}>완료</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">시험 시작일</label>
+            <input type="date" id="dpStartDate" class="dp-input" value="${escapeAttr(p.exam_start_date || '')}" />
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">시험 종료일</label>
+            <input type="date" id="dpEndDate" class="dp-input" value="${escapeAttr(p.exam_end_date || '')}" />
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">학년도</label>
+            <input type="text" id="dpYear" class="dp-input" value="${escapeAttr(p.year || '')}" />
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">학기</label>
+            <select id="dpSemester" class="dp-select">
+              <option value="1학기" ${p.semester === '1학기' ? 'selected' : ''}>1학기</option>
+              <option value="2학기" ${p.semester === '2학기' ? 'selected' : ''}>2학기</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size:.8rem;font-weight:600;color:#6b7280;display:block;margin-bottom:4px">과목 목록 (쉼표 구분)</label>
+          <input type="text" id="dpSubjects" class="dp-input" value="${escapeAttr(subjects.join(', '))}" />
+        </div>
+
+        <button class="dp-save-btn" onclick="saveDetailBasic()">
+          <i class="fas fa-save"></i> 기본 정보 저장
+        </button>
+
+        <div class="dp-section-title" style="margin-top:24px"><i class="fas fa-chart-pie"></i> 진도 현황</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#f9fafb;border-radius:10px;margin-bottom:8px">
+          <div style="font-size:2rem;font-weight:800;color:var(--ep-main)">${pct}%</div>
+          <div>
+            <div style="font-size:.85rem;font-weight:600;color:#374151">${detailTasks.filter(t => t.is_done).length}개 완료 / 전체 ${detailTasks.length}개</div>
+            <div style="font-size:.78rem;color:#9ca3af">${dday.text}</div>
+          </div>
+          <div style="flex:1;height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:var(--ep-success);border-radius:99px"></div>
+          </div>
+        </div>
+
+        <div class="dp-section-title" style="margin-top:24px"><i class="fas fa-list-check"></i> 날짜별 할 일 편집</div>
+        <div id="dpTaskDatePicker" class="week-date-tabs"></div>
+        <div id="dpTaskList" class="task-edit-list"></div>
+        <button class="btn-add-task" onclick="addDetailTask()"><i class="fas fa-plus"></i> 할 일 추가</button>
+        <button onclick="saveDetailTasks()" style="margin-top:10px;width:100%;padding:10px;border-radius:8px;border:none;background:var(--ep-success);color:white;font-weight:700;cursor:pointer;font-size:14px;">
+          <i class="fas fa-save"></i> 할 일 + 코멘트 저장
+        </button>
+
+        <div class="dp-section-title" style="margin-top:24px"><i class="fas fa-comment-dots"></i> 전체 플래너 메시지</div>
+        <p style="font-size:12px;color:#9ca3af;margin:0 0 8px;">학생/학부모 화면에 공통으로 표시되는 메시지입니다.</p>
+        <textarea id="dpAdminComment" rows="3" class="dp-textarea"
+          style="border-color:#ede9fe;background:#faf5ff"
+          placeholder="학생에게 전달할 전체 학습 격려 메시지를 입력하세요...">${escapeHtml(p.scope || '')}</textarea>
+        <button onclick="saveAdminComment()" style="margin-top:8px;width:100%;padding:10px;border-radius:8px;border:none;background:#ede9fe;color:#6d28d9;font-weight:700;cursor:pointer;font-size:14px;">
+          <i class="fas fa-paper-plane"></i> 메시지 저장
+        </button>
+      `;
+
+      renderDetailDateTabs();
+    }
+
+    function getDetailWeeks() {
+      if (!currentDetailPlanner) return [];
+      const weeks = Array.isArray(currentDetailPlanner.weeks_data) && currentDetailPlanner.weeks_data.length
+        ? currentDetailPlanner.weeks_data
+        : buildWeeksData(
+            currentDetailPlanner.plan_start_date || computePlanStartDate(currentDetailPlanner.exam_start_date),
+            currentDetailPlanner.exam_start_date
+          );
+      return weeks;
+    }
+
+    function renderDetailDateTabs() {
+      const container = document.getElementById('dpTaskDatePicker');
+      const weeks = getDetailWeeks();
+      container.innerHTML = '';
+
+      weeks.forEach((week, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'week-date-tab';
+        btn.textContent = `${week.name} (${fmt(week.start_date).slice(5)} ~ ${fmt(week.end_date).slice(5)})`;
+        btn.onclick = () => {
+          document.querySelectorAll('.week-date-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          detailWeekKey = week.id;
+          renderDetailTaskList(week);
+        };
+        container.appendChild(btn);
+        if (idx === 0) {
+          btn.classList.add('active');
+          detailWeekKey = week.id;
+        }
+      });
+
+      if (weeks[0]) renderDetailTaskList(weeks[0]);
+    }
+
+    function renderDetailTaskList(week) {
+      const container = document.getElementById('dpTaskList');
+      container.innerHTML = '';
+      const subjects = Array.isArray(currentDetailPlanner?.subjects) ? currentDetailPlanner.subjects : [];
+
+      const weekTasks = detailTasks
+        .filter(t => t.task_date >= week.start_date && t.task_date <= week.end_date)
+        .sort((a,b) => {
+          if (a.task_date !== b.task_date) return String(a.task_date).localeCompare(String(b.task_date));
+          return Number(a.col_order || 0) - Number(b.col_order || 0);
+        });
+
+      const grouped = {};
+      weekTasks.forEach(t => {
+        if (!grouped[t.task_date]) grouped[t.task_date] = [];
+        grouped[t.task_date].push(t);
+      });
+
+      if (!Object.keys(grouped).length) {
+        container.innerHTML = `<div style="padding:14px;border:1px dashed #d1d5db;border-radius:10px;color:#9ca3af;font-size:.85rem">이 주차에는 등록된 할 일이 없습니다.</div>`;
+        return;
+      }
+
+      Object.entries(grouped).forEach(([date, tasks]) => {
+        const title = document.createElement('div');
+        title.className = 'task-date-title';
+        title.textContent = `${fmt(date)} (${getDayName(date)})`;
+        container.appendChild(title);
+
+        tasks.forEach(t => {
+          const row = document.createElement('div');
+          row.className = `task-card ${t.is_done ? 'done' : 'pending'}`;
+          row.dataset.taskId = t.id || '';
+          row.dataset.taskDate = t.task_date || '';
+          row.innerHTML = `
+            <div class="task-top">
+              <span class="task-pill ${t.is_done ? 'done' : ''}">${t.is_done ? '✅ 완료' : '⬜ 미완료'}</span>
+              <select class="dp-task-subject dp-select" style="padding:6px 8px;font-size:.82rem;width:auto">
+                ${subjects.map(s => `<option value="${escapeAttr(s)}" ${s === t.subject ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+              </select>
+              <select class="dp-task-type dp-select" style="padding:6px 8px;font-size:.82rem;width:auto">
+                <option value="주요" ${t.subject_type === '주요' ? 'selected' : ''}>주요</option>
+                <option value="보조" ${t.subject_type === '보조' ? 'selected' : ''}>보조</option>
+                <option value="암기" ${t.subject_type === '암기' ? 'selected' : ''}>암기</option>
+              </select>
+              <button class="btn-del-task" onclick="removeDetailTask('${escapeAttr(String(t.id || ''))}', this)"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="text" class="dp-task-content dp-input" value="${escapeAttr(t.task_content || '')}" placeholder="할 일 내용" style="font-size:.85rem" />
+            <div class="task-comment-row">
+              <i class="fas fa-comment-dots" style="color:#a78bfa;font-size:13px;flex-shrink:0;"></i>
+              <input type="text" class="dp-task-comment dp-input" value="${escapeAttr(t.admin_comment || '')}" placeholder="선생님 코멘트 (학생/학부모에게 표시)" style="font-size:.82rem;background:#faf5ff;border-color:#ede9fe" />
+            </div>
+            ${t.student_memo ? `<div class="task-meta-note"><i class="fas fa-pencil-alt" style="margin-right:4px;color:#9ca3af"></i>학생 메모: ${escapeHtml(t.student_memo)}</div>` : ''}
+          `;
+          container.appendChild(row);
+        });
+      });
+    }
+
+    function addDetailTask() {
+      const container = document.getElementById('dpTaskList');
+      const subjects = Array.isArray(currentDetailPlanner?.subjects) ? currentDetailPlanner.subjects : [];
+      const weeks = getDetailWeeks();
+      const currentWeek = weeks.find(w => w.id === detailWeekKey) || weeks[0];
+      const dateValue = currentWeek?.start_date || toYmd(new Date());
+
+      const row = document.createElement('div');
+      row.className = 'task-card pending';
+      row.dataset.taskId = `new_${Date.now()}`;
+      row.dataset.taskDate = dateValue;
+      row.innerHTML = `
+        <div class="task-top">
+          <span class="task-pill">새 할 일</span>
+          <input type="date" class="dp-task-date dp-input" value="${escapeAttr(dateValue)}" style="padding:6px 8px;font-size:.82rem;width:auto" />
+          <select class="dp-task-subject dp-select" style="padding:6px 8px;font-size:.82rem;width:auto">
+            ${subjects.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('')}
+          </select>
+          <select class="dp-task-type dp-select" style="padding:6px 8px;font-size:.82rem;width:auto">
+            <option value="주요">주요</option>
+            <option value="보조">보조</option>
+            <option value="암기">암기</option>
+          </select>
+          <button class="btn-del-task" onclick="this.closest('.task-card').remove()"><i class="fas fa-times"></i></button>
+        </div>
+        <input type="text" class="dp-task-content dp-input" placeholder="할 일 내용" style="font-size:.85rem" />
+        <div class="task-comment-row">
+          <i class="fas fa-comment-dots" style="color:#a78bfa;font-size:13px;flex-shrink:0;"></i>
+          <input type="text" class="dp-task-comment dp-input" placeholder="선생님 코멘트" style="font-size:.82rem;background:#faf5ff;border-color:#ede9fe" />
+        </div>
+      `;
+      container.appendChild(row);
+      row.querySelector('.dp-task-content').focus();
+    }
+
+    async function removeDetailTask(taskId, btn) {
+      if (!taskId || String(taskId).startsWith('new_')) {
+        btn.closest('.task-card')?.remove();
+        return;
+      }
+      if (!confirm('이 할 일을 삭제할까요?')) return;
+      try {
+        await fetch(`/tables/${TABLE_TASKS}/${taskId}`, { method: 'DELETE' });
+        detailTasks = detailTasks.filter(t => String(t.id) !== String(taskId));
+        btn.closest('.task-card')?.remove();
+        await syncPlannerBridge(currentDetailPlanner, detailTasks);
+        await refreshPlannerDetail(currentDetailPlanner.id);
+        renderDetailPanel();
+        showToast('🗑️ 삭제되었습니다.');
+      } catch (_) {
+        showToast('⚠️ 삭제 실패');
+      }
+    }
+
+    async function saveDetailTasks() {
+      const rows = [...document.querySelectorAll('#dpTaskList .task-card')];
+      const promises = [];
+
+      rows.forEach((row, idx) => {
+        const taskId = row.dataset.taskId || '';
+        const taskDate = row.querySelector('.dp-task-date')?.value || row.dataset.taskDate || toYmd(new Date());
+        const subject = row.querySelector('.dp-task-subject')?.value || '';
+        const type = row.querySelector('.dp-task-type')?.value || '주요';
+        const content = row.querySelector('.dp-task-content')?.value?.trim() || '';
+        const comment = row.querySelector('.dp-task-comment')?.value?.trim() || '';
+        if (!content) return;
+
+        const payload = {
+          planner_id: currentDetailPlanner.id,
+          student_id: currentDetailPlanner.student_id,
+          task_date: taskDate,
+          subject,
+          subject_type: type,
+          week_num: Math.max(1, getDetailWeeks().findIndex(w => taskDate >= w.start_date && taskDate <= w.end_date) + 1),
+          is_done: row.classList.contains('done'),
+          task_content: content,
+          col_order: idx + 1,
+          color_tag: getColorTag(subject),
+          student_memo: '',
+          admin_comment: comment
+        };
+
+        if (String(taskId).startsWith('new_')) {
+          promises.push(
+            fetch(`/tables/${TABLE_TASKS}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            })
+          );
+        } else {
+          promises.push(
+            fetch(`/tables/${TABLE_TASKS}/${taskId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                task_date: taskDate,
+                subject,
+                subject_type: type,
+                task_content: content,
+                col_order: idx + 1,
+                color_tag: getColorTag(subject),
+                admin_comment: comment
+              })
+            })
+          );
+        }
+      });
+
+      try {
+        await Promise.all(promises);
+        const freshTasks = await fetchTaskRowsForPlanner(currentDetailPlanner.student_id, currentDetailPlanner.id);
+        await syncPlannerBridge(currentDetailPlanner, freshTasks);
+        await refreshPlannerDetail(currentDetailPlanner.id);
+        renderDetailPanel();
+        showToast('✅ 할 일이 저장되었습니다!');
+      } catch (e) {
+        console.error('[saveDetailTasks]', e);
+        showToast('⚠️ 할 일 저장 실패');
+      }
+    }
+
+    async function saveDetailBasic() {
+      const examType = document.getElementById('dpExamType').value;
+      const status = document.getElementById('dpStatus').value;
+      const startDate = document.getElementById('dpStartDate').value;
+      const endDate = document.getElementById('dpEndDate').value || startDate;
+      const year = String(document.getElementById('dpYear').value || new Date().getFullYear()).trim();
+      const semester = document.getElementById('dpSemester').value;
+      const subjects = document.getElementById('dpSubjects').value.split(',').map(s => s.trim()).filter(Boolean);
+
+      if (!startDate || !endDate) {
+        showToast('⚠️ 시험 날짜를 입력해주세요.');
+        return;
+      }
+
+      try {
+        const planStartDate = computePlanStartDate(startDate);
+        const updatedPlanner = {
+          ...currentDetailPlanner,
+          exam_type: examType,
+          status,
+          exam_start_date: startDate,
+          exam_end_date: endDate,
+          exam_days: Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / 86400000) + 1),
+          year,
+          school_year: year,
+          semester,
+          subjects,
+          plan_start_date: planStartDate
+        };
+
+        const freshTasks = await fetchTaskRowsForPlanner(currentDetailPlanner.student_id, currentDetailPlanner.id);
+        const weeksData = buildWeeksData(planStartDate, startDate);
+        const dailyTasks = buildDailyTasksFromTaskRows(freshTasks, currentDetailPlanner.daily_tasks || {}, planStartDate, endDate);
+
+        await patchPlannerRecord(currentDetailPlanner.id, {
+          exam_type: examType,
+          status,
+          exam_start_date: startDate,
+          exam_end_date: endDate,
+          exam_days: updatedPlanner.exam_days,
+          year,
+          school_year: year,
+          semester,
+          subjects,
+          plan_start_date: planStartDate,
+          weeks_data: weeksData,
+          daily_tasks: dailyTasks
+        });
+
+        await refreshPlannerDetail(currentDetailPlanner.id);
+        renderDetailPanel();
+        renderSummary();
+        renderTable();
+        showToast('✅ 기본 정보가 저장되었습니다!');
+      } catch (e) {
+        console.error('[saveDetailBasic]', e);
+        showToast('⚠️ 저장 실패');
+      }
+    }
+
+    async function saveAdminComment() {
+      const comment = document.getElementById('dpAdminComment').value;
+      try {
+        await patchPlannerRecord(currentDetailPlanner.id, { scope: comment });
+        currentDetailPlanner.scope = comment;
+        await refreshPlannerDetail(currentDetailPlanner.id);
+        renderDetailPanel();
+        showToast('✅ 전체 메시지가 저장되었습니다!');
+      } catch (_) {
+        showToast('⚠️ 저장 실패');
+      }
+    }
+
+    function closeDetailPanel() {
+      document.getElementById('detailPanel').classList.remove('open');
+      document.getElementById('panelOverlay').style.display = 'none';
+      currentDetailPlanner = null;
+      detailTasks = [];
+    }
+
+    function openCreateModal() {
+      selectedStudentIds.clear();
+      renderStudentChips('');
+      document.getElementById('createModal').classList.add('open');
+    }
+
+    async function createPlannerHeader(payload) {
+      const res = await fetch(`/tables/${TABLE_PLANNERS}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || '플래너 생성 실패');
+      return unwrapData(json);
+    }
+
+    async function batchCreatePlanners() {
+      if (selectedStudentIds.size === 0) {
+        showToast('⚠️ 학생을 선택해주세요.');
+        return;
+      }
+
+      const examType = document.getElementById('createExamType').value;
+      const startDate = document.getElementById('createStartDate').value;
+      const endDate = document.getElementById('createEndDate').value || startDate;
+      const year = String(document.getElementById('createYear').value || new Date().getFullYear());
+      const semester = document.getElementById('createSemester').value;
+      const subjects = document.getElementById('createSubjects').value.split(',').map(s => s.trim()).filter(Boolean);
+
+      if (!startDate || !endDate) {
+        showToast('⚠️ 날짜를 입력해주세요.');
+        return;
+      }
+      if (!subjects.length) {
+        showToast('⚠️ 과목을 1개 이상 입력해주세요.');
+        return;
+      }
+
+      showToast(`⏳ ${selectedStudentIds.size}명 플래너 생성 중...`);
+
+      const studentList = allStudents.filter(s => selectedStudentIds.has(String(s.student_id)));
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const student of studentList) {
+        try {
+          const planStartDate = computePlanStartDate(startDate);
+          const weeksData = buildWeeksData(planStartDate, startDate);
+          const plannerPayload = {
+            student_id: student.student_id,
+            student_name: student.name,
+            school: student.school || '',
+            grade: student.grade || '',
+            exam_type: examType,
+            exam_start_date: startDate,
+            exam_end_date: endDate,
+            exam_days: Math.max(1, Math.round((new Date(endDate) - new Date(startDate)) / 86400000) + 1),
+            plan_start_date: planStartDate,
+            subjects,
+            schedule: '{}',
+            scope: '',
+            status: 'active',
+            created_by: sessionStorage.getItem('userId') || 'admin',
+            year,
+            school_year: year,
+            semester,
+            weeks_data: weeksData,
+            daily_tasks: {}
+          };
+
+          const createdPlanner = await createPlannerHeader(plannerPayload);
+          const taskRows = createDefaultTaskRows({
+            plannerId: createdPlanner.id,
+            studentId: student.student_id,
+            subjects,
+            planStartDate,
+            examStartDate: startDate
+          });
+
+          if (taskRows.length) {
+            await createTaskRowsBulk(taskRows);
+          }
+
+          await syncPlannerBridge({
+            ...plannerPayload,
+            ...createdPlanner,
+            id: createdPlanner.id
+          }, taskRows);
+
+          successCount++;
+        } catch (e) {
+          console.error('[batchCreatePlanners]', student.student_id, e);
+          failCount++;
+        }
+      }
+
       closeModal('createModal');
       await loadPlanners();
-      const msg = failed > 0
-        ? `✅ ${created.length}명 완료 (${failed}명 실패)`
-        : `✅ ${created.length}명 플래너 생성 완료!`;
-      showToast(msg);
-    } catch(e) {
-      console.error('[batchCreate]', e);
-      showToast('⚠️ 생성 중 오류: ' + (e.message || '알 수 없는 오류'));
-    }
-  }
-
-  async function generateDefaultTasks(plannerId, studentId, subjects, planStart, examStart) {
-    const tasks = [];
-    const weekConfig = ['개념 정리', '문제풀이', '프린트·기출', '오답·회독'];
-    const prioritySubjects = subjects.filter(s => ['수학','영어','국어'].some(p => s.includes(p)));
-    const normalSubjects   = subjects.filter(s => !prioritySubjects.some(p => p === s));
-
-    for (let day = 0; day < 28; day++) {
-      const d = new Date(planStart); d.setDate(d.getDate() + day);
-      const dateStr  = d.toISOString().split('T')[0];
-      const weekNum  = Math.floor(day / 7) + 1;
-      const strategy = weekConfig[weekNum - 1];
-      if (d.getDay() === 0) continue;
-
-      if (prioritySubjects.some(s => s.includes('수학')))
-        tasks.push({ planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: '수학', subject_type: '주요', week_num: weekNum, is_done: false, task_content: `수학 – ${strategy}`, col_order: 1, color_tag: 'math', student_memo: '', admin_comment: '' });
-      if (prioritySubjects.some(s => s.includes('영어')))
-        tasks.push({ planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: '영어', subject_type: '주요', week_num: weekNum, is_done: false, task_content: `영어 – 단어 30개 + ${strategy}`, col_order: 2, color_tag: 'eng', student_memo: '', admin_comment: '' });
-      if (day % 2 === 0 && prioritySubjects.some(s => s.includes('국어')))
-        tasks.push({ planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: '국어', subject_type: '주요', week_num: weekNum, is_done: false, task_content: `국어 – ${strategy}`, col_order: 3, color_tag: 'kor', student_memo: '', admin_comment: '' });
-      if (normalSubjects.length > 0) {
-        const sub = normalSubjects[day % normalSubjects.length];
-        tasks.push({ planner_id: plannerId, student_id: studentId, task_date: dateStr, subject: sub, subject_type: '보조', week_num: weekNum, is_done: false, task_content: `${sub} – ${strategy}`, col_order: 4, color_tag: 'etc', student_memo: '', admin_comment: '' });
+      if (successCount > 0 && failCount === 0) {
+        showToast(`✅ ${successCount}명 플래너 생성 완료!`);
+      } else if (successCount > 0) {
+        showToast(`✅ ${successCount}명 완료 / ${failCount}명 실패`);
+      } else {
+        showToast('⚠️ 플래너 생성 실패');
       }
     }
-    for (let i = 0; i < tasks.length; i += 20) {
-      await Promise.all(tasks.slice(i, i + 20).map(t =>
-        fetch(`/tables/${TABLE_TASKS}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(t) })
-      ));
+
+    async function deletePlanner(id, name) {
+      if (!confirm(`${name}의 플래너를 삭제할까요?\n관련 할 일도 모두 삭제됩니다.`)) return;
+      try {
+        const target = getPlannerFromState(id);
+        const taskRows = target ? target.task_rows : await fetchTaskRowsForPlanner('', id);
+
+        await Promise.all((taskRows || []).map(t =>
+          t.id ? fetch(`/tables/${TABLE_TASKS}/${t.id}`, { method: 'DELETE' }) : Promise.resolve()
+        ));
+        await fetch(`/tables/${TABLE_PLANNERS}/${id}`, { method: 'DELETE' });
+
+        await loadPlanners();
+        showToast('🗑️ 플래너가 삭제되었습니다.');
+      } catch (e) {
+        console.error('[deletePlanner]', e);
+        showToast('⚠️ 삭제 실패');
+      }
     }
-  }
-
-  // ===== 플래너 삭제 =====
-  async function deletePlanner(id, name) {
-    if (!confirm(`${name}의 플래너를 삭제할까요?\n관련 할 일도 모두 삭제됩니다.`)) return;
-    try {
-      await fetch(`/tables/${TABLE_PLANNERS}/${id}`, { method: 'DELETE' });
-      allPlanners = allPlanners.filter(p => p.id !== id);
-      filteredPlanners = filteredPlanners.filter(p => p.id !== id);
-      renderSummary(); renderTable();
-      showToast('🗑️ 플래너가 삭제되었습니다.');
-    } catch(e) { showToast('⚠️ 삭제 실패'); }
-  }
-
-  // ===== 유틸 =====
-  function fmt(dateStr) {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-');
-    return `${y}.${m}.${d}`;
-  }
-  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-  function showToast(msg) {
-    const el = document.getElementById('epToast');
-    el.textContent = msg; el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2500);
-  }
   </script>
 
-  <!-- ===== 모바일 하단 네비 (관리자) ===== -->
   <nav class="mobile-nav mobile-nav--admin">
     <div class="mobile-nav-inner">
       <a href="dashboard.html" class="mobile-nav-item"><i class="fas fa-th-large"></i><span>홈</span></a>
@@ -1051,9 +1612,9 @@
       <a href="notice.html" class="mobile-nav-item"><i class="fas fa-bullhorn"></i><span>공지</span></a>
     </div>
   </nav>
+
   <div class="sidebar-dim" id="sidebarDim"></div>
   <script src="../js/dvl-session.js?v=20260430"></script>
   <script src="../js/admin-common.js?v=20260430"></script>
-  <!-- 사이드바 토글은 admin.js에서 통합 처리 -->
 </body>
 </html>
