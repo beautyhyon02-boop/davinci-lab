@@ -421,10 +421,11 @@ function renderTable() {
   const tbody = document.getElementById('studentTbody');
   const empty = document.getElementById('emptyState');
   const rc    = document.getElementById('resultCount');
-  if (rc) rc.textContent = `${list.length}명 표시 중`;
 
   /* 가입 대기 학생 섹션 */
   const pending = getPendingStudents();
+  const visibleCount = list.length + pending.length;
+  if (rc) rc.textContent = `${visibleCount}명 표시 중`;
   let pendingHtml = '';
   if (pending.length > 0) {
     pendingHtml = `
@@ -1205,6 +1206,50 @@ document.getElementById('breakBtn')?.addEventListener('click', async () => {
    - 세션 OK  → loadStudentsFromAPI() 호출
    - 세션 실패 → location.replace() 가 이미 실행 중이므로 아무것도 하지 않음
 ═══════════════════════════════════════ */
+let __studentsBootInFlight = false;
+
+async function bootStudentsPage(force = false) {
+  if (window._dvlSessionFailed) return;
+  if (__studentsBootInFlight && !force) return;
+  __studentsBootInFlight = true;
+  try {
+    await Promise.allSettled([loadStudentsFromAPI(), loadParentPendingQuickStats()]);
+    setTimeout(async () => {
+      try {
+        const activeCnt = Number(document.getElementById('sumAll')?.textContent || '0');
+        const pendingCnt = Number(document.getElementById('sumPending')?.textContent || '0');
+        if (activeCnt === 0 && pendingCnt === 0) {
+          console.warn('[students] 화면 카드가 모두 0으로 남아 재로드를 1회 재시도합니다.');
+          await Promise.allSettled([loadStudentsFromAPI(), loadParentPendingQuickStats()]);
+        }
+      } catch (e) {
+        console.warn('[students] 재시도 점검 실패:', e);
+      }
+    }, 600);
+  } finally {
+    setTimeout(() => { __studentsBootInFlight = false; }, 1200);
+  }
+}
+
 if (!window._dvlSessionFailed) {
-  Promise.allSettled([loadStudentsFromAPI(), loadParentPendingQuickStats()]);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => bootStudentsPage(true), { once: true });
+  } else {
+    setTimeout(() => bootStudentsPage(true), 0);
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(() => bootStudentsPage(true), 150);
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    const activeCnt = Number(document.getElementById('sumAll')?.textContent || '0');
+    const pendingCnt = Number(document.getElementById('sumPending')?.textContent || '0');
+    if (activeCnt === 0 && pendingCnt === 0) {
+      setTimeout(() => bootStudentsPage(true), 100);
+    }
+  });
+
+  window.reloadStudentAdminData = () => bootStudentsPage(true);
 }
