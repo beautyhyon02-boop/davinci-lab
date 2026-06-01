@@ -6,7 +6,8 @@ const TBL = {
   vocab: 'vocabulary_master',
   vocabProgress: 'vocabulary_progress',
   subjects: 'subject_master',
-  students: 'student_profiles'
+  students: 'student_profiles',
+  studentCourses: 'student_courses'
 };
 
 let currentStudent = null;
@@ -19,6 +20,22 @@ let currentCornellSlot = null;
 let currentCornellNoteId = null;
 let currentEditingSlot = null;  // 슬롯 편집용
 let activeHighlightColor = null;
+let confirmedWorkbooks = [];
+
+const WORKBOOK_SUBJECT_MAP = {
+  korean: { name: '국어', emoji: '📚' },
+  english: { name: '영어', emoji: '🔤' },
+  math: { name: '수학', emoji: '📐' },
+  science: { name: '과학', emoji: '🔬' },
+  social: { name: '사회', emoji: '🌏' },
+  history: { name: '역사', emoji: '🏺' },
+  history_kr: { name: '한국사', emoji: '🏺' },
+  information: { name: '정보', emoji: '💻' },
+  tech: { name: '기가', emoji: '🔧' },
+  gica: { name: '기가', emoji: '🔧' },
+  chinese: { name: '중국어', emoji: '🀄' },
+  japanese: { name: '일본어', emoji: '🗾' }
+};
 
 const STAGES = [
   { id: 1, name: '개념이해', emoji: '💡', color: '#10B981' },
@@ -48,6 +65,7 @@ const DAY_END = 1480;        // 24:40 (24*60+40)
 
 document.addEventListener('DOMContentLoaded', async () => {
   showLoading('학생 정보를 불러오는 중...');
+  injectWorkbookStyles();
   if (!checkSession()) { hideLoading(); return; }
   await hydrateCurrentStudentProfile();
   console.log('📌 학생(보정 후):', currentStudent);
@@ -149,6 +167,400 @@ function checkSession() {
 
 function normalizeText(value) {
   return String(value ?? '').trim();
+}
+
+function injectWorkbookStyles() {
+  if (document.getElementById('plannerWorkbookStyles')) return;
+  const style = document.createElement('style');
+  style.id = 'plannerWorkbookStyles';
+  style.textContent = `
+    .workbook-board{margin:18px 0 10px;padding:18px 18px 14px;border:1px solid rgba(22,58,51,.08);border-radius:18px;background:linear-gradient(180deg,#f7fffb 0%,#ffffff 100%);box-shadow:0 12px 30px rgba(15,23,42,.05)}
+    .workbook-board-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .workbook-board-title{font-size:16px;font-weight:800;color:#163A33;display:flex;align-items:center;gap:8px}
+    .workbook-board-sub{font-size:12px;color:#64748b;margin-top:4px}
+    .workbook-board-metrics{display:flex;gap:10px;flex-wrap:wrap}
+    .workbook-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;background:#eef8f4;color:#245A4E;font-size:12px;font-weight:700;border:1px solid rgba(36,90,78,.08)}
+    .workbook-chip strong{color:#163A33}
+    .workbook-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+    .workbook-card{padding:14px 14px 12px;border-radius:14px;background:#fff;border:1px solid #e2e8f0}
+    .workbook-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+    .workbook-card-title{font-size:14px;font-weight:800;color:#0f172a;line-height:1.4}
+    .workbook-card-meta{font-size:12px;color:#64748b;display:flex;gap:8px;flex-wrap:wrap}
+    .workbook-card-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:#ecfeff;color:#0f766e;font-size:11px;font-weight:700}
+    .workbook-card-progress{margin-top:10px;font-size:12px;color:#475569}
+    .workbook-card-progress strong{color:#163A33}
+    .workbook-empty{padding:16px;border:1px dashed #cbd5e1;border-radius:14px;background:#fff;color:#64748b;font-size:13px;line-height:1.7}
+    .workbook-section{margin:14px 0 10px;padding:14px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0}
+    .workbook-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    .workbook-section-title{font-size:14px;font-weight:800;color:#163A33;display:flex;align-items:center;gap:8px}
+    .workbook-section-sub{font-size:12px;color:#64748b;margin-top:4px}
+    .workbook-section-count{font-size:12px;font-weight:700;color:#245A4E;background:#e9f7f2;padding:6px 10px;border-radius:999px}
+    .workbook-rows{display:flex;flex-direction:column;gap:10px}
+    .workbook-row{padding:12px;border-radius:14px;background:#fff;border:1px solid #e2e8f0}
+    .workbook-row.completed{border-color:#86efac;background:#f0fdf4}
+    .workbook-row-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .workbook-row-name{font-size:13px;font-weight:800;color:#0f172a;line-height:1.5}
+    .workbook-row-meta{font-size:11px;color:#64748b;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .workbook-row-status{font-size:11px;font-weight:800;padding:5px 9px;border-radius:999px;background:#f1f5f9;color:#475569}
+    .workbook-row.completed .workbook-row-status{background:#dcfce7;color:#166534}
+    .workbook-row-controls{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;margin-top:10px}
+    .workbook-input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;font-size:13px;outline:none}
+    .workbook-input:focus{border-color:#163A33;box-shadow:0 0 0 3px rgba(22,58,51,.08)}
+    .workbook-check{display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:12px;font-weight:700;color:#166534;white-space:nowrap}
+    .workbook-check input{width:16px;height:16px}
+    .workbook-help{margin-top:8px;font-size:11px;color:#94a3b8}
+    @media (max-width: 768px){
+      .workbook-row-controls{grid-template-columns:1fr 1fr}
+      .workbook-check{grid-column:1/-1;justify-content:flex-start}
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function getSubjectMeta(rawValue = '', subjectCode = '') {
+  const raw = normalizeText(rawValue);
+  const code = normalizeText(subjectCode).toLowerCase();
+  const lowerRaw = raw.toLowerCase();
+
+  const fromAllSubjects = allSubjects.find(s =>
+    normalizeText(s.subject_name) === raw ||
+    normalizeText(s.subject_code).toLowerCase() === code
+  );
+  if (fromAllSubjects) {
+    return {
+      name: fromAllSubjects.subject_name || raw || subjectCode || '문제집',
+      emoji: fromAllSubjects.emoji || '📘',
+      subject_code: fromAllSubjects.subject_code || subjectCode || ''
+    };
+  }
+
+  const lookupKey = code || lowerRaw;
+  const mappedKey = Object.keys(WORKBOOK_SUBJECT_MAP).find(key => lookupKey.includes(key));
+  if (mappedKey) {
+    return {
+      name: raw || WORKBOOK_SUBJECT_MAP[mappedKey].name,
+      emoji: WORKBOOK_SUBJECT_MAP[mappedKey].emoji,
+      subject_code: subjectCode || mappedKey
+    };
+  }
+
+  return {
+    name: raw || subjectCode || '문제집',
+    emoji: '📘',
+    subject_code: subjectCode || ''
+  };
+}
+
+function normalizeCourseStatus(status) {
+  return normalizeText(status).toLowerCase();
+}
+
+async function loadConfirmedWorkbooks() {
+  if (!currentStudent || !currentStudent.student_id) {
+    confirmedWorkbooks = [];
+    return [];
+  }
+
+  try {
+    const studentId = normalizeText(currentStudent.student_id);
+    const url = `${API_BASE}/${TBL.studentCourses}?student_id=eq.${encodeURIComponent(studentId)}&course_type=eq.workbook&limit=200&sort=created_at.desc`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`문제집 조회 실패 (${res.status})`);
+
+    const data = await res.json();
+    const rows = data.data || data.records || data || [];
+
+    confirmedWorkbooks = rows
+      .filter(row => {
+        const sameStudent = normalizeText(row.student_id) === studentId;
+        const sameType = normalizeText(row.course_type).toLowerCase() === 'workbook';
+        const status = normalizeCourseStatus(row.status || 'active');
+        const activeLike = !['dropped', 'deleted', 'archived', 'inactive'].includes(status);
+        return sameStudent && sameType && activeLike;
+      })
+      .map(row => {
+        const meta = getSubjectMeta(row.subject_name, row.subject_code);
+        return {
+          ...row,
+          display_subject: meta.name,
+          subject_emoji: meta.emoji,
+          subject_code: row.subject_code || meta.subject_code || ''
+        };
+      });
+
+    console.log('📚 확정 문제집 로드:', confirmedWorkbooks.length, '권');
+    return confirmedWorkbooks;
+  } catch (e) {
+    console.warn('확정 문제집 로드 실패:', e);
+    confirmedWorkbooks = [];
+    return [];
+  }
+}
+
+function createEmptyWorkbookEntry(course) {
+  return {
+    course_id: course.id,
+    course_name: course.course_name || '문제집',
+    subject_code: course.subject_code || '',
+    subject_name: course.display_subject || course.subject_name || '',
+    page_start: '',
+    page_end: '',
+    completed: false,
+    updated_at: null
+  };
+}
+
+function syncWorkbookEntriesIntoPlanner() {
+  if (!currentPlanner || !currentPlanner.daily_tasks) return false;
+
+  const validKeys = new Set(confirmedWorkbooks.map(course => String(course.id)));
+  let changed = false;
+
+  Object.values(currentPlanner.daily_tasks).forEach(dayTask => {
+    if (!dayTask || typeof dayTask !== 'object') return;
+
+    if (!dayTask.workbook_entries || typeof dayTask.workbook_entries !== 'object') {
+      dayTask.workbook_entries = {};
+      changed = true;
+    }
+
+    Object.keys(dayTask.workbook_entries).forEach(key => {
+      if (!validKeys.has(String(key))) {
+        delete dayTask.workbook_entries[key];
+        changed = true;
+      }
+    });
+
+    confirmedWorkbooks.forEach(course => {
+      const key = String(course.id);
+      const existing = dayTask.workbook_entries[key];
+      if (!existing || typeof existing !== 'object') {
+        dayTask.workbook_entries[key] = createEmptyWorkbookEntry(course);
+        changed = true;
+        return;
+      }
+
+      const nextName = course.course_name || existing.course_name || '문제집';
+      const nextSubjectName = course.display_subject || existing.subject_name || '';
+      const nextSubjectCode = course.subject_code || existing.subject_code || '';
+
+      if (existing.course_name !== nextName) { existing.course_name = nextName; changed = true; }
+      if (existing.subject_name !== nextSubjectName) { existing.subject_name = nextSubjectName; changed = true; }
+      if (existing.subject_code !== nextSubjectCode) { existing.subject_code = nextSubjectCode; changed = true; }
+      if (typeof existing.completed !== 'boolean') { existing.completed = false; changed = true; }
+      if (existing.page_start == null) { existing.page_start = ''; changed = true; }
+      if (existing.page_end == null) { existing.page_end = ''; changed = true; }
+    });
+  });
+
+  return changed;
+}
+
+function hasWorkbookPlan(entry) {
+  if (!entry || typeof entry !== 'object') return false;
+  return !!(normalizeText(entry.page_start) || normalizeText(entry.page_end) || entry.completed);
+}
+
+function getDayWorkbookMetrics(dayTask) {
+  const entries = Object.values(dayTask?.workbook_entries || {});
+  const planned = entries.filter(hasWorkbookPlan);
+  const done = planned.filter(entry => entry.completed).length;
+  return { total: planned.length, done };
+}
+
+function getWorkbookCompletionSummary(courseId) {
+  let planned = 0;
+  let done = 0;
+  if (!currentPlanner || !currentPlanner.daily_tasks) return { planned, done };
+
+  Object.values(currentPlanner.daily_tasks).forEach(dayTask => {
+    const entry = dayTask?.workbook_entries?.[String(courseId)];
+    if (!entry || !hasWorkbookPlan(entry)) return;
+    planned += 1;
+    if (entry.completed) done += 1;
+  });
+
+  return { planned, done };
+}
+
+function ensureWorkbookPlannerBoard() {
+  const plannerContent = document.getElementById('plannerContent');
+  const weekTabs = document.getElementById('weekTabs');
+  if (!plannerContent || !weekTabs) return null;
+
+  let board = document.getElementById('workbookPlannerBoard');
+  if (!board) {
+    board = document.createElement('div');
+    board.id = 'workbookPlannerBoard';
+    plannerContent.insertBefore(board, weekTabs);
+  }
+  return board;
+}
+
+function renderWorkbookPlannerBoard() {
+  const board = ensureWorkbookPlannerBoard();
+  if (!board) return;
+
+  if (!currentPlanner) {
+    board.innerHTML = '';
+    return;
+  }
+
+  if (!confirmedWorkbooks.length) {
+    board.innerHTML = `
+      <div class="workbook-board">
+        <div class="workbook-board-head">
+          <div>
+            <div class="workbook-board-title">📚 확정 문제집 연동</div>
+            <div class="workbook-board-sub">내 학습강좌에서 확정한 문제집이 있으면 여기에 자동으로 표시됩니다.</div>
+          </div>
+        </div>
+        <div class="workbook-empty">아직 확정된 문제집이 없습니다. <strong>내 학습강좌</strong>에서 문제집을 확정하면 시험 플래너에 자동으로 연결됩니다.</div>
+      </div>
+    `;
+    return;
+  }
+
+  let totalPlanned = 0;
+  let totalDone = 0;
+  Object.values(currentPlanner.daily_tasks || {}).forEach(dayTask => {
+    const m = getDayWorkbookMetrics(dayTask);
+    totalPlanned += m.total;
+    totalDone += m.done;
+  });
+
+  board.innerHTML = `
+    <div class="workbook-board">
+      <div class="workbook-board-head">
+        <div>
+          <div class="workbook-board-title">📚 확정 문제집 연동</div>
+          <div class="workbook-board-sub">문제집은 자동 표시되고, 페이지 범위와 완료 체크는 날짜별로 직접 기록할 수 있어요.</div>
+        </div>
+        <div class="workbook-board-metrics">
+          <span class="workbook-chip">등록 문제집 <strong>${confirmedWorkbooks.length}권</strong></span>
+          <span class="workbook-chip">입력된 학습 범위 <strong>${totalPlanned}개</strong></span>
+          <span class="workbook-chip">완료 체크 <strong>${totalDone}개</strong></span>
+        </div>
+      </div>
+      <div class="workbook-list">
+        ${confirmedWorkbooks.map(course => {
+          const summary = getWorkbookCompletionSummary(course.id);
+          return `
+            <div class="workbook-card">
+              <div class="workbook-card-top">
+                <div>
+                  <div class="workbook-card-title">${course.subject_emoji || '📘'} ${escapeHtml(course.course_name || '문제집')}</div>
+                  <div class="workbook-card-meta">
+                    <span>${escapeHtml(course.display_subject || course.subject_name || '과목 미지정')}</span>
+                    <span>${escapeHtml(normalizeText(course.platform) || '문제집')}</span>
+                  </div>
+                </div>
+                <span class="workbook-card-badge">course_type = workbook</span>
+              </div>
+              <div class="workbook-card-progress">입력된 날짜 <strong>${summary.planned}</strong>회 · 완료 체크 <strong>${summary.done}</strong>회</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderWorkbookSection(dateStr, dayTask) {
+  if (!confirmedWorkbooks.length) return '';
+  if (!dayTask.workbook_entries || typeof dayTask.workbook_entries !== 'object') dayTask.workbook_entries = {};
+
+  const metrics = getDayWorkbookMetrics(dayTask);
+
+  const rows = confirmedWorkbooks.map(course => {
+    const key = String(course.id);
+    if (!dayTask.workbook_entries[key]) {
+      dayTask.workbook_entries[key] = createEmptyWorkbookEntry(course);
+    }
+    const entry = dayTask.workbook_entries[key];
+    const meta = getSubjectMeta(entry.subject_name, entry.subject_code);
+    const completed = !!entry.completed;
+    const planned = hasWorkbookPlan(entry);
+
+    return `
+      <div class="workbook-row ${completed ? 'completed' : ''}">
+        <div class="workbook-row-top">
+          <div>
+            <div class="workbook-row-name">${meta.emoji} ${escapeHtml(entry.course_name || course.course_name || '문제집')}</div>
+            <div class="workbook-row-meta">
+              <span>${escapeHtml(entry.subject_name || course.display_subject || '과목 미지정')}</span>
+              <span>${planned ? '범위 입력됨' : '범위 미입력'}</span>
+            </div>
+          </div>
+          <span class="workbook-row-status">${completed ? '학습 완료' : '학습 예정'}</span>
+        </div>
+        <div class="workbook-row-controls">
+          <input class="workbook-input" type="text" placeholder="시작 페이지 예: 12" value="${escapeHtml(normalizeText(entry.page_start))}" onchange="updateWorkbookRange('${dateStr}', '${key}', 'page_start', this.value)">
+          <input class="workbook-input" type="text" placeholder="끝 페이지 예: 25" value="${escapeHtml(normalizeText(entry.page_end))}" onchange="updateWorkbookRange('${dateStr}', '${key}', 'page_end', this.value)">
+          <label class="workbook-check"><input type="checkbox" ${completed ? 'checked' : ''} onchange="toggleWorkbookComplete('${dateStr}', '${key}', this.checked)"> 완료</label>
+        </div>
+        <div class="workbook-help">학생이 오늘 공부할 페이지 범위를 직접 입력하고, 끝나면 완료 체크를 하면 됩니다.</div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="workbook-section">
+      <div class="workbook-section-head">
+        <div>
+          <div class="workbook-section-title">📘 오늘의 문제집 학습</div>
+          <div class="workbook-section-sub">확정된 문제집이 자동 연결됩니다. 날짜별 범위를 자유롭게 입력하세요.</div>
+        </div>
+        <div class="workbook-section-count">입력 ${metrics.total}개 · 완료 ${metrics.done}개</div>
+      </div>
+      <div class="workbook-rows">${rows}</div>
+    </div>
+  `;
+}
+
+function getWorkbookEntry(dateStr, courseId) {
+  if (!currentPlanner || !currentPlanner.daily_tasks || !currentPlanner.daily_tasks[dateStr]) return null;
+  const dayTask = currentPlanner.daily_tasks[dateStr];
+  if (!dayTask.workbook_entries || typeof dayTask.workbook_entries !== 'object') dayTask.workbook_entries = {};
+  const key = String(courseId);
+
+  let entry = dayTask.workbook_entries[key];
+  if (!entry) {
+    const course = confirmedWorkbooks.find(item => String(item.id) === key);
+    if (!course) return null;
+    entry = createEmptyWorkbookEntry(course);
+    dayTask.workbook_entries[key] = entry;
+  }
+  return entry;
+}
+
+async function updateWorkbookRange(dateStr, courseId, field, value) {
+  const entry = getWorkbookEntry(dateStr, courseId);
+  if (!entry) return;
+  entry[field] = normalizeText(value);
+  entry.updated_at = new Date().toISOString();
+  await savePlannerData();
+  renderDayGrid();
+  updateStats();
+  showToast('📘 문제집 범위가 저장되었습니다.', 'success');
+}
+
+async function toggleWorkbookComplete(dateStr, courseId, checked) {
+  const entry = getWorkbookEntry(dateStr, courseId);
+  if (!entry) return;
+
+  if (checked && !normalizeText(entry.page_start) && !normalizeText(entry.page_end)) {
+    showToast('먼저 페이지 범위를 입력해주세요!', 'error');
+    renderDayGrid();
+    return;
+  }
+
+  entry.completed = !!checked;
+  entry.updated_at = new Date().toISOString();
+  await savePlannerData();
+  renderDayGrid();
+  updateStats();
+  showToast(checked ? '✅ 문제집 학습 완료 체크!' : '↩️ 완료 체크를 해제했어요.', 'success');
 }
 
 function showPlannerCreationUI() {
@@ -435,11 +847,17 @@ async function createPlanner() {
     }
     const saved = await res.json();
     currentPlanner = saved.data || saved;
-    
+    selectedSubjects = Array.isArray(currentPlanner.subjects) ? [...currentPlanner.subjects] : [...selectedSubjects];
+
+    await loadConfirmedWorkbooks();
+    const workbookSynced = syncWorkbookEntriesIntoPlanner();
+    if (workbookSynced) await savePlannerData();
+
     showToast('🎉 플래너가 생성되었습니다!', 'success');
     document.getElementById('inputCard').style.display = 'none';
     document.getElementById('emptyState').style.display = 'none';
     document.getElementById('plannerContent').style.display = 'block';
+    renderWorkbookPlannerBoard();
     renderWeekTabs();
     renderDayGrid();
     updateStats();
@@ -526,6 +944,7 @@ function generateDailyTasks(weeksData) {
         week_id: week.id,
         slots: slots,
         completed_slots: [],
+        workbook_entries: {},
         memo: '', mood: '',
         vocab_done: 0, vocab_total: selectedVocabCount
       };
@@ -728,6 +1147,8 @@ function renderDayGrid() {
   const grid = document.getElementById('dayGrid');
   grid.innerHTML = '';
 
+  renderWorkbookPlannerBoard();
+
   const currentWeek = currentPlanner.weeks_data.find(w => w.id === activeWeekTab) || currentPlanner.weeks_data[0];
   if (!currentWeek) return;
 
@@ -746,10 +1167,15 @@ function renderDayGrid() {
     const card = document.createElement('div');
     card.className = `day-card ${currentWeek.cls} ${isToday ? 'today-card' : ''}`;
 
-    const completedCount = (dayTask.completed_slots || []).length;
+    const completedCount = (dayTask.completed_slots || []).filter(idx => {
+      const slot = dayTask.slots[idx];
+      return slot && slot.type !== 'rest' && slot.type !== 'meal';
+    }).length;
     const countableSlots = dayTask.slots.filter(s => s.type !== 'rest' && s.type !== 'meal');
-    const totalCount = countableSlots.length;
-    const pct = totalCount > 0 ? Math.round(completedCount / totalCount * 100) : 0;
+    const workbookMetrics = getDayWorkbookMetrics(dayTask);
+    const totalCount = countableSlots.length + workbookMetrics.total;
+    const doneCount = completedCount + workbookMetrics.done;
+    const pct = totalCount > 0 ? Math.round(doneCount / totalCount * 100) : 0;
 
     const startMin = dayTask.start_minutes || (dayTask.is_weekend ? WEEKEND_DEFAULT_START : WEEKDAY_DEFAULT_START);
 
@@ -772,6 +1198,7 @@ function renderDayGrid() {
           </button>
         </div>
         ${renderTimeSlots(dateStr, dayTask.slots)}
+        ${renderWorkbookSection(dateStr, dayTask)}
         ${renderVocabSection(dateStr, dayTask)}
         ${renderDayMemo(dateStr, dayTask)}
       </div>
@@ -908,6 +1335,7 @@ async function regenerateDaySchedule(dateStr) {
   const oldMemo = dayTask.memo;
   const oldMood = dayTask.mood;
   const oldVocabDone = dayTask.vocab_done;
+  const oldWorkbookEntries = dayTask.workbook_entries || {};
   
   const newSlots = buildDaySchedule(
     dayTask.start_minutes,
@@ -919,6 +1347,7 @@ async function regenerateDaySchedule(dateStr) {
   
   dayTask.slots = newSlots;
   dayTask.completed_slots = [];
+  dayTask.workbook_entries = oldWorkbookEntries;
   dayTask.memo = oldMemo;
   dayTask.mood = oldMood;
   dayTask.vocab_done = oldVocabDone;
@@ -1487,6 +1916,10 @@ function updateStats() {
       const slot = day.slots[idx];
       return slot && slot.type !== 'rest' && slot.type !== 'meal';
     }).length;
+
+    const workbookMetrics = getDayWorkbookMetrics(day);
+    total += workbookMetrics.total;
+    done += workbookMetrics.done;
   });
   const pct = total > 0 ? Math.round(done / total * 100) : 0;
   document.getElementById('statTotal').textContent = total;
@@ -1494,6 +1927,7 @@ function updateStats() {
   document.getElementById('statPct').textContent = pct + '%';
   document.getElementById('statPctLabel').textContent = pct + '%';
   document.getElementById('overallFill').style.width = pct + '%';
+  renderWorkbookPlannerBoard();
 }
 
 async function loadExistingPlanner() {
@@ -1591,7 +2025,10 @@ async function loadExistingPlanner() {
     }
 
     currentPlanner = p;
+    selectedSubjects = Array.isArray(p.subjects) ? [...p.subjects] : [];
 
+    await loadConfirmedWorkbooks();
+    const workbookSynced = syncWorkbookEntriesIntoPlanner();
     const cornellKeysPatched = ensurePlannerCornellKeys();
     const examEnd = new Date(p.exam_end_date);
     const today = new Date();
@@ -1612,6 +2049,7 @@ async function loadExistingPlanner() {
       if (emptyState) emptyState.style.display = 'none';
       if (plannerContent) plannerContent.style.display = 'block';
 
+      renderWorkbookPlannerBoard();
       renderWeekTabs();
       renderDayGrid();
       updateStats();
@@ -1622,8 +2060,8 @@ async function loadExistingPlanner() {
       return;
     }
 
-    if (cornellKeysPatched) {
-      savePlannerData().catch(err => console.warn('코넬 슬롯 키 저장:', err));
+    if (cornellKeysPatched || workbookSynced) {
+      savePlannerData().catch(err => console.warn('플래너 보정 저장:', err));
     }
   } catch (e) {
     console.warn('기존 플래너 로드:', e);
