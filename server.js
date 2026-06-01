@@ -1,9 +1,11 @@
 /* ================================================================
-   DaVinci Lab Server (v2.1 - Supabase 연동 + query string PATCH 지원)
+   DaVinci Lab Server (v2.2 - Supabase 연동 + GET query filter 지원)
    ----------------------------------------------------------------
-   /tables/{테이블명}              GET, POST
-   /tables/{테이블명}?id=eq.{id}   PATCH, PUT, DELETE  ← 신규 추가
-   /tables/{테이블명}/{id}          GET, PATCH, DELETE
+   /tables/{테이블명}                              GET, POST
+   /tables/{테이블명}?id=eq.{id}                   PATCH, PUT, DELETE
+   /tables/{테이블명}?student_id=eq.seeun...       GET 필터 지원
+   /tables/{테이블명}/{id}                         GET, PATCH, DELETE
+
    환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
    ================================================================ */
 
@@ -17,7 +19,6 @@ const PORT = process.env.PORT || 3000;
 
 /* ----------------------------------------------------------------
    Supabase 클라이언트 초기화
-   서버에서는 SERVICE_KEY 사용 (모든 권한)
    ---------------------------------------------------------------- */
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -39,14 +40,106 @@ console.log('✅ Supabase 연결 준비 완료');
 app.use(express.json({ limit: '10mb' }));
 
 /* ----------------------------------------------------------------
-   query string에서 id=eq.{숫자} 파싱 헬퍼
-   예: ?id=eq.4  →  4
+   공통 유틸
    ---------------------------------------------------------------- */
-function parseEqId(raw) {
-  if (!raw) return null;
-  const value = Array.isArray(raw) ? raw[0] : String(raw);
-  const match = value.trim().match(/^eq\.(\d+)$/);
-  return match ? Number(match[1]) : null;
+
+// query value를 문자열 1개로 정리
+function getSingleQueryValue(raw) {
+  if (raw === undefined || raw === null) return '';
+  return Array.isArray(raw) ? String(raw[0]).trim() : String(raw).trim();
+}
+
+// ?id=eq.4 / ?id=eq.seeun 같은 형태 파싱
+function parseEqValue(raw) {
+  const value = getSingleQueryValue(raw);
+  if (!value) return null;
+
+  const match = value.match(/^eq\.(.+)$/);
+  return match ? match[1] : null;
+}
+
+/* ----------------------------------------------------------------
+   GET /tables/:table 용 query string 필터 적용 헬퍼
+
+   지원 예시:
+   ?student_id=eq.seeun
+   ?status=eq.active
+   ?created_at=gte.2026-06-01
+   ?name=like.%세은%
+   ?name=ilike.%세은%
+   ?id=in.1,2,3
+   ?deleted_at=is.null
+   ---------------------------------------------------------------- */
+function applyQueryFilters(query, filters = {}) {
+  for (const [key, raw] of Object.entries(filters)) {
+    const value = getSingleQueryValue(raw);
+    if (!value) continue;
+
+    const dotIndex = value.indexOf('.');
+
+    // op.value 형식이 아니면 기본 eq 처리
+    if (dotIndex === -1) {
+      query = query.eq(key, value);
+      continue;
+    }
+
+    const op = value.slice(0, dotIndex);
+    const operand = value.slice(dotIndex + 1);
+
+    switch (op) {
+      case 'eq':
+        query = query.eq(key, operand);
+        break;
+
+      case 'neq':
+        query = query.neq(key, operand);
+        break;
+
+      case 'gt':
+        query = query.gt(key, operand);
+        break;
+
+      case 'gte':
+        query = query.gte(key, operand);
+        break;
+
+      case 'lt':
+        query = query.lt(key, operand);
+        break;
+
+      case 'lte':
+        query = query.lte(key, operand);
+        break;
+
+      case 'like':
+        query = query.like(key, operand);
+        break;
+
+      case 'ilike':
+        query = query.ilike(key, operand);
+        break;
+
+      case 'in': {
+        const values = operand
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean);
+        query = query.in(key, values);
+        break;
+      }
+
+      case 'is':
+        query = query.is(key, operand === 'null' ? null : operand);
+        break;
+
+      default:
+        // 알 수 없는 형식이면 안전하게 원문 eq 처리
+        query = query.eq(key, value);
+        break;
+    }
+  }
+
+  return query;
 }
 
 /* ----------------------------------------------------------------
@@ -59,23 +152,44 @@ app.all('/tables/:table', async (req, res) => {
   const table = req.params.table;
 
   try {
-    /* ---- GET: 목록 조회 ---- */
+    /* ---- GET: 목록 조회 + query filter 지원 ---- */
     if (req.method === 'GET') {
-      const limit = parseInt(req.query.limit) || 1000;
-      const sort = req.query.sort; // 예: created_at.desc
+      const {
+        limit: rawLimit = '1000',
+        sort,
+        ...filters
+      } = req.query;
+
+      const limit = Math.min(parseInt(rawLimit, 10) || 1000, 1000);
+
       let query = supabase.from(table).select('*');
 
+      // 1) query string 필터 적용
+      query = applyQueryFilters(query, filters);
+
+      // 2) 정렬 적용
       if (sort) {
-        const [col, dir] = sort.split('.');
-        query = query.order(col || 'created_at', { ascending: dir !== 'desc' });
+        const sortValue = getSingleQueryValue(sort);
+        const [col, dir] = sortValue.split('.');
+
+        query = query.order(col || 'created_at', {
+          ascending: dir !== 'desc'
+        });
       } else {
+        // created_at 컬럼이 있는 테이블 기준 기본 정렬
         query = query.order('created_at', { ascending: false });
       }
 
+      // 3) limit 적용
       query = query.limit(limit);
+
       const { data, error } = await query;
       if (error) throw error;
-      return res.json({ data, total: data.length });
+
+      return res.json({
+        data,
+        total: data.length
+      });
     }
 
     /* ---- POST: 신규 생성 ---- */
@@ -84,16 +198,18 @@ app.all('/tables/:table', async (req, res) => {
         .from(table)
         .insert(req.body)
         .select();
+
       if (error) throw error;
       return res.json(data[0] || data);
     }
 
     /* ---- PATCH / PUT: query string ?id=eq.{id} 방식 수정 ---- */
     if (req.method === 'PATCH' || req.method === 'PUT') {
-      const id = parseEqId(req.query.id);
+      const id = parseEqValue(req.query.id);
+
       if (!id) {
         return res.status(400).json({
-          error: 'PATCH requires ?id=eq.{number} query string'
+          error: 'PATCH requires ?id=eq.{value} query string'
         });
       }
 
@@ -104,18 +220,21 @@ app.all('/tables/:table', async (req, res) => {
         .select();
 
       if (error) throw error;
+
       if (!data || !data.length) {
         return res.status(404).json({ error: 'Record not found' });
       }
+
       return res.json(data[0]);
     }
 
     /* ---- DELETE: query string ?id=eq.{id} 방식 삭제 ---- */
     if (req.method === 'DELETE') {
-      const id = parseEqId(req.query.id);
+      const id = parseEqValue(req.query.id);
+
       if (!id) {
         return res.status(400).json({
-          error: 'DELETE requires ?id=eq.{number} query string'
+          error: 'DELETE requires ?id=eq.{value} query string'
         });
       }
 
@@ -139,6 +258,7 @@ app.all('/tables/:table', async (req, res) => {
 // 단일 항목 조회/수정/삭제 (/tables/:table/:id 경로 방식)
 app.all('/tables/:table/:id', async (req, res) => {
   const { table, id } = req.params;
+
   try {
     if (req.method === 'GET') {
       const { data, error } = await supabase
@@ -146,6 +266,7 @@ app.all('/tables/:table/:id', async (req, res) => {
         .select('*')
         .eq('id', id)
         .single();
+
       if (error) throw error;
       return res.json(data);
     }
@@ -156,8 +277,14 @@ app.all('/tables/:table/:id', async (req, res) => {
         .update(req.body)
         .eq('id', id)
         .select();
+
       if (error) throw error;
-      return res.json(data[0] || data);
+
+      if (!data || !data.length) {
+        return res.status(404).json({ error: 'Record not found' });
+      }
+
+      return res.json(data[0]);
     }
 
     if (req.method === 'DELETE') {
@@ -165,11 +292,13 @@ app.all('/tables/:table/:id', async (req, res) => {
         .from(table)
         .delete()
         .eq('id', id);
+
       if (error) throw error;
       return res.json({ success: true });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
+
   } catch (err) {
     console.error(`[${req.method} /tables/${table}/${id}]`, err.message);
     return res.status(500).json({ error: err.message });
@@ -185,14 +314,18 @@ app.get('/api/health', async (req, res) => {
       .from('student_profiles')
       .select('id')
       .limit(1);
-    res.json({
+
+    return res.json({
       status: 'ok',
       supabase: error ? 'error' : 'connected',
       message: error ? error.message : 'Supabase 정상 연결',
       time: new Date().toISOString()
     });
   } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
+    return res.status(500).json({
+      status: 'error',
+      message: err.message
+    });
   }
 });
 
@@ -209,8 +342,11 @@ app.use(express.static(path.join(__dirname), {
    ---------------------------------------------------------------- */
 app.get('*', (req, res) => {
   const filePath = path.join(__dirname, req.path);
+
   res.sendFile(filePath, (err) => {
-    if (err) res.sendFile(path.join(__dirname, 'index.html'));
+    if (err) {
+      res.sendFile(path.join(__dirname, 'index.html'));
+    }
   });
 });
 
