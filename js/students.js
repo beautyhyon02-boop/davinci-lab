@@ -41,7 +41,6 @@
       student_id: String(formData.get('student_id') || '').trim(),
       password: String(formData.get('password') || '').trim(),
       year: String(formData.get('year') || '').trim(),
-      school_name: String(formData.get('school_name') || '').trim(),
       parent_phone: normalizePhone(formData.get('parent_phone')),
       status: String(formData.get('status') || 'pending').trim(),
       notes: String(formData.get('notes') || '').trim(),
@@ -53,7 +52,7 @@
     if (!payload.password) throw new Error('비밀번호를 입력해 주세요.');
     if (!payload.year) throw new Error('학년을 선택해 주세요.');
 
-    const optionalKeys = ['school_name', 'parent_phone', 'notes'];
+    const optionalKeys = ['parent_phone', 'notes'];
     optionalKeys.forEach((key) => {
       if (!payload[key]) delete payload[key];
     });
