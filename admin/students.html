@@ -6,7 +6,7 @@
   <title>학생 관리</title>
   <style>
     :root{
-      --bg:#f6f8fc;--card:#ffffff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;
+      --bg:#f6f8fc;--card:#fff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;
       --primary:#2563eb;--primary-soft:#eff6ff;--ok:#059669;--ok-soft:#ecfdf5;
       --warn:#d97706;--warn-soft:#fff7ed;--danger:#dc2626;--danger-soft:#fef2f2;
       --shadow:0 8px 24px rgba(15,23,42,.06)
@@ -14,7 +14,7 @@
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Pretendard,sans-serif}
     .wrap{max-width:1320px;margin:0 auto;padding:24px}
-    h1,h2,h3,p{margin:0}
+    h1,h2,p{margin:0}
     .subtitle{margin-top:8px;color:var(--muted);line-height:1.6}
     .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0}
     .mini-card,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
@@ -22,10 +22,11 @@
     .mini-label{color:var(--muted);font-size:13px;margin-bottom:8px}
     .mini-value{font-size:30px;font-weight:800}
     .layout{display:grid;grid-template-columns:430px 1fr;gap:18px;align-items:start}
+    .stack{display:flex;flex-direction:column;gap:18px}
     .card{padding:20px}
-    .card + .card{margin-top:18px}
     .card-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
     .muted{color:var(--muted)}
+    .small{font-size:12px;color:var(--muted)}
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
     input,select,button,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:14px;background:#fff}
@@ -36,7 +37,8 @@
     .btn-ok{background:var(--ok);border-color:var(--ok);color:#fff}
     .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
     .btn-sm{padding:8px 12px;font-size:13px;border-radius:10px;width:auto}
-    .action-row{display:flex;gap:10px;margin-top:14px}
+    .action-row,.inline-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .action-row{margin-top:14px}
     .status-box{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;font-size:14px;line-height:1.5}
     .status-box.show{display:block}
     .status-box.ok{background:var(--ok-soft);border:1px solid #a7f3d0;color:#065f46}
@@ -51,10 +53,8 @@
     th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px;white-space:nowrap}
     th{color:var(--muted);font-size:13px;background:#fbfcfe;position:sticky;top:0}
     tr:last-child td{border-bottom:none}
-    .stack{display:flex;flex-direction:column;gap:18px}
-    .inline-actions{display:flex;gap:8px;flex-wrap:wrap}
     .empty{padding:18px;color:var(--muted);text-align:center}
-    .small{font-size:12px;color:var(--muted)}
+    .highlight{outline:2px solid #bfdbfe;box-shadow:0 0 0 4px rgba(191,219,254,.35)}
     @media (max-width:1100px){.layout{grid-template-columns:1fr}.meta{grid-template-columns:repeat(2,1fr)}}
     @media (max-width:640px){.meta{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
   </style>
@@ -62,7 +62,7 @@
 <body>
   <div class="wrap">
     <h1>학생 관리</h1>
-    <p class="subtitle">학생 등록 + 승인 대기 처리까지 포함한 전체 교체본입니다. 라이브 스키마에 맞춰 <code>name</code>, <code>school</code>, <code>grade</code>, <code>status</code>, <code>approved</code>, <code>approval_status</code> 기준으로 동작합니다.</p>
+    <p class="subtitle">학생 등록 + 승인 대기 처리 + 프론트 렌더링 꼬임 방지까지 포함한 최종 교체본입니다. 라이브 스키마 기준으로 <code>name</code>, <code>school</code>, <code>grade</code>, <code>status</code>, <code>approved</code>, <code>approval_status</code>를 사용합니다.</p>
 
     <section class="meta">
       <div class="mini-card"><div class="mini-label">전체 학생</div><div id="countTotal" class="mini-value">0</div></div>
@@ -76,7 +76,7 @@
         <section class="card">
           <div class="card-header">
             <h2>학생 등록</h2>
-            <span class="small">관리자 직접 등록 시에도 pending으로 생성 가능</span>
+            <span class="small">관리자 등록 또는 pending 생성 가능</span>
           </div>
           <form id="studentForm">
             <div class="form-grid">
@@ -128,10 +128,10 @@
           </form>
         </section>
 
-        <section class="card">
+        <section class="card" id="pendingSection">
           <div class="card-header">
             <h2>승인 대기 학생</h2>
-            <span class="small">pending 학생을 바로 승인/반려</span>
+            <span class="small">pending 학생 즉시 승인/반려</span>
           </div>
           <div class="table-wrap">
             <table>
@@ -183,7 +183,6 @@
       </div>
     </div>
   </div>
-
-  <script src="../js/students.js?v=approval-full-20260601"></script>
+  <script src="../js/students.js?v=approval-renderfix-20260601"></script>
 </body>
 </html>
