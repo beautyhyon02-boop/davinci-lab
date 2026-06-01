@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>내 학습 강좌 - 다빈치랩</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,663 +14,1541 @@
   <style>
     :root {
       --green-900: #163A33;
+      --green-800: #1f4a41;
       --green-700: #245A4E;
-      --green-500: #2e7061;
+      --green-600: #2b6b5d;
       --mint-50: #f0fdf4;
       --mint-100: #dcfce7;
+      --mint-200: #bbf7d0;
       --mint-500: #22c55e;
-      --orange: #f59e0b;
-      --red: #ef4444;
-      --blue: #3b82f6;
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-500: #3b82f6;
+      --orange-50: #fffbeb;
+      --orange-100: #fef3c7;
+      --orange-500: #f59e0b;
+      --red-50: #fef2f2;
+      --red-100: #fee2e2;
+      --red-500: #ef4444;
       --gray-50: #f9fafb;
       --gray-100: #f3f4f6;
       --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
       --gray-400: #9ca3af;
-      --gray-600: #4b5563;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
       --gray-800: #1f2937;
+      --white: #ffffff;
+      --shadow: 0 8px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 18px 40px rgba(0,0,0,0.12);
+      --radius: 20px;
+      --font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Noto Sans KR', sans-serif; margin: 0; background: #f5f6f7; color: var(--gray-800); }
 
-    .content-wrapper { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: linear-gradient(180deg, #f8fbfa 0%, #f2f7f5 100%);
+      color: var(--gray-800);
+      min-height: 100vh;
+    }
 
-    .page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; }
-    .page-title { font-size: 24px; font-weight: 800; color: var(--green-900); display: flex; align-items: center; gap: 10px; margin: 0; }
-    .page-subtitle { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
-    .header-actions { display: flex; gap: 8px; }
+    .page-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 18px 80px;
+    }
 
-    /* 통계 카드 */
-    .stats-row {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px; margin-bottom: 24px;
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
-    .stat-card {
-      background: #fff; padding: 18px 20px; border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }
-    .stat-num { font-size: 26px; font-weight: 800; color: var(--green-700); line-height: 1; }
-    .stat-label { font-size: 12px; color: var(--gray-600); margin-top: 6px; }
 
-    /* 과목 카드 */
-    .subject-card {
-      background: #fff; border-radius: 14px; padding: 20px 22px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px;
+    .page-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--green-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
     }
-    .subject-card-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100);
-    }
-    .subject-name {
-      font-size: 16px; font-weight: 700; color: var(--green-900);
-      display: flex; align-items: center; gap: 8px;
-    }
-    .subject-meta { font-size: 12px; color: var(--gray-600); }
 
-    /* 강좌 목록 */
-    .course-list { display: flex; flex-direction: column; gap: 8px; }
-    .course-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; background: var(--gray-50); border-radius: 10px;
-      transition: all .15s;
+    .page-subtitle {
+      color: var(--gray-500);
+      font-size: 14px;
+      line-height: 1.6;
     }
-    .course-item:hover { background: var(--mint-50); }
-    .course-item.completed { opacity: .55; }
-    .course-item.completed .course-name { text-decoration: line-through; }
-    .course-checkbox { width: 20px; height: 20px; accent-color: var(--green-700); cursor: pointer; flex-shrink: 0; }
-    .course-info { flex: 1; min-width: 0; }
-    .course-name { font-size: 14px; font-weight: 600; color: var(--gray-800); }
-    .course-tags { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
-    .tag {
-      font-size: 10.5px; padding: 2px 8px; border-radius: 99px; font-weight: 700;
-    }
-    .tag-rec { background: var(--mint-100); color: var(--green-700); }
-    .tag-self { background: #fef3c7; color: #92400e; }
-    .tag-admin { background: #dbeafe; color: #1e40af; }
-    .tag-active { background: var(--mint-100); color: var(--green-700); }
-    .tag-paused { background: #fef3c7; color: #92400e; }
-    .tag-completed { background: var(--gray-200); color: var(--gray-600); }
-    .tag-dropped { background: #fee2e2; color: #991b1b; }
 
-    /* 진도 바 */
-    .progress-wrap { display: flex; align-items: center; gap: 8px; min-width: 140px; }
-    .progress-bar {
-      flex: 1; height: 6px; background: var(--gray-200); border-radius: 3px; overflow: hidden;
+    .student-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green-800);
+      box-shadow: var(--shadow);
     }
-    .progress-fill {
-      height: 100%; background: linear-gradient(90deg, var(--green-700), var(--mint-500));
-      border-radius: 3px; transition: width .3s;
-    }
-    .progress-text { font-size: 11px; font-weight: 700; color: var(--gray-600); min-width: 34px; text-align: right; }
 
-    /* 액션 버튼 */
-    .course-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    .icon-btn {
-      width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--gray-200);
-      background: #fff; color: var(--gray-600); cursor: pointer; font-size: 13px;
-      display: flex; align-items: center; justify-content: center; transition: all .15s;
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .icon-btn:hover { border-color: var(--green-700); color: var(--green-700); }
-    .icon-btn.danger:hover { border-color: var(--red); color: var(--red); background: #fef2f2; }
 
-    /* 강좌 추가 입력 */
-    .add-course-row { display: flex; gap: 6px; margin-top: 12px; }
-    .add-course-row input {
-      flex: 1; padding: 9px 12px; border: 1.5px dashed var(--gray-200);
-      border-radius: 8px; font-size: 13px; font-family: 'Noto Sans KR', sans-serif;
-    }
-    .add-course-row input:focus { border-color: var(--green-700); outline: none; border-style: solid; }
-    .add-course-row button {
-      padding: 9px 16px; background: var(--green-700); color: #fff; border: none;
-      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
-    }
-    .add-course-row button:hover { background: var(--green-900); }
-
-    /* 버튼 */
     .btn {
-      padding: 10px 18px; border: none; border-radius: 9px; font-size: 13.5px; font-weight: 700;
-      cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
-      display: inline-flex; align-items: center; gap: 6px; transition: all .15s;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
     }
-    .btn-primary { background: linear-gradient(135deg, var(--green-900), var(--green-500)); color: #fff; }
-    .btn-primary:hover { opacity: .9; }
-    .btn-secondary { background: #fff; color: var(--gray-800); border: 1px solid var(--gray-200); }
-    .btn-secondary:hover { border-color: var(--green-700); color: var(--green-700); }
 
-    /* 빈 상태 */
-    .empty-state {
-      text-align: center; padding: 60px 24px; background: #fff;
-      border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }
-    .empty-state i { font-size: 56px; color: var(--gray-200); margin-bottom: 16px; }
-    .empty-state h3 { font-size: 17px; color: var(--gray-800); margin: 0 0 8px 0; }
-    .empty-state p { font-size: 14px; color: var(--gray-600); margin: 0 0 20px 0; line-height: 1.6; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 
-    /* 모달 */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
-      z-index: 500; align-items: center; justify-content: center; padding: 20px;
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green-700), var(--green-900));
+      color: var(--white);
+      box-shadow: var(--shadow);
     }
-    .modal-overlay.show { display: flex; }
-    .modal-box {
-      background: #fff; border-radius: 16px; width: 100%; max-width: 480px;
-      padding: 28px; box-shadow: 0 16px 48px rgba(0,0,0,.2);
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--green-800);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
     }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-danger {
+      background: var(--red-50);
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-soft {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+
+    .btn-xs {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .notice {
+      background: linear-gradient(135deg, #ffffff, #f8fffc);
+      border: 1px solid #d6efe5;
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .notice strong { color: var(--green-900); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--green-800);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--gray-500);
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .card-title h2 {
+      font-size: 20px;
+      color: var(--green-900);
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    .score-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .score-badge {
+      background: var(--blue-50);
+      color: #1d4ed8;
+      border: 1px solid var(--blue-100);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .subject-rec-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, #ffffff, #fcfefd);
+    }
+
+    .subject-rec-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .subject-rec-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--green-900);
+    }
+
+    .subject-rec-meta {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    .band-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .band-top { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .band-mid-high { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .band-mid-low { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .band-low { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .reason-box {
+      background: var(--gray-50);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--gray-700);
+      line-height: 1.7;
+      margin-bottom: 12px;
+      border: 1px dashed var(--gray-200);
+    }
+
+    .recommend-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .recommend-item,
+    .draft-item,
+    .course-item {
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--white);
+    }
+
+    .recommend-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .rec-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--gray-800);
+      margin-bottom: 6px;
+    }
+
+    .meta-row,
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .tag-rec { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+    .tag-self { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+    .tag-workbook { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    .tag-lecture { background: #ede9fe; color: #6d28d9; border-color: #c4b5fd; }
+    .tag-active { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+    .tag-completed { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+    .tag-paused { background: #f3f4f6; color: #4b5563; border-color: #d1d5db; }
+    .tag-saved { background: #f0fdf4; color: #166534; border-color: #86efac; }
+
+    .recommend-actions,
+    .draft-actions,
+    .course-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .empty-box {
+      border: 2px dashed var(--gray-200);
+      border-radius: 18px;
+      padding: 32px 20px;
+      text-align: center;
+      color: var(--gray-500);
+      background: linear-gradient(180deg, #ffffff, #fafafa);
+    }
+
+    .empty-box i {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: var(--gray-400);
+    }
+
+    .draft-list,
+    .confirmed-groups {
+      display: grid;
+      gap: 12px;
+    }
+
+    .draft-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      background: linear-gradient(180deg, #ffffff, #fbfffd);
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .group-card {
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      overflow: hidden;
+      background: var(--white);
+    }
+
+    .group-head {
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #f8fffc, #f4f8f7);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .group-name {
+      font-weight: 800;
+      color: var(--green-900);
+      font-size: 17px;
+    }
+
+    .group-meta {
+      font-size: 12px;
+      color: var(--gray-500);
+      font-weight: 700;
+    }
+
+    .course-list {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .course-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .course-check-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .course-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: #16a34a;
+      cursor: pointer;
+    }
+
+    .course-name {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--gray-800);
+    }
+
+    .course-sub {
+      color: var(--gray-500);
+      font-size: 12px;
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+
+    .progress-wrap {
+      min-width: 150px;
+      max-width: 180px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--gray-100);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 6px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      border-radius: 999px;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--gray-500);
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .48);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 2000;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      background: var(--white);
+      border-radius: 24px;
+      box-shadow: var(--shadow-lg);
+      padding: 20px;
+      border: 1px solid var(--gray-200);
+    }
+
     .modal-header {
-      display: flex; align-items: center; gap: 10px;
-      margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
     }
-    .modal-header h3 { font-size: 18px; font-weight: 800; color: var(--green-900); flex: 1; margin: 0; }
-    .modal-close {
-      background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray-400);
-    }
-    .modal-field { margin-bottom: 14px; }
-    .modal-field label { display: block; font-size: 13px; font-weight: 700; color: var(--gray-600); margin-bottom: 6px; }
-    .modal-field input, .modal-field select, .modal-field textarea {
-      width: 100%; padding: 10px 12px; border: 1.5px solid var(--gray-200);
-      border-radius: 9px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; outline: none;
-    }
-    .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color: var(--green-700); }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
 
-    /* 토스트 */
-    #toast {
-      position: fixed; bottom: 28px; right: 28px;
-      padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600;
-      color: #fff; z-index: 9999; transition: all .3s;
-      opacity: 0; transform: translateY(10px); pointer-events: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    .modal-header h3 {
+      font-size: 20px;
+      color: var(--green-900);
+      font-weight: 800;
     }
-    #toast.show { opacity: 1; transform: translateY(0); }
+
+    .icon-close {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: var(--gray-700);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--gray-300);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--white);
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--green-700);
+      box-shadow: 0 0 0 3px rgba(36,90,78,.10);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(12px);
+      opacity: 0;
+      background: var(--green-900);
+      color: var(--white);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow-lg);
+      transition: .22s ease;
+      z-index: 3000;
+      pointer-events: none;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      white-space: pre-wrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2500;
+    }
+
+    #loadingOverlay.show { display: flex; }
+
+    .loading-box {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow-lg);
+      font-weight: 800;
+      color: var(--green-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .muted {
+      color: var(--gray-500);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--gray-200);
+      margin: 16px 0;
+    }
+
+    @media (max-width: 1024px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
 
     @media (max-width: 768px) {
-      .content-wrapper { padding: 16px; }
-      .course-item { flex-wrap: wrap; }
-      .progress-wrap { width: 100%; }
+      .page-title { font-size: 24px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .recommend-item,
+      .draft-item,
+      .course-item {
+        grid-template-columns: 1fr;
+      }
+      .recommend-actions,
+      .draft-actions,
+      .course-actions {
+        justify-content: flex-start;
+      }
+      .progress-wrap {
+        max-width: none;
+      }
     }
   </style>
 </head>
 <body>
-
-<main class="content-wrapper">
-  <div class="page-header">
-    <div>
-      <h1 class="page-title"><i class="fas fa-book-open" style="color:var(--green-700);"></i> 내 학습 강좌</h1>
-      <p class="page-subtitle">확정한 인강과 문제집을 관리하고 진도를 기록하세요.</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-secondary" onclick="location.href='scores.html'">
-        <i class="fas fa-chart-line"></i> 성적 입력 & 추천
-      </button>
-      <button class="btn btn-primary" onclick="openAddModal()">
-        <i class="fas fa-plus"></i> 강좌 직접 추가
-      </button>
+  <div id="loadingOverlay">
+    <div class="loading-box">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span id="loadingText">불러오는 중...</span>
     </div>
   </div>
 
-  <!-- 통계 카드 -->
-  <div class="stats-row" id="statsRow">
-    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">전체 강좌</div></div>
-    <div class="stat-card"><div class="stat-num" id="statActive">0</div><div class="stat-label">진행 중</div></div>
-    <div class="stat-card"><div class="stat-num" id="statCompleted">0</div><div class="stat-label">완료</div></div>
-    <div class="stat-card"><div class="stat-num" id="statAvgProgress">0%</div><div class="stat-label">평균 진도</div></div>
+  <div class="page-shell">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-book-open"></i> 내 학습 강좌</h1>
+        <p class="page-subtitle">
+          성적 기반 추천 강좌를 확인하고, 원하는 강좌를 골라 저장하고, 직접 추가한 강좌까지 함께 관리할 수 있습니다.
+        </p>
+        <div class="student-chip" id="studentChip">학생 정보를 확인하는 중...</div>
+      </div>
+
+      <div class="header-actions">
+        <a class="btn btn-secondary" href="scores.html">
+          <i class="fas fa-chart-line"></i> 성적 입력 & 추천
+        </a>
+        <button class="btn btn-primary" id="openAddModalBtn">
+          <i class="fas fa-plus"></i> 강좌 직접 추가
+        </button>
+      </div>
+    </header>
+
+    <section class="notice">
+      <strong>사용 흐름</strong><br />
+      1) 성적 입력 페이지에서 점수를 저장하면 과목별 추천이 자동 계산됩니다.<br />
+      2) 여기서 추천 강좌를 골라 저장하거나, 직접 강좌/문제집을 추가할 수 있습니다.<br />
+      3) 저장된 강좌는 이후 학습 관리와 시험 플래너 연동 대상으로 사용할 수 있습니다.
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">0</div>
+        <div class="stat-label">저장된 전체 강좌</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statActive">0</div>
+        <div class="stat-label">진행 중</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statCompleted">0</div>
+        <div class="stat-label">완료</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statAvg">0%</div>
+        <div class="stat-label">평균 진도</div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div>
+        <section class="card">
+          <div class="card-title">
+            <div>
+              <h2><i class="fas fa-magic" style="color:#2563eb;"></i> 추천 강좌</h2>
+              <div class="card-sub">최근 성적을 기준으로 과목별 맞춤 추천을 보여줍니다. 원하는 항목만 선택해서 저장할 수 있습니다.</div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-soft btn-xs" id="refreshRecommendationsBtn">
+                <i class="fas fa-rotate-right"></i> 추천 다시 불러오기
+              </button>
+            </div>
+          </div>
+
+          <div id="scoreSummary" class="score-summary"></div>
+          <div class="divider"></div>
+          <div id="recommendationsArea"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-title">
+            <div>
+              <h2><i class="fas fa-inbox" style="color:#f59e0b;"></i> 저장 대기 강좌</h2>
+              <div class="card-sub">추천에서 고른 항목과 직접 추가한 항목이 여기에 모입니다. 확인 후 한 번에 저장하세요.</div>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-secondary btn-xs" id="clearDraftsBtn">
+                <i class="fas fa-trash-can"></i> 비우기
+              </button>
+              <button class="btn btn-blue btn-xs" id="saveDraftsBtn">
+                <i class="fas fa-floppy-disk"></i> 확정 강좌 저장
+              </button>
+            </div>
+          </div>
+
+          <div id="draftsArea"></div>
+        </section>
+      </div>
+
+      <div>
+        <section class="card">
+          <div class="card-title">
+            <div>
+              <h2><i class="fas fa-check-circle" style="color:#16a34a;"></i> 저장된 내 학습 강좌</h2>
+              <div class="card-sub">확정된 강좌와 문제집입니다. 삭제, 완료 체크, 진도 수정이 가능합니다.</div>
+            </div>
+          </div>
+
+          <div id="confirmedCoursesArea"></div>
+        </section>
+      </div>
+    </div>
   </div>
 
-  <!-- 강좌 목록 -->
-  <div id="coursesArea">
-    <div style="text-align:center;padding:40px;color:var(--gray-400);">
-      <i class="fas fa-spinner fa-spin"></i> 강좌를 불러오는 중...
+  <!-- 직접 추가 모달 -->
+  <div class="modal-backdrop" id="addModalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>강좌 직접 추가</h3>
+        <button class="icon-close" id="closeAddModalBtn">✕</button>
+      </div>
+
+      <div class="field">
+        <label for="addSubject">과목</label>
+        <select id="addSubject"></select>
+      </div>
+
+      <div class="field">
+        <label for="addCourseName">강좌명 / 문제집명</label>
+        <input type="text" id="addCourseName" placeholder="예: EBS 뉴런 수학1 실전책, 완자 과학, 메가스터디 영어 특강" />
+      </div>
+
+      <div class="field">
+        <label for="addCourseType">유형</label>
+        <select id="addCourseType">
+          <option value="lecture">📺 인강</option>
+          <option value="workbook">📖 문제집</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="addPlatform">플랫폼 / 출처 (선택)</label>
+        <input type="text" id="addPlatform" placeholder="예: EBS, 메가스터디, 자체, 교재" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelAddBtn">취소</button>
+        <button class="btn btn-primary" id="submitAddDraftBtn">
+          <i class="fas fa-plus"></i> 저장 대기에 추가
+        </button>
+      </div>
     </div>
   </div>
-</main>
 
-<!-- 강좌 추가 모달 -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3>📚 강좌 직접 추가</h3>
-      <button class="modal-close" onclick="closeAddModal()">✕</button>
-    </div>
-    <div class="modal-field">
-      <label>과목 선택</label>
-      <select id="addSubject"></select>
-    </div>
-    <div class="modal-field">
-      <label>강좌명</label>
-      <input type="text" id="addCourseName" placeholder="예: EBS 중학 뉴런 국어1 - 실전책" />
-    </div>
-    <div class="modal-field">
-      <label>유형</label>
-      <select id="addCourseType">
-        <option value="lecture">📺 인강</option>
-        <option value="workbook">📖 문제집</option>
-      </select>
-    </div>
-    <div class="modal-field">
-      <label>플랫폼 (선택)</label>
-      <input type="text" id="addPlatform" placeholder="예: EBS, 메가스터디, 자체" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeAddModal()">취소</button>
-      <button class="btn btn-primary" onclick="submitAddCourse()">
-        <i class="fas fa-check"></i> 추가하기
-      </button>
+  <!-- 진도 수정 모달 -->
+  <div class="modal-backdrop" id="progressModalBackdrop">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <h3>진도 수정</h3>
+        <button class="icon-close" id="closeProgressModalBtn">✕</button>
+      </div>
+
+      <div class="field">
+        <label>강좌 정보</label>
+        <div id="progressCourseInfo" class="notice" style="margin:0;padding:14px 16px;"></div>
+      </div>
+
+      <div class="field">
+        <label for="progressSlider">진행률</label>
+        <input type="range" min="0" max="100" value="0" id="progressSlider" />
+        <div style="text-align:center;font-size:24px;font-weight:900;color:var(--green-800);margin-top:8px;" id="progressValue">0%</div>
+      </div>
+
+      <div class="field">
+        <label for="progressStatus">상태</label>
+        <select id="progressStatus">
+          <option value="active">🟢 진행 중</option>
+          <option value="completed">✅ 완료</option>
+          <option value="paused">⏸ 일시중지</option>
+          <option value="dropped">❌ 중단</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="progressNotes">메모</label>
+        <textarea id="progressNotes" rows="3" placeholder="학습 메모를 입력하세요"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelProgressBtn">취소</button>
+        <button class="btn btn-primary" id="submitProgressBtn">
+          <i class="fas fa-save"></i> 저장
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 진도 수정 모달 -->
-<div class="modal-overlay" id="progressModal">
-  <div class="modal-box" style="max-width:400px;">
-    <div class="modal-header">
-      <h3>📊 진도 수정</h3>
-      <button class="modal-close" onclick="closeProgressModal()">✕</button>
-    </div>
-    <div id="progressCourseInfo" style="font-size:13px;color:var(--gray-600);margin-bottom:14px;"></div>
-    <div class="modal-field">
-      <label>진행률 (0~100%)</label>
-      <input type="range" id="progressSlider" min="0" max="100" value="0" oninput="document.getElementById('progressValue').textContent = this.value + '%'" />
-      <div style="text-align:center;margin-top:8px;font-size:22px;font-weight:800;color:var(--green-700);" id="progressValue">0%</div>
-    </div>
-    <div class="modal-field">
-      <label>상태</label>
-      <select id="progressStatus">
-        <option value="active">🟢 진행 중</option>
-        <option value="completed">✅ 완료</option>
-        <option value="paused">⏸ 일시중지</option>
-        <option value="dropped">❌ 중단</option>
-      </select>
-    </div>
-    <div class="modal-field">
-      <label>메모 (선택)</label>
-      <textarea id="progressNotes" rows="2" placeholder="강좌에 대한 메모"></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeProgressModal()">취소</button>
-      <button class="btn btn-primary" onclick="submitProgress()">
-        <i class="fas fa-save"></i> 저장
-      </button>
-    </div>
-  </div>
-</div>
+  <div id="toast"></div>
 
-<div id="toast"></div>
+  <script>
+    const API = '/tables';
 
-<script>
-/* ════════════════════════════════════════
-   다빈치랩 - 내 학습 강좌 관리 v1
-═══════════════════════════════════════ */
-const API = '/tables';
-let currentStudent = null;
-let allCourses = [];
-let allSubjects = [];
-let editingCourseId = null;
+    let currentStudent = null;
+    let allSubjects = [];
+    let confirmedCourses = [];
+    let latestScoresMap = {};
+    let recommendationMatrix = [];
+    let recommendationGroups = [];
+    let draftSelections = [];
+    let hiddenRecommendationKeys = new Set();
+    let editingCourseId = null;
 
-/* ── 세션 확인 ── */
-function checkSession() {
-  const keys = ['dvl_user','dvl_student_session','dvl_session','dvSession','isLogin'];
-  let userStr = null;
-  for (const k of keys) {
-    const v = sessionStorage.getItem(k) || localStorage.getItem(k);
-    if (v && v !== 'null' && v !== 'undefined') { userStr = v; break; }
-  }
-  if (!userStr) {
-    showToast('로그인이 필요합니다', 'error');
-    setTimeout(() => location.href = '../login.html', 1500);
-    return false;
-  }
-  try {
-    currentStudent = JSON.parse(userStr);
-    if (!currentStudent.id && currentStudent.student_id) currentStudent.id = currentStudent.student_id;
-    if (!currentStudent.id && currentStudent.username) currentStudent.id = currentStudent.username;
-    return true;
-  } catch (e) {
-    console.error('세션 파싱 오류:', e);
-    return false;
-  }
-}
+    document.addEventListener('DOMContentLoaded', async () => {
+      bindStaticEvents();
 
-/* ── 토스트 ── */
-function showToast(msg, type = 'ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  const bg = { ok: '#163A33', error: '#b91c1c', warn: '#d97706', info: '#3b82f6' };
-  el.style.background = bg[type] || bg.ok;
-  el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2800);
-}
+      if (!checkSession()) return;
 
-/* ── 데이터 로드 ── */
-async function loadAll() {
-  try {
-    // 과목 카탈로그
-    const subjRes = await fetch(`${API}/subject_catalog?limit=200`);
-    const subjData = await subjRes.json();
-    allSubjects = subjData.data || [];
+      await loadPageData();
+    });
 
-        // 학생 확정 강좌 (search 파라미터 사용)
-    const courseRes = await fetch(`${API}/student_courses?search=${encodeURIComponent(currentStudent.id)}&limit=300`);
-    if (!courseRes.ok) {
-      throw new Error(`강좌 API 오류 (${courseRes.status})`);
+    function bindStaticEvents() {
+      document.getElementById('openAddModalBtn').addEventListener('click', openAddModal);
+      document.getElementById('closeAddModalBtn').addEventListener('click', closeAddModal);
+      document.getElementById('cancelAddBtn').addEventListener('click', closeAddModal);
+      document.getElementById('submitAddDraftBtn').addEventListener('click', submitAddDraft);
+
+      document.getElementById('closeProgressModalBtn').addEventListener('click', closeProgressModal);
+      document.getElementById('cancelProgressBtn').addEventListener('click', closeProgressModal);
+      document.getElementById('submitProgressBtn').addEventListener('click', submitProgress);
+      document.getElementById('progressSlider').addEventListener('input', e => {
+        document.getElementById('progressValue').textContent = `${e.target.value}%`;
+      });
+
+      document.getElementById('saveDraftsBtn').addEventListener('click', saveDraftSelections);
+      document.getElementById('clearDraftsBtn').addEventListener('click', clearDraftSelections);
+      document.getElementById('refreshRecommendationsBtn').addEventListener('click', async () => {
+        hiddenRecommendationKeys = new Set();
+        await loadPageData();
+      });
+
+      document.getElementById('addModalBackdrop').addEventListener('click', e => {
+        if (e.target.id === 'addModalBackdrop') closeAddModal();
+      });
+
+      document.getElementById('progressModalBackdrop').addEventListener('click', e => {
+        if (e.target.id === 'progressModalBackdrop') closeProgressModal();
+      });
     }
-    const courseData = await courseRes.json();
-    allCourses = (courseData.data || []).filter(c => c.student_id === currentStudent.id);
-    console.log('✅ 강좌 로드:', allCourses.length, '건');
 
-    populateAddModalSubjects();
-    renderCourses();
-    updateStats();
-  } catch (e) {
-    console.error('로드 실패:', e);
-    document.getElementById('coursesArea').innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-exclamation-circle" style="color:#ef4444;"></i>
-        <h3>강좌를 불러올 수 없습니다</h3>
-        <p>${e.message}</p>
-      </div>`;
-  }
-}
-
-/* ── 추가 모달의 과목 옵션 채우기 ── */
-function populateAddModalSubjects() {
-  const grade = currentStudent.grade || '중1';
-  const sel = document.getElementById('addSubject');
-  const filtered = allSubjects.filter(s => {
-    if (s.grade_levels && Array.isArray(s.grade_levels)) {
-      return s.grade_levels.includes(grade);
+    function normalizeText(value) {
+      return String(value ?? '').trim();
     }
-    return true;
-  });
-  sel.innerHTML = filtered.map(s =>
-    `<option value="${s.subject_code}">${s.subject_name}</option>`
-  ).join('');
-}
 
-/* ── 과목명 조회 ── */
-function getSubjectName(code) {
-  const s = allSubjects.find(x => x.subject_code === code);
-  return s ? s.subject_name : code;
-}
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
-/* ── 강좌 목록 렌더링 ── */
-function renderCourses() {
-  const area = document.getElementById('coursesArea');
+    function makeCourseKey(subjectCode, courseName) {
+      return `${normalizeText(subjectCode)}__${normalizeText(courseName).toLowerCase()}`;
+    }
 
-  if (!allCourses.length) {
-    area.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-book"></i>
-        <h3>아직 확정한 강좌가 없습니다</h3>
-        <p>먼저 <strong>성적 입력 & 추천</strong> 에서 점수를 입력하고<br/>맞춤 강좌를 추천받아 보세요!</p>
-        <button class="btn btn-primary" onclick="location.href='scores.html'">
-          <i class="fas fa-chart-line"></i> 성적 입력하러 가기
-        </button>
-      </div>`;
-    return;
-  }
+    function showLoading(message = '불러오는 중...') {
+      document.getElementById('loadingText').textContent = message;
+      document.getElementById('loadingOverlay').classList.add('show');
+    }
 
-  // 과목별로 그룹화
-  const groups = {};
-  allCourses.forEach(c => {
-    if (!groups[c.subject_code]) groups[c.subject_code] = [];
-    groups[c.subject_code].push(c);
-  });
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+    }
 
-  area.innerHTML = Object.keys(groups).map(code => {
-    const courses = groups[code];
-    const subjectName = getSubjectName(code);
-    const activeCount = courses.filter(c => c.status === 'active').length;
+    function showToast(message, type = 'ok') {
+      const toast = document.getElementById('toast');
+      const colors = {
+        ok: '#163A33',
+        error: '#b91c1c',
+        warn: '#b45309',
+        info: '#1d4ed8'
+      };
+      toast.style.background = colors[type] || colors.ok;
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
 
-    return `
-      <div class="subject-card">
-        <div class="subject-card-header">
-          <div class="subject-name">📚 ${subjectName}</div>
-          <div class="subject-meta">전체 ${courses.length}개 · 진행 중 ${activeCount}개</div>
+    function checkSession() {
+      const SESSION_SOURCES = [
+        { storage: sessionStorage, key: 'dvl_student_session' },
+        { storage: localStorage, key: 'dvl_student_session' },
+        { storage: sessionStorage, key: 'dvl_user' },
+        { storage: sessionStorage, key: 'dvSession' },
+        { storage: sessionStorage, key: 'dvl_session' },
+        { storage: localStorage, key: 'dvl_user' },
+        { storage: localStorage, key: 'dvl_session' }
+      ];
+
+      let userData = null;
+
+      for (const source of SESSION_SOURCES) {
+        try {
+          const raw = source.storage.getItem(source.key);
+          if (!raw || raw === 'null' || raw === 'undefined' || !raw.includes('{')) continue;
+
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') continue;
+
+          const looksLikeStudent =
+            parsed.role === 'student' ||
+            !!parsed.student_id ||
+            (!!parsed.grade && !parsed.childName);
+
+          if (!looksLikeStudent) continue;
+
+          userData = parsed;
+          break;
+        } catch (e) {
+          console.warn('세션 파싱 실패:', source.key, e);
+        }
+      }
+
+      if (!userData) {
+        alert('로그인이 필요합니다.');
+        location.href = '../login.html';
+        return false;
+      }
+
+      const studentId = normalizeText(
+        userData.student_id ||
+        userData.login_id ||
+        userData.username ||
+        userData.id ||
+        ''
+      );
+
+      if (!studentId) {
+        alert('학생 계정 정보가 올바르지 않습니다. 다시 로그인해주세요.');
+        location.href = '../login.html';
+        return false;
+      }
+
+      currentStudent = {
+        id: studentId,
+        student_id: studentId,
+        name: normalizeText(userData.name || '학생'),
+        role: normalizeText(userData.role || 'student') || 'student',
+        school: normalizeText(userData.school || ''),
+        grade: normalizeText(userData.grade || ''),
+        grade_num: userData.gradeNum || userData.grade_num || null,
+        stage: normalizeText(userData.stage || '1단계') || '1단계'
+      };
+
+      if (currentStudent.role !== 'student') {
+        alert('학생 계정으로 로그인해주세요.');
+        location.href = '../login.html';
+        return false;
+      }
+
+      const chip = document.getElementById('studentChip');
+      chip.innerHTML = `
+        <i class="fas fa-user-graduate"></i>
+        <span>${escapeHtml(currentStudent.name)} · ${escapeHtml(currentStudent.school || '학교 미입력')} · ${escapeHtml(currentStudent.grade || '학년 미입력')}</span>
+      `;
+
+      return true;
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`API 오류 (${res.status})`);
+      return res.json();
+    }
+
+    async function loadPageData() {
+      showLoading('강좌와 추천 정보를 불러오는 중...');
+      try {
+        const studentId = encodeURIComponent(currentStudent.id);
+
+        const [subjectData, courseData, scoreData, matrixData] = await Promise.all([
+          fetchJson(`${API}/subject_catalog?limit=300&sort=display_order.asc`),
+          fetchJson(`${API}/student_courses?student_id=eq.${studentId}&limit=300&sort=created_at.desc`),
+          fetchJson(`${API}/student_scores?student_id=eq.${studentId}&limit=500&sort=created_at.desc`),
+          fetchJson(`${API}/recommendation_matrix?limit=500`)
+        ]);
+
+        allSubjects = Array.isArray(subjectData.data) ? subjectData.data : [];
+        confirmedCourses = Array.isArray(courseData.data) ? courseData.data : [];
+        recommendationMatrix = Array.isArray(matrixData.data) ? matrixData.data : [];
+
+        latestScoresMap = buildLatestScoresMap(Array.isArray(scoreData.data) ? scoreData.data : []);
+        recommendationGroups = buildRecommendationGroups();
+
+        populateAddModalSubjects();
+        renderScoreSummary();
+        renderRecommendations();
+        renderDraftSelections();
+        renderConfirmedCourses();
+        updateStats();
+      } catch (e) {
+        console.error('내 학습 강좌 로드 실패:', e);
+        document.getElementById('recommendationsArea').innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-circle-exclamation"></i>
+            <div style="font-weight:800;margin-bottom:8px;">추천 강좌를 불러올 수 없습니다</div>
+            <div>${escapeHtml(e.message)}</div>
+          </div>
+        `;
+        document.getElementById('confirmedCoursesArea').innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-circle-exclamation"></i>
+            <div style="font-weight:800;margin-bottom:8px;">저장된 강좌를 불러올 수 없습니다</div>
+            <div>${escapeHtml(e.message)}</div>
+          </div>
+        `;
+        showToast(`불러오기 실패: ${e.message}`, 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function buildLatestScoresMap(scoreRows) {
+      const map = {};
+      for (const row of scoreRows) {
+        const code = normalizeText(row.subject_code);
+        if (!code) continue;
+        if (!map[code]) map[code] = row; // created_at desc로 불러왔으므로 첫 항목이 최신
+      }
+      return map;
+    }
+
+    function parseFlexibleArray(value) {
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    }
+
+    function getSubjectMeta(subjectCode) {
+      return allSubjects.find(s => normalizeText(s.subject_code) === normalizeText(subjectCode)) || null;
+    }
+
+    function getSubjectName(subjectCode) {
+      const meta = getSubjectMeta(subjectCode);
+      return meta?.subject_name || subjectCode;
+    }
+
+    function getScoreBand(score) {
+      const n = Number(score);
+      if (n >= 90) return 'top';
+      if (n >= 70) return 'mid_high';
+      if (n >= 50) return 'mid_low';
+      return 'low';
+    }
+
+    function getBandLabel(band) {
+      return {
+        top: '상위권',
+        mid_high: '중상위권',
+        mid_low: '중위권',
+        low: '기초 보강'
+      }[band] || band;
+    }
+
+    function getBandClass(band) {
+      return {
+        top: 'band-top',
+        mid_high: 'band-mid-high',
+        mid_low: 'band-mid-low',
+        low: 'band-low'
+      }[band] || 'band-mid-low';
+    }
+
+    function inferCourseType(name, hint = '') {
+      const text = `${normalizeText(name)} ${normalizeText(hint)}`.toLowerCase();
+      const workbookKeywords = [
+        '문제집', 'workbook', '실전책', '기출', '완자', '풍산자', '자습서',
+        '평가문제집', '개념서', '문법책', '독해', '서술형', '뉴런 영어1 workbook'
+      ];
+      const isWorkbook = workbookKeywords.some(k => text.includes(k.toLowerCase()));
+      return isWorkbook ? 'workbook' : 'lecture';
+    }
+
+    function isCourseConfirmed(subjectCode, courseName) {
+      const key = makeCourseKey(subjectCode, courseName);
+      return confirmedCourses.some(c => makeCourseKey(c.subject_code, c.course_name) === key);
+    }
+
+    function isCourseInDraft(subjectCode, courseName) {
+      const key = makeCourseKey(subjectCode, courseName);
+      return draftSelections.some(c => c.key === key);
+    }
+
+    function buildRecommendationGroups() {
+      const groups = [];
+      const subjectCodes = Object.keys(latestScoresMap);
+
+      for (const code of subjectCodes) {
+        const latest = latestScoresMap[code];
+        const score = Number(latest.score);
+        const band = getScoreBand(score);
+        const grade = normalizeText(currentStudent.grade || '중1');
+        const subjectMeta = getSubjectMeta(code);
+
+        let match = recommendationMatrix.find(m =>
+          normalizeText(m.grade) === grade &&
+          normalizeText(m.score_band) === band &&
+          normalizeText(m.subject_code) === normalizeText(code)
+        );
+
+        if (!match && subjectMeta?.category) {
+          match = recommendationMatrix.find(m => {
+            if (normalizeText(m.grade) !== grade) return false;
+            if (normalizeText(m.score_band) !== band) return false;
+            const matrixSubject = getSubjectMeta(m.subject_code);
+            return matrixSubject?.category === subjectMeta.category;
+          });
+        }
+
+        const items = [];
+        if (match) {
+          const recCourses = parseFlexibleArray(match.recommended_courses);
+          const workbooks = parseFlexibleArray(match.workbooks);
+
+          recCourses.forEach(name => {
+            const courseName = normalizeText(name);
+            if (!courseName) return;
+            items.push({
+              subject_code: code,
+              course_name: courseName,
+              subject_name: subjectMeta?.subject_name || code,
+              course_type: inferCourseType(courseName, match.course_type),
+              platform: null,
+              source: 'recommended',
+              reason: normalizeText(match.reason || ''),
+              difficulty: normalizeText(match.difficulty || ''),
+              band,
+              score,
+              key: makeCourseKey(code, courseName)
+            });
+          });
+
+          workbooks.forEach(name => {
+            const courseName = normalizeText(name);
+            if (!courseName) return;
+            items.push({
+              subject_code: code,
+              course_name: courseName,
+              subject_name: subjectMeta?.subject_name || code,
+              course_type: 'workbook',
+              platform: null,
+              source: 'recommended',
+              reason: normalizeText(match.reason || ''),
+              difficulty: normalizeText(match.difficulty || ''),
+              band,
+              score,
+              key: makeCourseKey(code, courseName)
+            });
+          });
+        }
+
+        // 중복 제거
+        const uniqueMap = new Map();
+        items.forEach(item => {
+          if (!uniqueMap.has(item.key)) uniqueMap.set(item.key, item);
+        });
+
+        groups.push({
+          subject_code: code,
+          subject_name: subjectMeta?.subject_name || code,
+          score,
+          band,
+          difficulty: normalizeText(match?.difficulty || ''),
+          reason: normalizeText(match?.reason || ''),
+          items: [...uniqueMap.values()]
+        });
+      }
+
+      return groups.sort((a, b) => a.subject_name.localeCompare(b.subject_name, 'ko'));
+    }
+
+    function renderScoreSummary() {
+      const wrap = document.getElementById('scoreSummary');
+      const subjectCodes = Object.keys(latestScoresMap);
+
+      if (!subjectCodes.length) {
+        wrap.innerHTML = `
+          <div class="empty-box" style="width:100%;">
+            <i class="fas fa-chart-line"></i>
+            <div style="font-weight:800;margin-bottom:8px;">아직 저장된 성적이 없습니다</div>
+            <div style="margin-bottom:14px;">먼저 성적 입력 & 추천 페이지에서 점수를 저장해 주세요.</div>
+            <a class="btn btn-secondary" href="scores.html">
+              <i class="fas fa-arrow-right"></i> 성적 입력하러 가기
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      wrap.innerHTML = subjectCodes.map(code => {
+        const row = latestScoresMap[code];
+        const band = getScoreBand(row.score);
+        return `
+          <div class="score-badge">
+            <span>${escapeHtml(getSubjectName(code))}</span>
+            <strong>${escapeHtml(row.score)}점</strong>
+            <span>(${escapeHtml(getBandLabel(band))})</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRecommendations() {
+      const area = document.getElementById('recommendationsArea');
+
+      if (!recommendationGroups.length) {
+        area.innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <div style="font-weight:800;margin-bottom:8px;">추천 강좌가 없습니다</div>
+            <div style="margin-bottom:14px;">성적을 입력한 뒤 다시 들어오면 과목별 추천이 표시됩니다.</div>
+            <a class="btn btn-secondary" href="scores.html">
+              <i class="fas fa-chart-line"></i> 성적 입력 & 추천으로 이동
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      area.innerHTML = recommendationGroups.map(group => {
+        const visibleItems = group.items.filter(item => !hiddenRecommendationKeys.has(item.key));
+
+        if (!visibleItems.length) {
+          return `
+            <div class="subject-rec-card">
+              <div class="subject-rec-head">
+                <div>
+                  <div class="subject-rec-name">📘 ${escapeHtml(group.subject_name)}</div>
+                  <div class="subject-rec-meta">${escapeHtml(group.score)}점 · ${escapeHtml(getBandLabel(group.band))}</div>
+                </div>
+                <div class="band-chip ${getBandClass(group.band)}">${escapeHtml(getBandLabel(group.band))}</div>
+              </div>
+              <div class="empty-box" style="padding:18px;">
+                <div style="font-weight:800;margin-bottom:6px;">현재 표시할 추천이 없습니다</div>
+                <div>이 과목의 추천을 모두 제외했거나 저장 완료했습니다.</div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="subject-rec-card">
+            <div class="subject-rec-head">
+              <div>
+                <div class="subject-rec-name">📘 ${escapeHtml(group.subject_name)}</div>
+                <div class="subject-rec-meta">
+                  ${escapeHtml(group.score)}점 · ${escapeHtml(getBandLabel(group.band))}
+                  ${group.difficulty ? ` · ${escapeHtml(group.difficulty)}` : ''}
+                </div>
+              </div>
+              <div class="band-chip ${getBandClass(group.band)}">${escapeHtml(getBandLabel(group.band))}</div>
+            </div>
+
+            ${group.reason ? `<div class="reason-box">${escapeHtml(group.reason)}</div>` : ''}
+
+            <div class="recommend-list">
+              ${visibleItems.map(item => {
+                const saved = isCourseConfirmed(item.subject_code, item.course_name);
+                const drafted = isCourseInDraft(item.subject_code, item.course_name);
+                return `
+                  <div class="recommend-item">
+                    <div>
+                      <div class="rec-name">${escapeHtml(item.course_name)}</div>
+                      <div class="tag-row">
+                        <span class="tag tag-rec">🎯 추천</span>
+                        <span class="tag ${item.course_type === 'workbook' ? 'tag-workbook' : 'tag-lecture'}">
+                          ${item.course_type === 'workbook' ? '📖 문제집' : '📺 인강'}
+                        </span>
+                        ${saved ? `<span class="tag tag-saved">✅ 이미 저장됨</span>` : ''}
+                        ${drafted ? `<span class="tag tag-self">📝 저장 대기</span>` : ''}
+                      </div>
+                    </div>
+                    <div class="recommend-actions">
+                      ${!saved ? `
+                        <button class="btn ${drafted ? 'btn-secondary' : 'btn-primary'} btn-xs btn-add-rec"
+                          data-subject="${escapeHtml(item.subject_code)}"
+                          data-name="${escapeHtml(item.course_name)}"
+                          data-type="${escapeHtml(item.course_type)}"
+                          data-platform=""
+                          ${drafted ? 'disabled' : ''}>
+                          <i class="fas fa-plus"></i> ${drafted ? '추가됨' : '저장 대기에 추가'}
+                        </button>
+                      ` : ''}
+                      <button class="btn btn-danger btn-xs btn-hide-rec"
+                        data-key="${escapeHtml(item.key)}">
+                        <i class="fas fa-xmark"></i> 추천에서 제외
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      area.querySelectorAll('.btn-add-rec').forEach(btn => {
+        btn.addEventListener('click', () => {
+          addDraftSelection({
+            subject_code: btn.dataset.subject,
+            course_name: btn.dataset.name,
+            course_type: btn.dataset.type || 'lecture',
+            platform: btn.dataset.platform || null,
+            source: 'recommended'
+          });
+        });
+      });
+
+      area.querySelectorAll('.btn-hide-rec').forEach(btn => {
+        btn.addEventListener('click', () => {
+          hiddenRecommendationKeys.add(btn.dataset.key);
+          renderRecommendations();
+        });
+      });
+    }
+
+    function renderDraftSelections() {
+      const area = document.getElementById('draftsArea');
+
+      if (!draftSelections.length) {
+        area.innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-box-open"></i>
+            <div style="font-weight:800;margin-bottom:8px;">저장 대기 강좌가 없습니다</div>
+            <div>추천에서 골라 담거나, 강좌 직접 추가 버튼으로 원하는 강좌/문제집을 담아보세요.</div>
+          </div>
+        `;
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="draft-list">
+          ${draftSelections.map(item => `
+            <div class="draft-item">
+              <div>
+                <div class="rec-name">${escapeHtml(item.course_name)}</div>
+                <div class="tag-row">
+                  <span class="tag ${item.source === 'recommended' ? 'tag-rec' : 'tag-self'}">
+                    ${item.source === 'recommended' ? '🎯 추천' : '✏️ 직접 추가'}
+                  </span>
+                  <span class="tag ${item.course_type === 'workbook' ? 'tag-workbook' : 'tag-lecture'}">
+                    ${item.course_type === 'workbook' ? '📖 문제집' : '📺 인강'}
+                  </span>
+                  <span class="tag tag-active">${escapeHtml(getSubjectName(item.subject_code))}</span>
+                  ${item.platform ? `<span class="tag">${escapeHtml(item.platform)}</span>` : ''}
+                </div>
+              </div>
+              <div class="draft-actions">
+                <button class="btn btn-danger btn-xs btn-remove-draft" data-key="${escapeHtml(item.key)}">
+                  <i class="fas fa-trash"></i> 제거
+                </button>
+              </div>
+            </div>
+          `).join('')}
         </div>
-        <div class="course-list">
-          ${courses.map(c => renderCourseItem(c)).join('')}
-        </div>
-        <div class="add-course-row">
-          <input type="text" id="quick-${code}" placeholder="이 과목에 강좌 추가 (예: 강좌명)" />
-          <button onclick="quickAddCourse('${code}')"><i class="fas fa-plus"></i> 추가</button>
-        </div>
-      </div>`;
-  }).join('');
-}
+      `;
 
-/* ── 강좌 카드 ── */
-function renderCourseItem(c) {
-  const sourceTag = {
-    recommended: '<span class="tag tag-rec">🎯 추천</span>',
-    student_added: '<span class="tag tag-self">✏️ 직접 추가</span>',
-    admin_added: '<span class="tag tag-admin">👨‍🏫 선생님</span>',
-  }[c.source] || '';
+      area.querySelectorAll('.btn-remove-draft').forEach(btn => {
+        btn.addEventListener('click', () => {
+          draftSelections = draftSelections.filter(item => item.key !== btn.dataset.key);
+          renderDraftSelections();
+          renderRecommendations();
+        });
+      });
+    }
 
-  const statusTag = {
-    active: '<span class="tag tag-active">🟢 진행 중</span>',
-    completed: '<span class="tag tag-completed">✅ 완료</span>',
-    paused: '<span class="tag tag-paused">⏸ 일시중지</span>',
-    dropped: '<span class="tag tag-dropped">❌ 중단</span>',
-  }[c.status] || '';
+    function renderConfirmedCourses() {
+      const area = document.getElementById('confirmedCoursesArea');
 
-  const typeIcon = c.course_type === 'workbook' ? '📖' : '📺';
-  const progress = c.progress || 0;
-  const completedClass = c.status === 'completed' ? 'completed' : '';
+      if (!confirmedCourses.length) {
+        area.innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-folder-open"></i>
+            <div style="font-weight:800;margin-bottom:8px;">저장된 강좌가 없습니다</div>
+            <div>추천 강좌를 선택해 저장하거나, 직접 추가한 강좌를 저장해보세요.</div>
+          </div>
+        `;
+        return;
+      }
 
-  return `
-    <div class="course-item ${completedClass}">
-      <input type="checkbox" class="course-checkbox" ${c.status === 'completed' ? 'checked' : ''}
-        onchange="toggleComplete(${c.id}, this.checked)" />
-      <div class="course-info">
-        <div class="course-name">${typeIcon} ${c.course_name}</div>
-        <div class="course-tags">
-          ${sourceTag} ${statusTag}
-          ${c.platform ? `<span class="tag" style="background:#f3f4f6;color:#6b7280;">${c.platform}</span>` : ''}
-        </div>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:${progress}%"></div>
-        </div>
-        <div class="progress-text">${progress}%</div>
-      </div>
-      <div class="course-actions">
-        <button class="icon-btn" onclick="openProgressModal(${c.id})" title="진도 수정">
-          <i class="fas fa-edit"></i>
-        </button>
-        <button class="icon-btn danger" onclick="deleteCourse(${c.id})" title="삭제">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>`;
-}
+      const groups = {};
+      confirmedCourses.forEach(course => {
+        const key = normalizeText(course.subject_code || '기타');
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(course);
+      });
 
-/* ── 통계 업데이트 ── */
-function updateStats() {
-  const total = allCourses.length;
-  const active = allCourses.filter(c => c.status === 'active').length;
-  const completed = allCourses.filter(c => c.status === 'completed').length;
-  const avg = total > 0
-    ? Math.round(allCourses.reduce((s, c) => s + (c.progress || 0), 0) / total)
-    : 0;
+      const subjectCodes = Object.keys(groups).sort((a, b) => getSubjectName(a).localeCompare(getSubjectName(b), 'ko'));
 
-  document.getElementById('statTotal').textContent = total;
-  document.getElementById('statActive').textContent = active;
-  document.getElementById('statCompleted').textContent = completed;
-  document.getElementById('statAvgProgress').textContent = avg + '%';
-}
+      area.innerHTML = `
+        <div class="confirmed-groups">
+          ${subjectCodes.map(code => {
+            const items = groups[code];
+            const activeCount = items.filter(x => x.status === 'active').length;
+            return `
+              <div class="group-card">
+                <div class="group-head">
+                  <div>
+                    <div class="group-name">📚 ${escapeHtml(getSubjectName(code))}</div>
+                    <div class="group-meta">전체 ${items.length}개 · 진행 중 ${activeCount}개</div>
+                  </div>
+                </div>
+                <div class="course-list">
+                  ${items.map(course => {
+                    const progress = Number(course.progress || 0);
+                    const sourceTag =
+                      course.source === 'recommended'
+                        ? '<span class="tag tag-rec">🎯 추천</span>'
+                        : course.source === 'student_added'
+                        ? '<span class="tag tag-self">✏️ 직접 추가</span>'
+                        : '<span class="tag">📌 저장</span>';
 
-/* ── 완료 토글 ── */
-async function toggleComplete(courseId, checked) {
-  const newStatus = checked ? 'completed' : 'active';
-  const newProgress = checked ? 100 : (allCourses.find(c => c.id === courseId)?.progress || 0);
+                    const statusTag =
+                      course.status === 'completed'
+                        ? '<span class="tag tag-completed">✅ 완료</span>'
+                        : course.status === 'paused'
+                        ? '<span class="tag tag-paused">⏸ 일시중지</span>'
+                        : course.status === 'dropped'
+                        ? '<span class="tag tag-paused">❌ 중단</span>'
+                        : '<span class="tag tag-active">🟢 진행 중</span>';
 
-  try {
-    await fetch(`${API}/student_courses/${courseId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: newStatus,
-        progress: newProgress,
-        updated_at: new Date().toISOString(),
-      }),
-    });
-    const c = allCourses.find(x => x.id === courseId);
-    if (c) { c.status = newStatus; c.progress = newProgress; }
-    renderCourses();
-    updateStats();
-    showToast(checked ? '✅ 완료 처리!' : '🔄 다시 진행 중', 'ok');
-  } catch (e) {
-    showToast('처리 실패: ' + e.message, 'error');
-  }
-}
+                    const typeTag =
+                      course.course_type === 'workbook'
+                        ? '<span class="tag tag-workbook">📖 문제집</span>'
+                        : '<span class="tag tag-lecture">📺 인강</span>';
 
-/* ── 강좌 삭제 ── */
-async function deleteCourse(courseId) {
-  const c = allCourses.find(x => x.id === courseId);
-  if (!c) return;
-  if (!confirm(`'${c.course_name}' 강좌를 정말 삭제할까요?`)) return;
+                    return `
+                      <div class="course-item">
+                        <div class="course-check-wrap">
+                          <input
+                            type="checkbox"
+                            class="course-checkbox course-complete-checkbox"
+                            data-id="${course.id}"
+                            ${course.status === 'completed' ? 'checked' : ''}
+                          />
+                        </div>
 
-  try {
-    await fetch(`${API}/student_courses/${courseId}`, { method: 'DELETE' });
-    allCourses = allCourses.filter(x => x.id !== courseId);
-    renderCourses();
-    updateStats();
-    showToast('🗑️ 삭제되었습니다', 'ok');
-  } catch (e) {
-    showToast('삭제 실패: ' + e.message, 'error');
-  }
-}
-
-/* ── 진도 수정 모달 ── */
-function openProgressModal(courseId) {
-  const c = allCourses.find(x => x.id === courseId);
-  if (!c) return;
-  editingCourseId = courseId;
-  document.getElementById('progressCourseInfo').textContent =
-    `${getSubjectName(c.subject_code)} · ${c.course_name}`;
-  const slider = document.getElementById('progressSlider');
-  slider.value = c.progress || 0;
-  document.getElementById('progressValue').textContent = (c.progress || 0) + '%';
-  document.getElementById('progressStatus').value = c.status || 'active';
-  document.getElementById('progressNotes').value = c.notes || '';
-  document.getElementById('progressModal').classList.add('show');
-}
-
-function closeProgressModal() {
-  document.getElementById('progressModal').classList.remove('show');
-  editingCourseId = null;
-}
-
-async function submitProgress() {
-  if (!editingCourseId) return;
-  const progress = parseInt(document.getElementById('progressSlider').value, 10);
-  const status = document.getElementById('progressStatus').value;
-  const notes = document.getElementById('progressNotes').value.trim();
-
-  try {
-    await fetch(`${API}/student_courses/${editingCourseId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        progress, status, notes,
-        updated_at: new Date().toISOString(),
-      }),
-    });
-    const c = allCourses.find(x => x.id === editingCourseId);
-    if (c) { c.progress = progress; c.status = status; c.notes = notes; }
-    closeProgressModal();
-    renderCourses();
-    updateStats();
-    showToast('✅ 저장 완료', 'ok');
-  } catch (e) {
-    showToast('저장 실패: ' + e.message, 'error');
-  }
-}
-
-/* ── 강좌 추가 모달 ── */
-function openAddModal() {
-  document.getElementById('addCourseName').value = '';
-  document.getElementById('addPlatform').value = '';
-  document.getElementById('addCourseType').value = 'lecture';
-  document.getElementById('addModal').classList.add('show');
-}
-
-function closeAddModal() {
-  document.getElementById('addModal').classList.remove('show');
-}
-
-async function submitAddCourse() {
-  const subjectCode = document.getElementById('addSubject').value;
-  const courseName = document.getElementById('addCourseName').value.trim();
-  const courseType = document.getElementById('addCourseType').value;
-  const platform = document.getElementById('addPlatform').value.trim();
-
-  if (!subjectCode || !courseName) {
-    showToast('과목과 강좌명을 모두 입력해주세요', 'warn');
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API}/student_courses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        student_id: currentStudent.id,
-        subject_code: subjectCode,
-        course_name: courseName,
-        course_type: courseType,
-        platform: platform || null,
-        source: 'student_added',
-        status: 'active',
-        progress: 0,
-        added_by: currentStudent.id,
-      }),
-    });
-    if (!res.ok) throw new Error(`서버 오류 ${res.status}`);
-    closeAddModal();
-    await loadAll();
-    showToast('✅ 강좌가 추가되었습니다!', 'ok');
-  } catch (e) {
-    showToast('추가 실패: ' + e.message, 'error');
-  }
-}
-
-/* ── 빠른 추가 (과목 카드 안에서) ── */
-async function quickAddCourse(subjectCode) {
-  const inp = document.getElementById(`quick-${subjectCode}`);
-  const name = (inp.value || '').trim();
-  if (!name) { showToast('강좌명을 입력해주세요', 'warn'); return; }
-
-  try {
-    await fetch(`${API}/student_courses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        student_id: currentStudent.id,
-        subject_code: subjectCode,
-        course_name: name,
-        course_type: 'lecture',
-        source: 'student_added',
-        status: 'active',
-        progress: 0,
-        added_by: currentStudent.id,
-      }),
-    });
-    inp.value = '';
-    await loadAll();
-    showToast(`✅ ${name} 추가됨`, 'ok');
-  } catch (e) {
-    showToast('추가 실패: ' + e.message, 'error');
-  }
-}
-
-/* ── 초기화 ── */
-document.addEventListener('DOMContentLoaded', () => {
-  if (!checkSession()) return;
-  loadAll();
-});
-</script>
-
-</body>
-</html>
+                        <div>
+                          <div class="course-name">${escapeHtml(course.course_name)}</div>
+                          <div class="tag-row">
+                            ${sourceTag}
+                            ${typeTag}
+                            ${statusTag}
+                            ${course.platform ? `<span class="tag">${escapeHtml(course.platform)}</span>` : ''}
+                          </div>
+                          <
