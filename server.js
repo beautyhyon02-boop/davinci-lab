@@ -1,8 +1,9 @@
 /* ================================================================
-   DaVinci Lab Server (v2.0 - Supabase 연동)
+   DaVinci Lab Server (v2.1 - Supabase 연동 + query string PATCH 지원)
    ----------------------------------------------------------------
-   /tables/{테이블명}            GET, POST
-   /tables/{테이블명}/{id}       GET, PATCH, DELETE
+   /tables/{테이블명}              GET, POST
+   /tables/{테이블명}?id=eq.{id}   PATCH, PUT, DELETE  ← 신규 추가
+   /tables/{테이블명}/{id}          GET, PATCH, DELETE
    환경변수: SUPABASE_URL, SUPABASE_SERVICE_KEY
    ================================================================ */
 
@@ -38,25 +39,46 @@ console.log('✅ Supabase 연결 준비 완료');
 app.use(express.json({ limit: '10mb' }));
 
 /* ----------------------------------------------------------------
+   query string에서 id=eq.{숫자} 파싱 헬퍼
+   예: ?id=eq.4  →  4
+   ---------------------------------------------------------------- */
+function parseEqId(raw) {
+  if (!raw) return null;
+  const value = Array.isArray(raw) ? raw[0] : String(raw);
+  const match = value.trim().match(/^eq\.(\d+)$/);
+  return match ? Number(match[1]) : null;
+}
+
+/* ----------------------------------------------------------------
    /tables API — Supabase 프록시
    기존 코드가 /tables/{테이블} 형식으로 호출하므로 호환 유지
    ---------------------------------------------------------------- */
 
-// 목록 조회 또는 신규 생성
+// 목록 조회 / 신규 생성 / query string id 기반 수정·삭제
 app.all('/tables/:table', async (req, res) => {
   const table = req.params.table;
+
   try {
+    /* ---- GET: 목록 조회 ---- */
     if (req.method === 'GET') {
       const limit = parseInt(req.query.limit) || 1000;
-      const { data, error } = await supabase
-        .from(table)
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      const sort = req.query.sort; // 예: created_at.desc
+      let query = supabase.from(table).select('*');
+
+      if (sort) {
+        const [col, dir] = sort.split('.');
+        query = query.order(col || 'created_at', { ascending: dir !== 'desc' });
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      query = query.limit(limit);
+      const { data, error } = await query;
       if (error) throw error;
       return res.json({ data, total: data.length });
     }
 
+    /* ---- POST: 신규 생성 ---- */
     if (req.method === 'POST') {
       const { data, error } = await supabase
         .from(table)
@@ -66,14 +88,55 @@ app.all('/tables/:table', async (req, res) => {
       return res.json(data[0] || data);
     }
 
+    /* ---- PATCH / PUT: query string ?id=eq.{id} 방식 수정 ---- */
+    if (req.method === 'PATCH' || req.method === 'PUT') {
+      const id = parseEqId(req.query.id);
+      if (!id) {
+        return res.status(400).json({
+          error: 'PATCH requires ?id=eq.{number} query string'
+        });
+      }
+
+      const { data, error } = await supabase
+        .from(table)
+        .update(req.body)
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+      if (!data || !data.length) {
+        return res.status(404).json({ error: 'Record not found' });
+      }
+      return res.json(data[0]);
+    }
+
+    /* ---- DELETE: query string ?id=eq.{id} 방식 삭제 ---- */
+    if (req.method === 'DELETE') {
+      const id = parseEqId(req.query.id);
+      if (!id) {
+        return res.status(400).json({
+          error: 'DELETE requires ?id=eq.{number} query string'
+        });
+      }
+
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return res.json({ success: true });
+    }
+
     return res.status(405).json({ error: 'Method not allowed' });
+
   } catch (err) {
     console.error(`[${req.method} /tables/${table}]`, err.message);
     return res.status(500).json({ error: err.message });
   }
 });
 
-// 단일 항목 조회/수정/삭제
+// 단일 항목 조회/수정/삭제 (/tables/:table/:id 경로 방식)
 app.all('/tables/:table/:id', async (req, res) => {
   const { table, id } = req.params;
   try {
