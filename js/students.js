@@ -37,20 +37,22 @@
   function collectFormPayload() {
     const formData = new FormData(els.form);
     const payload = {
-      student_name: String(formData.get('student_name') || '').trim(),
+      name: String(formData.get('student_name') || '').trim(),
       student_id: String(formData.get('student_id') || '').trim(),
       password: String(formData.get('password') || '').trim(),
-      year: String(formData.get('year') || '').trim(),
+      grade: String(formData.get('year') || '').trim(),
+      school: String(formData.get('school') || '').trim(),
       parent_phone: normalizePhone(formData.get('parent_phone')),
       status: String(formData.get('status') || 'pending').trim(),
       notes: String(formData.get('notes') || '').trim(),
       updated_at: new Date().toISOString()
     };
 
-    if (!payload.student_name) throw new Error('학생 이름을 입력해 주세요.');
+    if (!payload.name) throw new Error('학생 이름을 입력해 주세요.');
     if (!payload.student_id) throw new Error('학생 아이디를 입력해 주세요.');
     if (!payload.password) throw new Error('비밀번호를 입력해 주세요.');
-    if (!payload.year) throw new Error('학년을 선택해 주세요.');
+    if (!payload.grade) throw new Error('학년을 선택해 주세요.');
+    if (!payload.school) throw new Error('학교명을 입력해 주세요.');
 
     const optionalKeys = ['parent_phone', 'notes'];
     optionalKeys.forEach((key) => {
@@ -99,9 +101,9 @@
       const cls = status === 'pending' ? 'pill pending' : 'pill';
       return `
         <tr>
-          <td>${escapeHtml(s.student_name || '-')}</td>
+          <td>${escapeHtml(s.name || s.student_name || '-')}</td>
           <td>${escapeHtml(s.student_id || '-')}</td>
-          <td>${escapeHtml(s.year || '-')}</td>
+          <td>${escapeHtml(s.grade || s.year || '-')}</td>
           <td><span class="${cls}">${escapeHtml(status || '-')}</span></td>
         </tr>
       `;
