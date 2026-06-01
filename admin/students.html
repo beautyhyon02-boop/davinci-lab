@@ -5,82 +5,185 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>학생 관리</title>
   <style>
-    :root{--bg:#f7f8fc;--card:#fff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;--primary:#2563eb;--danger:#dc2626;--ok:#059669}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Pretendard,sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1100px;margin:0 auto;padding:24px} .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 6px 24px rgba(0,0,0,.04)}
-    h1,h2{margin:0 0 16px} .muted{color:var(--muted)} .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    label{display:block;font-size:14px;font-weight:700;margin-bottom:6px} input,select,button{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:14px}
-    button{cursor:pointer;font-weight:700} .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)} .btn-ghost{background:#fff}
-    .status{margin-top:12px;padding:12px 14px;border-radius:12px;font-size:14px;display:none} .status.show{display:block}
-    .status.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0} .status.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
-    table{width:100%;border-collapse:collapse} th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px} th{color:var(--muted);font-weight:700}
-    .pill{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#eff6ff;color:#1d4ed8}
-    .pill.pending{background:#fff7ed;color:#c2410c} .meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px} .meta .card{padding:14px 16px;flex:1}
-    .num{font-size:28px;font-weight:800} .actions{display:flex;gap:10px;margin-top:12px}
-    @media (max-width: 920px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
+    :root{
+      --bg:#f6f8fc;--card:#ffffff;--line:#e5e7eb;--text:#111827;--muted:#6b7280;
+      --primary:#2563eb;--primary-soft:#eff6ff;--ok:#059669;--ok-soft:#ecfdf5;
+      --warn:#d97706;--warn-soft:#fff7ed;--danger:#dc2626;--danger-soft:#fef2f2;
+      --shadow:0 8px 24px rgba(15,23,42,.06)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Pretendard,sans-serif}
+    .wrap{max-width:1320px;margin:0 auto;padding:24px}
+    h1,h2,h3,p{margin:0}
+    .subtitle{margin-top:8px;color:var(--muted);line-height:1.6}
+    .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0}
+    .mini-card,.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .mini-card{padding:16px 18px}
+    .mini-label{color:var(--muted);font-size:13px;margin-bottom:8px}
+    .mini-value{font-size:30px;font-weight:800}
+    .layout{display:grid;grid-template-columns:430px 1fr;gap:18px;align-items:start}
+    .card{padding:20px}
+    .card + .card{margin-top:18px}
+    .card-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .muted{color:var(--muted)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+    input,select,button,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:14px;background:#fff}
+    textarea{min-height:88px;resize:vertical}
+    button{cursor:pointer;font-weight:700}
+    .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .btn-ghost{background:#fff}
+    .btn-ok{background:var(--ok);border-color:var(--ok);color:#fff}
+    .btn-danger{background:var(--danger);border-color:var(--danger);color:#fff}
+    .btn-sm{padding:8px 12px;font-size:13px;border-radius:10px;width:auto}
+    .action-row{display:flex;gap:10px;margin-top:14px}
+    .status-box{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;font-size:14px;line-height:1.5}
+    .status-box.show{display:block}
+    .status-box.ok{background:var(--ok-soft);border:1px solid #a7f3d0;color:#065f46}
+    .status-box.err{background:var(--danger-soft);border:1px solid #fecaca;color:#991b1b}
+    .status-box.info{background:var(--primary-soft);border:1px solid #bfdbfe;color:#1d4ed8}
+    .pill{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;text-transform:lowercase}
+    .pill.active{background:var(--primary-soft);color:#1d4ed8}
+    .pill.pending{background:var(--warn-soft);color:#c2410c}
+    .pill.rejected{background:var(--danger-soft);color:#b91c1c}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px;white-space:nowrap}
+    th{color:var(--muted);font-size:13px;background:#fbfcfe;position:sticky;top:0}
+    tr:last-child td{border-bottom:none}
+    .stack{display:flex;flex-direction:column;gap:18px}
+    .inline-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .empty{padding:18px;color:var(--muted);text-align:center}
+    .small{font-size:12px;color:var(--muted)}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr}.meta{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:640px){.meta{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>학생 관리</h1>
-    <p class="muted">학생 등록 안정화용 전체 교체본입니다. API는 <code>/tables/student_profiles</code> 기준으로 동작하며, 라이브 스키마에 맞춰 <code>student_name → name</code>, <code>school_name → school</code>, <code>year → grade</code>로 전송하도록 수정했습니다.</p>
+    <p class="subtitle">학생 등록 + 승인 대기 처리까지 포함한 전체 교체본입니다. 라이브 스키마에 맞춰 <code>name</code>, <code>school</code>, <code>grade</code>, <code>status</code>, <code>approved</code>, <code>approval_status</code> 기준으로 동작합니다.</p>
 
-    <div class="meta">
-      <div class="card"><div class="muted">전체 학생</div><div id="countTotal" class="num">0</div></div>
-      <div class="card"><div class="muted">활성 학생</div><div id="countActive" class="num">0</div></div>
-      <div class="card"><div class="muted">승인 대기</div><div id="countPending" class="num">0</div></div>
-    </div>
+    <section class="meta">
+      <div class="mini-card"><div class="mini-label">전체 학생</div><div id="countTotal" class="mini-value">0</div></div>
+      <div class="mini-card"><div class="mini-label">활성 학생</div><div id="countActive" class="mini-value">0</div></div>
+      <div class="mini-card"><div class="mini-label">승인 대기</div><div id="countPending" class="mini-value">0</div></div>
+      <div class="mini-card"><div class="mini-label">반려/비활성</div><div id="countRejected" class="mini-value">0</div></div>
+    </section>
 
-    <div class="grid">
-      <section class="card">
-        <h2>학생 등록</h2>
-        <form id="studentForm">
-          <div class="row">
-            <div><label for="student_name">학생 이름</label><input id="student_name" name="student_name" required /></div>
-            <div><label for="student_id">학생 아이디</label><input id="student_id" name="student_id" required /></div>
+    <div class="layout">
+      <div>
+        <section class="card">
+          <div class="card-header">
+            <h2>학생 등록</h2>
+            <span class="small">관리자 직접 등록 시에도 pending으로 생성 가능</span>
           </div>
-          <div class="row">
-            <div><label for="password">비밀번호</label><input id="password" name="password" type="password" required /></div>
-            <div><label for="year">학년</label>
-              <select id="year" name="year" required>
-                <option value="">선택</option>
-                <option value="중1">중1</option><option value="중2">중2</option><option value="중3">중3</option>
-                <option value="고1">고1</option><option value="고2">고2</option><option value="고3">고3</option>
-              </select>
+          <form id="studentForm">
+            <div class="form-grid">
+              <div>
+                <label for="student_name">학생 이름</label>
+                <input id="student_name" name="student_name" required />
+              </div>
+              <div>
+                <label for="student_id">학생 아이디</label>
+                <input id="student_id" name="student_id" required />
+              </div>
+              <div>
+                <label for="password">비밀번호</label>
+                <input id="password" name="password" type="password" required />
+              </div>
+              <div>
+                <label for="year">학년</label>
+                <select id="year" name="year" required>
+                  <option value="">선택</option>
+                  <option value="중1">중1</option><option value="중2">중2</option><option value="중3">중3</option>
+                  <option value="고1">고1</option><option value="고2">고2</option><option value="고3">고3</option>
+                </select>
+              </div>
+              <div>
+                <label for="school">학교명</label>
+                <input id="school" name="school" required />
+              </div>
+              <div>
+                <label for="parent_phone">학부모 전화번호</label>
+                <input id="parent_phone" name="parent_phone" placeholder="010-0000-0000" />
+              </div>
+              <div>
+                <label for="status">초기 상태</label>
+                <select id="status" name="status">
+                  <option value="pending">pending</option>
+                  <option value="active">active</option>
+                </select>
+              </div>
+              <div>
+                <label for="memo">메모</label>
+                <input id="memo" name="memo" />
+              </div>
             </div>
-          </div>
-          <div class="row">
-            <div><label for="school">학교명</label><input id="school" name="school" required /></div>
-            <div><label for="parent_phone">학부모 전화번호</label><input id="parent_phone" name="parent_phone" placeholder="010-0000-0000" /></div>
-          </div>
-          <div class="row">
-            <div><label for="status">상태</label>
-              <select id="status" name="status">
-                <option value="pending">pending</option>
-                <option value="active">active</option>
-              </select>
+            <div class="action-row">
+              <button class="btn-primary" type="submit" id="submitBtn">학생 등록</button>
+              <button class="btn-ghost" type="button" id="refreshBtn">목록 새로고침</button>
             </div>
-            <div><label for="notes">메모</label><input id="notes" name="notes" /></div>
-          </div>
-          <div class="actions">
-            <button class="btn-primary" type="submit" id="submitBtn">학생 등록</button>
-            <button class="btn-ghost" type="button" id="refreshBtn">목록 새로고침</button>
-          </div>
-          <div id="formStatus" class="status"></div>
-        </form>
-      </section>
+            <div id="formStatus" class="status-box"></div>
+          </form>
+        </section>
 
-      <section class="card">
-        <h2>최근 학생 목록</h2>
-        <p class="muted">등록 성공 시 목록이 자동 갱신됩니다.</p>
-        <table>
-          <thead><tr><th>이름</th><th>아이디</th><th>학년</th><th>상태</th></tr></thead>
-          <tbody id="studentRows"><tr><td colspan="4" class="muted">불러오는 중...</td></tr></tbody>
-        </table>
-      </section>
+        <section class="card">
+          <div class="card-header">
+            <h2>승인 대기 학생</h2>
+            <span class="small">pending 학생을 바로 승인/반려</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>아이디</th>
+                  <th>학교</th>
+                  <th>학년</th>
+                  <th>상태</th>
+                  <th>처리</th>
+                </tr>
+              </thead>
+              <tbody id="pendingRows">
+                <tr><td colspan="6" class="empty">불러오는 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="approvalStatus" class="status-box"></div>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div class="card-header">
+            <h2>전체 학생 목록</h2>
+            <span class="small">최근 등록 순</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>이름</th>
+                  <th>아이디</th>
+                  <th>학교</th>
+                  <th>학년</th>
+                  <th>상태</th>
+                  <th>승인상태</th>
+                  <th>등록일</th>
+                  <th>액션</th>
+                </tr>
+              </thead>
+              <tbody id="studentRows">
+                <tr><td colspan="8" class="empty">불러오는 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
-  <script src="../js/students.js?v=registration-stable-20260530"></script>
+
+  <script src="../js/students.js?v=approval-full-20260601"></script>
 </body>
 </html>
