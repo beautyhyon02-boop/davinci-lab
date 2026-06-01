@@ -59,56 +59,92 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /* ════════ 세션 ════════ */
 function checkSession() {
-  const SESSION_KEYS = ['dvl_user', 'dvSession', 'dvl_student_session', 'dvl_session'];
-  let userStr = null;
+  const SESSION_SOURCES = [
+    { storage: sessionStorage, key: 'dvl_student_session' },
+    { storage: localStorage, key: 'dvl_student_session' },
+    { storage: sessionStorage, key: 'dvl_user' },
+    { storage: sessionStorage, key: 'dvSession' },
+    { storage: sessionStorage, key: 'dvl_session' },
+    { storage: localStorage, key: 'dvl_user' },
+    { storage: localStorage, key: 'dvl_session' }
+  ];
+
+  let userData = null;
   let foundKey = null;
-  
-  for (const key of SESSION_KEYS) {
-    const val = sessionStorage.getItem(key);
-    if (val && val !== 'null' && val !== 'undefined' && val.includes('{')) {
-      userStr = val; foundKey = `sessionStorage.${key}`; break;
+
+  for (const source of SESSION_SOURCES) {
+    try {
+      const raw = source.storage.getItem(source.key);
+      if (!raw || raw === 'null' || raw === 'undefined' || !raw.includes('{')) continue;
+
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') continue;
+
+      const looksLikeStudent =
+        parsed.role === 'student' ||
+        !!parsed.student_id ||
+        (!!parsed.grade && !parsed.childName);
+
+      if (!looksLikeStudent) continue;
+
+      userData = parsed;
+      foundKey = `${source.storage === sessionStorage ? 'sessionStorage' : 'localStorage'}.${source.key}`;
+      break;
+    } catch (e) {
+      console.warn('세션 파싱 실패:', source.key, e);
     }
   }
-  if (!userStr) {
-    for (const key of SESSION_KEYS) {
-      const val = localStorage.getItem(key);
-      if (val && val !== 'null' && val !== 'undefined' && val.includes('{')) {
-        userStr = val; foundKey = `localStorage.${key}`; break;
-      }
-    }
-  }
-  console.log('🔍 세션:', foundKey || '❌');
-  
-  if (!userStr) {
+
+  console.log('🔍 학생 세션:', foundKey || '❌ 없음');
+
+  if (!userData) {
     showToast('로그인이 필요합니다', 'error');
     setTimeout(() => location.href = '../login.html', 1500);
     return false;
   }
-  try {
-    const userData = JSON.parse(userStr);
-    const rawId = userData.student_id || userData.login_id || userData.username || userData.id || '';
-    currentStudent = {
-      student_id: rawId ? String(rawId).trim() : '',
-      session_id: userData.id ?? null,
-      name: userData.name || '학생',
-      role: userData.role || 'student',
-      school: userData.school || '',
-      grade: userData.grade || '',
-      grade_num: userData.gradeNum || userData.grade_num || null,
-      stage: userData.stage || '1단계'
-    };
-    console.log('📌 학생(세션 원본):', currentStudent);
-    const avatarEl = document.getElementById('studentAvatar');
-    const nameEl = document.getElementById('studentNameText');
-    if (avatarEl) avatarEl.textContent = currentStudent.name.charAt(0);
-    if (nameEl) nameEl.textContent = currentStudent.name;
-    return true;
-  } catch (e) {
-    console.error('세션 오류:', e);
-    showToast('세션 정보 오류', 'error');
+
+  const rawStudentId = normalizeText(
+    userData.student_id ||
+    userData.login_id ||
+    userData.username ||
+    userData.id ||
+    ''
+  );
+
+  if (!rawStudentId) {
+    console.warn('⚠️ student_id 식별값이 비어 있습니다:', userData);
+    showToast('학생 계정 정보가 올바르지 않습니다. 다시 로그인해주세요.', 'error');
+    setTimeout(() => location.href = '../login.html', 1800);
+    return false;
+  }
+
+  currentStudent = {
+    student_id: rawStudentId,
+    session_id: userData.id ?? null,
+    name: normalizeText(userData.name || '학생'),
+    role: normalizeText(userData.role || 'student') || 'student',
+    school: normalizeText(userData.school || ''),
+    grade: normalizeText(userData.grade || ''),
+    grade_num: userData.gradeNum || userData.grade_num || null,
+    stage: normalizeText(userData.stage || '1단계') || '1단계'
+  };
+
+  if (currentStudent.role && currentStudent.role !== 'student') {
+    console.warn('⚠️ 학생 계정이 아닌 세션이 감지되었습니다:', currentStudent);
+    showToast('학생 계정으로 로그인해주세요', 'error');
     setTimeout(() => location.href = '../login.html', 1500);
     return false;
   }
+
+  console.log('📌 학생(세션 원본):', currentStudent);
+
+  const avatarEl = document.getElementById('studentAvatar');
+  const nameEl = document.getElementById('studentNameText');
+
+  if (avatarEl) avatarEl.textContent = (currentStudent.name || '학').charAt(0);
+  if (nameEl) nameEl.textContent = currentStudent.name || '학생';
+
+  return true;
 }
 
 function normalizeText(value) {
@@ -1466,49 +1502,124 @@ async function loadExistingPlanner() {
 
     if (!currentStudent || !currentStudent.student_id) {
       console.warn('⚠️ 학생 식별값이 없어 기존 플래너를 조회하지 않습니다.');
+      currentPlanner = null;
       return;
     }
 
     const studentId = normalizeText(currentStudent.student_id);
     const url = `${API_BASE}/${TBL.planners}?student_id=eq.${encodeURIComponent(studentId)}&status=eq.active&limit=20&sort=created_at.desc`;
+
     console.log('📘 플래너 조회 student_id:', studentId, url);
+
     const res = await fetch(url, { cache: 'no-store' });
+
     if (!res.ok) {
       console.warn('플래너 조회 실패 상태코드:', res.status);
+      currentPlanner = null;
       showPlannerCreationUI();
       return;
     }
 
     const data = await res.json();
-    const myPlanners = data.data || data.records || data || [];
+    const fetched = data.data || data.records || data || [];
+
+    if (!Array.isArray(fetched) || fetched.length === 0) {
+      console.log('🆕 현재 학생의 기존 active 플래너가 없습니다. 새 플래너 생성 화면을 표시합니다.', studentId);
+      currentPlanner = null;
+      showPlannerCreationUI();
+      return;
+    }
+
+    const myPlanners = fetched.filter(p => {
+      const plannerStudentId = normalizeText(p?.student_id);
+      return plannerStudentId === studentId;
+    });
+
+    const foreignPlanners = fetched.filter(p => {
+      const plannerStudentId = normalizeText(p?.student_id);
+      return plannerStudentId && plannerStudentId !== studentId;
+    });
+
+    if (foreignPlanners.length > 0) {
+      console.warn('⚠️ 다른 학생 플래너 응답 감지 - 프론트에서 차단합니다.', {
+        expectedStudentId: studentId,
+        foreignStudentIds: [...new Set(foreignPlanners.map(p => normalizeText(p.student_id)).filter(Boolean))]
+      });
+    }
 
     if (myPlanners.length === 0) {
-      console.log('🆕 현재 학생의 기존 active 플래너가 없습니다. 새 플래너 생성 화면을 표시합니다.', currentStudent.student_id);
+      console.warn('⚠️ 응답은 있었지만 현재 학생 소유 플래너가 없습니다. 생성 화면으로 전환합니다.', {
+        studentId,
+        fetchedCount: fetched.length
+      });
       currentPlanner = null;
       showPlannerCreationUI();
       return;
     }
 
     const p = myPlanners[0];
-    if (typeof p.weeks_data === 'string') p.weeks_data = JSON.parse(p.weeks_data);
-    if (typeof p.daily_tasks === 'string') p.daily_tasks = JSON.parse(p.daily_tasks);
-    if (typeof p.subjects === 'string') p.subjects = JSON.parse(p.subjects);
+
+    if (normalizeText(p.student_id) !== studentId) {
+      console.warn('⚠️ 플래너 소유권 불일치 - 렌더링 중단', {
+        expectedStudentId: studentId,
+        actualStudentId: p.student_id
+      });
+      currentPlanner = null;
+      showPlannerCreationUI();
+      return;
+    }
+
+    try {
+      if (typeof p.weeks_data === 'string') p.weeks_data = JSON.parse(p.weeks_data);
+    } catch (e) {
+      console.warn('weeks_data 파싱 실패:', e);
+      p.weeks_data = [];
+    }
+
+    try {
+      if (typeof p.daily_tasks === 'string') p.daily_tasks = JSON.parse(p.daily_tasks);
+    } catch (e) {
+      console.warn('daily_tasks 파싱 실패:', e);
+      p.daily_tasks = {};
+    }
+
+    try {
+      if (typeof p.subjects === 'string') p.subjects = JSON.parse(p.subjects);
+    } catch (e) {
+      console.warn('subjects 파싱 실패:', e);
+      p.subjects = [];
+    }
 
     currentPlanner = p;
+
     const cornellKeysPatched = ensurePlannerCornellKeys();
     const examEnd = new Date(p.exam_end_date);
     const today = new Date();
 
+    if (isNaN(examEnd.getTime())) {
+      console.warn('⚠️ exam_end_date가 비정상입니다. 생성 화면으로 전환합니다.', p.exam_end_date);
+      currentPlanner = null;
+      showPlannerCreationUI();
+      return;
+    }
+
     if (examEnd >= today) {
-      document.getElementById('inputCard').style.display = 'none';
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('plannerContent').style.display = 'block';
+      const inputCard = document.getElementById('inputCard');
+      const emptyState = document.getElementById('emptyState');
+      const plannerContent = document.getElementById('plannerContent');
+
+      if (inputCard) inputCard.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'none';
+      if (plannerContent) plannerContent.style.display = 'block';
+
       renderWeekTabs();
       renderDayGrid();
       updateStats();
     } else {
+      console.log('📦 기존 플래너는 만료됨. 새 플래너 생성 화면 표시');
       currentPlanner = null;
       showPlannerCreationUI();
+      return;
     }
 
     if (cornellKeysPatched) {
@@ -1516,6 +1627,7 @@ async function loadExistingPlanner() {
     }
   } catch (e) {
     console.warn('기존 플래너 로드:', e);
+    currentPlanner = null;
     showPlannerCreationUI();
   }
 }
