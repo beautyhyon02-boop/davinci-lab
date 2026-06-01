@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   showLoading('학생 정보를 불러오는 중...');
   if (!checkSession()) { hideLoading(); return; }
   await hydrateCurrentStudentProfile();
+  console.log('📌 학생(보정 후):', currentStudent);
   await loadSubjects();
   await loadExistingPlanner();
   setupEventListeners();
@@ -1468,17 +1469,18 @@ async function loadExistingPlanner() {
       return;
     }
 
-    const url = `${API_BASE}/${TBL.planners}?limit=200&sort=created_at.desc`;
-    const res = await fetch(url);
-    if (!res.ok) return;
+    const studentId = normalizeText(currentStudent.student_id);
+    const url = `${API_BASE}/${TBL.planners}?student_id=eq.${encodeURIComponent(studentId)}&status=eq.active&limit=20&sort=created_at.desc`;
+    console.log('📘 플래너 조회 student_id:', studentId, url);
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      console.warn('플래너 조회 실패 상태코드:', res.status);
+      showPlannerCreationUI();
+      return;
+    }
 
     const data = await res.json();
-    const allPlanners = data.data || data.records || data || [];
-    const myPlanners = allPlanners.filter(p => {
-      const plannerStudentId = normalizeText(p.student_id);
-      const plannerStatus = normalizeText(p.status).toLowerCase();
-      return plannerStudentId === normalizeText(currentStudent.student_id) && plannerStatus === 'active';
-    });
+    const myPlanners = data.data || data.records || data || [];
 
     if (myPlanners.length === 0) {
       console.log('🆕 현재 학생의 기존 active 플래너가 없습니다. 새 플래너 생성 화면을 표시합니다.', currentStudent.student_id);
