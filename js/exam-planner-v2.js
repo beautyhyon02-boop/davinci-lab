@@ -49,6 +49,7 @@ const DAY_END = 1480;        // 24:40 (24*60+40)
 document.addEventListener('DOMContentLoaded', async () => {
   showLoading('학생 정보를 불러오는 중...');
   if (!checkSession()) { hideLoading(); return; }
+  await hydrateCurrentStudentProfile();
   await loadSubjects();
   await loadExistingPlanner();
   setupEventListeners();
@@ -84,8 +85,10 @@ function checkSession() {
   }
   try {
     const userData = JSON.parse(userStr);
+    const rawId = userData.student_id || userData.login_id || userData.username || userData.id || '';
     currentStudent = {
-      student_id: userData.id || userData.student_id || 'seeyou',
+      student_id: rawId ? String(rawId).trim() : '',
+      session_id: userData.id ?? null,
       name: userData.name || '학생',
       role: userData.role || 'student',
       school: userData.school || '',
@@ -93,7 +96,7 @@ function checkSession() {
       grade_num: userData.gradeNum || userData.grade_num || null,
       stage: userData.stage || '1단계'
     };
-    console.log('📌 학생:', currentStudent);
+    console.log('📌 학생(세션 원본):', currentStudent);
     const avatarEl = document.getElementById('studentAvatar');
     const nameEl = document.getElementById('studentNameText');
     if (avatarEl) avatarEl.textContent = currentStudent.name.charAt(0);
@@ -104,6 +107,66 @@ function checkSession() {
     showToast('세션 정보 오류', 'error');
     setTimeout(() => location.href = '../login.html', 1500);
     return false;
+  }
+}
+
+function normalizeText(value) {
+  return String(value ?? '').trim();
+}
+
+function showPlannerCreationUI() {
+  const inputCard = document.getElementById('inputCard');
+  const emptyState = document.getElementById('emptyState');
+  const plannerContent = document.getElementById('plannerContent');
+  if (inputCard) inputCard.style.display = 'block';
+  if (emptyState) emptyState.style.display = 'none';
+  if (plannerContent) plannerContent.style.display = 'none';
+}
+
+async function hydrateCurrentStudentProfile() {
+  try {
+    const res = await fetch(`${API_BASE}/${TBL.students}?limit=500`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const students = data.data || data.records || data || [];
+
+    const candidateIds = new Set([
+      normalizeText(currentStudent.student_id),
+      normalizeText(currentStudent.session_id),
+      normalizeText(currentStudent.name)
+    ].filter(Boolean));
+
+    let matched = students.find(s => candidateIds.has(normalizeText(s.student_id)));
+
+    if (!matched && currentStudent.session_id && /^\d+$/.test(String(currentStudent.session_id))) {
+      matched = students.find(s => String(s.id) === String(currentStudent.session_id));
+    }
+
+    if (!matched && currentStudent.name) {
+      const byName = students.filter(s => normalizeText(s.name) === normalizeText(currentStudent.name));
+      if (byName.length === 1) matched = byName[0];
+      else if (byName.length > 1) {
+        matched = byName.find(s => normalizeText(s.school) === normalizeText(currentStudent.school) && normalizeText(s.grade) === normalizeText(currentStudent.grade)) || byName[0];
+      }
+    }
+
+    if (matched) {
+      currentStudent.student_id = normalizeText(matched.student_id);
+      currentStudent.name = matched.name || currentStudent.name;
+      currentStudent.school = matched.school || currentStudent.school || '';
+      currentStudent.grade = matched.grade || currentStudent.grade || '';
+      currentStudent.grade_num = matched.grade_num || currentStudent.grade_num || null;
+      currentStudent.stage = matched.stage || currentStudent.stage || '1단계';
+      console.log('✅ 학생 프로필 매칭 성공:', currentStudent);
+      const avatarEl = document.getElementById('studentAvatar');
+      const nameEl = document.getElementById('studentNameText');
+      if (avatarEl) avatarEl.textContent = currentStudent.name.charAt(0);
+      if (nameEl) nameEl.textContent = currentStudent.name;
+    } else {
+      console.warn('⚠️ student_profiles에서 학생 프로필을 찾지 못했습니다. 세션값으로 진행합니다.', currentStudent);
+    }
+  } catch (e) {
+    console.warn('학생 프로필 보정 실패:', e);
   }
 }
 
@@ -1398,33 +1461,61 @@ function updateStats() {
 
 async function loadExistingPlanner() {
   try {
-    const url = `${API_BASE}/${TBL.planners}?student_id=${currentStudent.student_id}&status=active&limit=10`;
+    showPlannerCreationUI();
+
+    if (!currentStudent || !currentStudent.student_id) {
+      console.warn('⚠️ 학생 식별값이 없어 기존 플래너를 조회하지 않습니다.');
+      return;
+    }
+
+    const url = `${API_BASE}/${TBL.planners}?limit=200&sort=created_at.desc`;
     const res = await fetch(url);
     if (!res.ok) return;
+
     const data = await res.json();
-    const planners = data.data || data.records || data || [];
-    if (planners.length > 0) {
-      const p = planners[planners.length - 1];
-      if (typeof p.weeks_data === 'string') p.weeks_data = JSON.parse(p.weeks_data);
-      if (typeof p.daily_tasks === 'string') p.daily_tasks = JSON.parse(p.daily_tasks);
-      if (typeof p.subjects === 'string') p.subjects = JSON.parse(p.subjects);
-      currentPlanner = p;
-      const cornellKeysPatched = ensurePlannerCornellKeys();
-      const examEnd = new Date(p.exam_end_date);
-      const today = new Date();
-      if (examEnd >= today) {
-        document.getElementById('inputCard').style.display = 'none';
-        document.getElementById('emptyState').style.display = 'none';
-        document.getElementById('plannerContent').style.display = 'block';
-        renderWeekTabs();
-        renderDayGrid();
-        updateStats();
-      }
-      if (cornellKeysPatched) {
-        savePlannerData().catch(err => console.warn('코넬 슬롯 키 저장:', err));
-      }
+    const allPlanners = data.data || data.records || data || [];
+    const myPlanners = allPlanners.filter(p => {
+      const plannerStudentId = normalizeText(p.student_id);
+      const plannerStatus = normalizeText(p.status).toLowerCase();
+      return plannerStudentId === normalizeText(currentStudent.student_id) && plannerStatus === 'active';
+    });
+
+    if (myPlanners.length === 0) {
+      console.log('🆕 현재 학생의 기존 active 플래너가 없습니다. 새 플래너 생성 화면을 표시합니다.', currentStudent.student_id);
+      currentPlanner = null;
+      showPlannerCreationUI();
+      return;
     }
-  } catch (e) { console.warn('기존 플래너 로드:', e); }
+
+    const p = myPlanners[0];
+    if (typeof p.weeks_data === 'string') p.weeks_data = JSON.parse(p.weeks_data);
+    if (typeof p.daily_tasks === 'string') p.daily_tasks = JSON.parse(p.daily_tasks);
+    if (typeof p.subjects === 'string') p.subjects = JSON.parse(p.subjects);
+
+    currentPlanner = p;
+    const cornellKeysPatched = ensurePlannerCornellKeys();
+    const examEnd = new Date(p.exam_end_date);
+    const today = new Date();
+
+    if (examEnd >= today) {
+      document.getElementById('inputCard').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('plannerContent').style.display = 'block';
+      renderWeekTabs();
+      renderDayGrid();
+      updateStats();
+    } else {
+      currentPlanner = null;
+      showPlannerCreationUI();
+    }
+
+    if (cornellKeysPatched) {
+      savePlannerData().catch(err => console.warn('코넬 슬롯 키 저장:', err));
+    }
+  } catch (e) {
+    console.warn('기존 플래너 로드:', e);
+    showPlannerCreationUI();
+  }
 }
 
 /* ════════ 헬퍼 ════════ */
