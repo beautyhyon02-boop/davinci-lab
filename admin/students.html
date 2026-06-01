@@ -24,7 +24,7 @@
 <body>
   <div class="wrap">
     <h1>학생 관리</h1>
-    <p class="muted">학생 등록 안정화용 전체 교체본입니다. API는 <code>/tables/student_profiles</code> 기준으로 동작하며, 현재 DB에 없는 <code>school_name</code> 필드는 전송하지 않도록 수정했습니다.</p>
+    <p class="muted">학생 등록 안정화용 전체 교체본입니다. API는 <code>/tables/student_profiles</code> 기준으로 동작하며, 라이브 스키마에 맞춰 <code>student_name → name</code>, <code>school_name → school</code>, <code>year → grade</code>로 전송하도록 수정했습니다.</p>
 
     <div class="meta">
       <div class="card"><div class="muted">전체 학생</div><div id="countTotal" class="num">0</div></div>
@@ -51,8 +51,8 @@
             </div>
           </div>
           <div class="row">
+            <div><label for="school">학교명</label><input id="school" name="school" required /></div>
             <div><label for="parent_phone">학부모 전화번호</label><input id="parent_phone" name="parent_phone" placeholder="010-0000-0000" /></div>
-            <div><label for="notes">메모</label><input id="notes" name="notes" /></div>
           </div>
           <div class="row">
             <div><label for="status">상태</label>
@@ -61,7 +61,7 @@
                 <option value="active">active</option>
               </select>
             </div>
-            <div></div>
+            <div><label for="notes">메모</label><input id="notes" name="notes" /></div>
           </div>
           <div class="actions">
             <button class="btn-primary" type="submit" id="submitBtn">학생 등록</button>
