@@ -3,710 +3,1484 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>성적 입력 & 추천 - 다빈치랩</title>
-  <link rel="manifest" href="../manifest.json" />
-  <meta name="theme-color" content="#163A33" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="../css/student-common.css" />
+
   <style>
     :root {
       --green-900: #163A33;
+      --green-800: #1e4d42;
       --green-700: #245A4E;
-      --green-500: #2e7061;
-      --mint-50:   #f0fdf4;
-      --mint-100:  #dcfce7;
-      --mint-500:  #22c55e;
-      --orange:    #f59e0b;
-      --red:       #ef4444;
-      --blue:      #3b82f6;
-      --purple:    #8b5cf6;
-      --gray-50:   #f9fafb;
-      --gray-100:  #f3f4f6;
-      --gray-200:  #e5e7eb;
-      --gray-400:  #9ca3af;
-      --gray-600:  #4b5563;
-      --gray-800:  #1f2937;
-    }
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: 'Noto Sans KR', sans-serif; margin: 0; background: #f5f6f7; color: var(--gray-800); }
+      --green-600: #2d6c60;
+      --green-500: #2f7c6e;
+      --mint-50: #f0fdf4;
+      --mint-100: #dcfce7;
+      --mint-200: #bbf7d0;
+      --mint-500: #22c55e;
 
-    .content-wrapper { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-500: #3b82f6;
 
-    .page-header { margin-bottom: 24px; }
-    .page-title { font-size: 24px; font-weight: 800; color: var(--green-900); display: flex; align-items: center; gap: 10px; }
-    .page-subtitle { font-size: 14px; color: var(--gray-600); margin-top: 4px; }
+      --orange-50: #fff7ed;
+      --orange-100: #ffedd5;
+      --orange-500: #f97316;
 
-    /* 단계 인디케이터 */
-    .step-indicator {
-      display: flex; gap: 8px; margin-bottom: 24px;
-      background: #fff; padding: 16px 20px; border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }
-    .step-item {
-      flex: 1; display: flex; align-items: center; gap: 8px;
-      padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
-      color: var(--gray-400); transition: all .2s;
-    }
-    .step-item.active { background: var(--mint-50); color: var(--green-700); }
-    .step-item.done { color: var(--mint-500); }
-    .step-num {
-      width: 24px; height: 24px; border-radius: 50%;
-      background: var(--gray-200); color: var(--gray-600);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; flex-shrink: 0;
-    }
-    .step-item.active .step-num { background: var(--green-700); color: #fff; }
-    .step-item.done .step-num { background: var(--mint-500); color: #fff; }
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-500: #f59e0b;
 
-    /* 카드 */
-    .card {
-      background: #fff; border-radius: 14px; padding: 24px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 20px;
-    }
-    .card-title {
-      font-size: 17px; font-weight: 700; color: var(--green-900);
-      margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;
-    }
-    .card-desc { font-size: 13px; color: var(--gray-600); margin: -8px 0 16px 0; }
+      --red-50: #fef2f2;
+      --red-100: #fee2e2;
+      --red-500: #ef4444;
 
-    /* 시험 정보 입력 */
-    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
-    .form-group input, .form-group select {
-      width: 100%; padding: 10px 12px; border: 1.5px solid var(--gray-200);
-      border-radius: 8px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif;
-      transition: border-color .2s; outline: none;
-    }
-    .form-group input:focus, .form-group select:focus { border-color: var(--green-700); }
+      --purple-50: #f5f3ff;
+      --purple-100: #ede9fe;
+      --purple-500: #8b5cf6;
 
-    /* 과목 선택 그리드 */
-    .subject-section { margin-bottom: 16px; }
-    .subject-section-label {
-      font-size: 12px; font-weight: 700; color: var(--gray-600);
-      margin-bottom: 8px; padding-left: 4px; letter-spacing: .03em;
-    }
-    .subject-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px;
-    }
-    .subject-chip {
-      padding: 10px 12px; border: 1.5px solid var(--gray-200);
-      border-radius: 10px; background: #fff; cursor: pointer;
-      font-size: 13px; font-weight: 600; color: var(--gray-600);
-      text-align: center; transition: all .15s; user-select: none;
-    }
-    .subject-chip:hover { border-color: var(--green-500); background: var(--mint-50); }
-    .subject-chip.selected {
-      background: linear-gradient(135deg, var(--green-700), var(--green-500));
-      color: #fff; border-color: var(--green-700);
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --white: #ffffff;
+
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --shadow-lg: 0 16px 42px rgba(15, 23, 42, 0.14);
+      --radius: 22px;
+      --font: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
-    /* 점수 입력 */
-    .score-row {
-      display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px;
-      padding: 12px; background: var(--gray-50); border-radius: 10px; margin-bottom: 8px;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+
+    body {
+      font-family: var(--font);
+      color: var(--gray-800);
+      background:
+        radial-gradient(circle at top left, #f0fdf4 0%, transparent 26%),
+        radial-gradient(circle at top right, #eff6ff 0%, transparent 22%),
+        linear-gradient(180deg, #f8fbfa 0%, #f3f7f5 100%);
+    }
+
+    .page-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 28px 18px 90px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .page-title {
+      display: flex;
       align-items: center;
+      gap: 10px;
+      font-size: 30px;
+      color: var(--green-900);
+      font-weight: 900;
+      margin-bottom: 8px;
     }
-    .score-subject { font-size: 14px; font-weight: 700; color: var(--gray-800); }
-    .score-input {
-      width: 100%; padding: 8px 12px; border: 1.5px solid var(--gray-200);
-      border-radius: 8px; font-size: 14px; text-align: center; font-weight: 700;
-    }
-    .score-input:focus { border-color: var(--green-700); outline: none; }
-    .score-band-tag {
-      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700;
-      text-align: center;
-    }
-    .band-top      { background: #dbeafe; color: #1e40af; }
-    .band-mid_high { background: #dcfce7; color: #15803d; }
-    .band-mid_low  { background: #fef3c7; color: #92400e; }
-    .band-low      { background: #fee2e2; color: #991b1b; }
 
-    /* 추천 카드 */
-    .rec-subject-card {
-      border: 2px solid var(--gray-200); border-radius: 14px;
-      padding: 18px; margin-bottom: 16px; transition: all .2s;
+    .page-subtitle {
+      color: var(--gray-500);
+      line-height: 1.7;
+      font-size: 14px;
     }
-    .rec-subject-card:hover { border-color: var(--green-500); }
-    .rec-subject-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100);
+
+    .student-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+      color: var(--green-800);
+      font-weight: 800;
+      font-size: 13px;
     }
-    .rec-subject-name { font-size: 16px; font-weight: 700; color: var(--green-900); }
-    .rec-subject-meta { font-size: 12px; color: var(--gray-600); margin-top: 4px; }
-    .rec-reason {
-      padding: 10px 14px; background: #fffbeb; border-left: 3px solid var(--orange);
-      border-radius: 6px; font-size: 13px; color: #78350f; line-height: 1.5;
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green-700), var(--green-900));
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--green-800);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-blue {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-orange {
+      background: linear-gradient(135deg, #f59e0b, #ea580c);
+      color: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-soft {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+
+    .btn-danger {
+      background: var(--red-50);
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .btn-xs {
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .notice {
+      background: linear-gradient(135deg, #ffffff, #fafffc);
+      border: 1px solid #dcefe8;
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .notice strong { color: var(--green-900); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-num {
+      font-size: 32px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--green-800);
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: var(--gray-500);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .card-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--green-900);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .card-subtitle {
+      color: var(--gray-500);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--gray-700);
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--gray-300);
+      background: var(--white);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--green-700);
+      box-shadow: 0 0 0 3px rgba(36, 90, 78, .08);
+    }
+
+    .subject-table {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .subject-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 0.8fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #fbfdfc);
+    }
+
+    .subject-name {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--gray-800);
+    }
+
+    .subject-desc {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+
+    .score-input {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .band-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .band-empty { background: var(--gray-100); color: var(--gray-500); border: 1px solid var(--gray-200); }
+    .band-top { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .band-mid-high { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .band-mid-low { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .band-low { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+    .tiny-note {
+      color: var(--gray-500);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .recommend-group {
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, #ffffff, #fcfffe);
+    }
+
+    .recommend-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
       margin-bottom: 12px;
     }
-    .rec-course-list { display: flex; flex-direction: column; gap: 6px; }
-    .rec-course-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; background: var(--mint-50); border: 1px solid var(--mint-100);
-      border-radius: 8px; cursor: pointer; transition: all .15s;
-    }
-    .rec-course-item:hover { background: var(--mint-100); }
-    .rec-course-item input[type="checkbox"] {
-      width: 18px; height: 18px; accent-color: var(--green-700); cursor: pointer;
-    }
-    .rec-course-name { flex: 1; font-size: 13.5px; font-weight: 600; color: var(--gray-800); }
-    .rec-course-add {
-      margin-top: 10px; display: flex; gap: 6px;
-    }
-    .rec-course-add input {
-      flex: 1; padding: 8px 12px; border: 1.5px dashed var(--gray-200);
-      border-radius: 8px; font-size: 13px; font-family: 'Noto Sans KR', sans-serif;
-    }
-    .rec-course-add input:focus { border-color: var(--green-700); outline: none; border-style: solid; }
-    .rec-course-add button {
-      padding: 8px 16px; background: var(--green-700); color: #fff; border: none;
-      border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;
+
+    .recommend-subject {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--green-900);
     }
 
-    /* 버튼 */
-    .btn { padding: 11px 22px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
-      cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all .15s;
-      display: inline-flex; align-items: center; gap: 8px; }
-    .btn-primary { background: linear-gradient(135deg, var(--green-900), var(--green-500)); color: #fff; }
-    .btn-primary:hover { opacity: .92; }
-    .btn-secondary { background: var(--gray-100); color: var(--gray-800); }
-    .btn-large { padding: 14px 32px; font-size: 15px; }
-
-    .action-bar {
-      display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;
+    .recommend-meta {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--gray-500);
+      line-height: 1.6;
     }
 
-    /* 토스트 */
+    .reason-box {
+      background: var(--gray-50);
+      border: 1px dashed var(--gray-200);
+      border-radius: 14px;
+      padding: 12px 14px;
+      line-height: 1.7;
+      color: var(--gray-700);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .recommend-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .recommend-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+    }
+
+    .recommend-check {
+      width: 18px;
+      height: 18px;
+      accent-color: #16a34a;
+      cursor: pointer;
+    }
+
+    .recommend-name {
+      font-size: 15px;
+      font-weight: 900;
+      color: var(--gray-800);
+      margin-bottom: 6px;
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .tag-rec { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+    .tag-workbook { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    .tag-lecture { background: #ede9fe; color: #6d28d9; border-color: #c4b5fd; }
+    .tag-saved { background: #ecfdf5; color: #166534; border-color: #86efac; }
+
+    .saved-summary {
+      display: grid;
+      gap: 12px;
+    }
+
+    .saved-item {
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      padding: 14px;
+      background: var(--white);
+    }
+
+    .saved-name {
+      font-size: 15px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: var(--gray-800);
+    }
+
+    .empty-box {
+      border: 2px dashed var(--gray-200);
+      border-radius: 18px;
+      padding: 32px 20px;
+      text-align: center;
+      color: var(--gray-500);
+      background: linear-gradient(180deg, #ffffff, #fafafa);
+    }
+
+    .empty-box i {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: var(--gray-400);
+    }
+
+    .section-divider {
+      height: 1px;
+      background: var(--gray-200);
+      margin: 16px 0;
+    }
+
     #toast {
-      position: fixed; bottom: 28px; right: 28px;
-      padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 600;
-      color: #fff; z-index: 9999; transition: all .3s;
-      opacity: 0; transform: translateY(10px); pointer-events: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(12px);
+      opacity: 0;
+      background: var(--green-900);
+      color: var(--white);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: var(--shadow-lg);
+      transition: .22s ease;
+      z-index: 3000;
+      pointer-events: none;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      white-space: pre-wrap;
     }
-    #toast.show { opacity: 1; transform: translateY(0); }
 
-    /* 빈 상태 */
-    .empty-state {
-      text-align: center; padding: 40px 20px; color: var(--gray-400);
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
-    .empty-state i { font-size: 36px; margin-bottom: 12px; opacity: .5; }
-    .empty-state p { margin: 0; font-size: 14px; }
 
-    /* 로딩 */
-    .loading { text-align: center; padding: 30px; color: var(--gray-400); }
-    .loading i { margin-right: 8px; }
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(2px);
+      z-index: 2500;
+    }
+
+    #loadingOverlay.show { display: flex; }
+
+    .loading-box {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 18px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--green-900);
+      font-weight: 900;
+    }
+
+    @media (max-width: 1024px) {
+      .layout { grid-template-columns: 1fr; }
+    }
 
     @media (max-width: 768px) {
-      .form-row { grid-template-columns: 1fr; }
-      .score-row { grid-template-columns: 1fr 1fr; }
-      .score-band-tag { grid-column: 1 / -1; }
-      .content-wrapper { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .field-grid { grid-template-columns: 1fr; }
+      .subject-row,
+      .recommend-item {
+        grid-template-columns: 1fr;
+      }
+      .page-title { font-size: 24px; }
     }
   </style>
 </head>
 <body>
-
-<!-- 학생 공통 사이드바 + 상단바 -->
-<div id="appLayout"></div>
-
-<main class="content-wrapper">
-  <div class="page-header">
-    <h1 class="page-title"><i class="fas fa-chart-line" style="color:var(--green-700);"></i> 성적 입력 & 추천</h1>
-    <p class="page-subtitle">시험 점수를 입력하면 학년·점수대에 맞는 인강이 자동 추천됩니다.</p>
-  </div>
-
-  <!-- 단계 인디케이터 -->
-  <div class="step-indicator">
-    <div class="step-item active" id="step1">
-      <div class="step-num">1</div><span>과목 선택</span>
-    </div>
-    <div class="step-item" id="step2">
-      <div class="step-num">2</div><span>점수 입력</span>
-    </div>
-    <div class="step-item" id="step3">
-      <div class="step-num">3</div><span>맞춤 추천</span>
+  <div id="loadingOverlay">
+    <div class="loading-box">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span id="loadingText">불러오는 중...</span>
     </div>
   </div>
 
-  <!-- ─── STEP 1: 과목 선택 ─── -->
-  <section class="card" id="section-subjects">
-    <h2 class="card-title"><i class="fas fa-book"></i> 1. 공부하는 과목 선택</h2>
-    <p class="card-desc">시험 본 과목을 모두 선택해주세요. <span id="gradeLabel" style="color:var(--green-700);font-weight:700;"></span></p>
-    <div id="subjectArea"><div class="loading"><i class="fas fa-spinner fa-spin"></i> 과목 불러오는 중...</div></div>
-  </section>
-
-  <!-- ─── STEP 2: 점수 입력 ─── -->
-  <section class="card" id="section-scores" style="display:none;">
-    <h2 class="card-title"><i class="fas fa-pen"></i> 2. 점수 입력</h2>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>시험 종류</label>
-        <select id="examType">
-          <option value="midterm">중간고사</option>
-          <option value="final">기말고사</option>
-          <option value="mock">모의고사</option>
-          <option value="self">자체평가</option>
-        </select>
+  <div class="page-shell">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title"><i class="fas fa-chart-line"></i> 성적 입력 & 추천</h1>
+        <p class="page-subtitle">
+          과목별 점수를 저장하면 최신 점수를 기준으로 맞춤 추천 강좌가 다시 계산됩니다.
+          이미 저장한 점수는 자동으로 불러와서 수정할 수 있습니다.
+        </p>
+        <div class="student-chip" id="studentChip">학생 정보를 확인하는 중...</div>
       </div>
-      <div class="form-group">
-        <label>시험명 (선택)</label>
-        <input type="text" id="examName" placeholder="예: 2026 1학기 중간고사" />
+
+      <div class="header-actions">
+        <a class="btn btn-secondary" href="my-courses.html">
+          <i class="fas fa-book-open"></i> 내 학습 강좌
+        </a>
+        <button class="btn btn-soft" id="reloadBtn">
+          <i class="fas fa-rotate-right"></i> 새로 불러오기
+        </button>
       </div>
-      <div class="form-group">
-        <label>시험 날짜</label>
-        <input type="date" id="examDate" />
+    </header>
+
+    <section class="notice">
+      <strong>이 페이지에서 가능한 것</strong><br />
+      1) 기존 점수를 다시 불러와 수정하기<br />
+      2) 새 점수를 저장하고 추천 강좌를 즉시 다시 생성하기<br />
+      3) 추천 결과에서 원하는 강좌만 골라 바로 내 학습 강좌로 저장하기
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="statSubjectCount">0</div>
+        <div class="stat-label">입력 가능한 과목</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statFilledCount">0</div>
+        <div class="stat-label">점수 입력 과목</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statRecommendationCount">0</div>
+        <div class="stat-label">현재 추천 강좌 수</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statSavedCount">0</div>
+        <div class="stat-label">저장된 추천 강좌</div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div>
+        <section class="card">
+          <div class="card-title-row">
+            <div>
+              <div class="card-title"><i class="fas fa-pen-to-square" style="color:#2563eb;"></i> 성적 입력</div>
+              <div class="card-subtitle">
+                최신 점수를 과목별로 입력하세요. 이미 저장된 점수는 자동으로 채워집니다.
+              </div>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label for="examType">시험 구분</label>
+              <select id="examType">
+                <option value="midterm">중간고사</option>
+                <option value="final">기말고사</option>
+                <option value="mock">모의고사</option>
+                <option value="other">기타</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="examName">시험명 (선택)</label>
+              <input type="text" id="examName" placeholder="예: 2026 1학기 중간고사" />
+            </div>
+
+            <div class="field">
+              <label for="examDate">시험일</label>
+              <input type="date" id="examDate" />
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div id="subjectTable" class="subject-table"></div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" id="saveScoresBtn">
+              <i class="fas fa-floppy-disk"></i> 점수 저장하고 추천 갱신
+            </button>
+            <button class="btn btn-secondary" id="recalculateBtn">
+              <i class="fas fa-wand-magic-sparkles"></i> 현재 점수로 추천 다시 계산
+            </button>
+          </div>
+
+          <div class="tiny-note" style="margin-top:10px;">
+            점수는 0~100 사이 숫자로 입력하세요. 저장 시 과목별 최신 점수로 반영되며, 추천 결과는 이 최신 값 기준으로 갱신됩니다.
+          </div>
+        </section>
+      </div>
+
+      <div>
+        <section class="card">
+          <div class="card-title-row">
+            <div>
+              <div class="card-title"><i class="fas fa-wand-magic-sparkles" style="color:#8b5cf6;"></i> 추천 강좌</div>
+              <div class="card-subtitle">
+                점수대와 학년에 맞는 추천을 보여줍니다. 선택한 강좌는 바로 내 학습 강좌에 저장할 수 있습니다.
+              </div>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-blue btn-xs" id="saveSelectedRecommendationsBtn">
+                <i class="fas fa-plus"></i> 선택 추천 저장
+              </button>
+            </div>
+          </div>
+
+          <div id="recommendationsArea"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-title-row">
+            <div>
+              <div class="card-title"><i class="fas fa-check-circle" style="color:#16a34a;"></i> 이미 저장된 추천 강좌</div>
+              <div class="card-subtitle">
+                추천에서 저장한 강좌입니다. 중복 저장은 자동으로 막습니다.
+              </div>
+            </div>
+          </div>
+
+          <div id="savedRecommendationsArea"></div>
+        </section>
       </div>
     </div>
+  </div>
 
-    <div id="scoreInputs"></div>
+  <div id="toast"></div>
 
-    <div class="action-bar">
-      <button class="btn btn-secondary" onclick="goToStep(1)"><i class="fas fa-arrow-left"></i> 과목 다시 선택</button>
-      <button class="btn btn-primary btn-large" onclick="submitScores()">
-        <i class="fas fa-magic"></i> 저장하고 추천 받기
-      </button>
-    </div>
-  </section>
+  <script>
+    const API = '/tables';
 
-  <!-- ─── STEP 3: 추천 결과 ─── -->
-  <section class="card" id="section-recommendations" style="display:none;">
-    <h2 class="card-title"><i class="fas fa-magic"></i> 3. 맞춤 학습 추천</h2>
-    <p class="card-desc">아래에서 듣고 싶은 강좌를 선택하고, 원하는 강좌를 자유롭게 추가할 수 있어요.</p>
-    <div id="recommendationsArea"></div>
-    <div class="action-bar">
-      <button class="btn btn-secondary" onclick="goToStep(2)"><i class="fas fa-arrow-left"></i> 점수 다시 입력</button>
-      <button class="btn btn-primary btn-large" onclick="confirmCourses()">
-        <i class="fas fa-check"></i> 학습 강좌 확정하기
-      </button>
-    </div>
-  </section>
-</main>
+    let currentStudent = null;
+    let allSubjects = [];
+    let filteredSubjects = [];
+    let recommendationMatrix = [];
+    let latestScoresMap = {};
+    let confirmedCourses = [];
+    let recommendationGroups = [];
+    let selectedRecommendationKeys = new Set();
 
-<div id="toast"></div>
+    document.addEventListener('DOMContentLoaded', async () => {
+      bindEvents();
 
-<script>
-/* ════════════════════════════════════════
-   다빈치랩 - 성적 입력 & 추천 시스템 v1
-═══════════════════════════════════════ */
-const API = '/tables';
-let currentStudent = null;
-let allSubjects = [];        // subject_catalog 전체
-let selectedSubjects = [];   // 학생이 고른 과목
-let scoresInput = {};        // { subject_code: score }
-let recommendations = {};    // { subject_code: matrix row }
-let selectedCourses = {};    // { subject_code: [course_name, ...] }
+      if (!checkSession()) return;
 
-/* ── 세션 확인 ── */
-function checkSession() {
-  const keys = ['dvl_user','dvl_student_session','dvl_session','dvSession'];
-  let userStr = null;
-  for (const k of keys) {
-    const v = sessionStorage.getItem(k) || localStorage.getItem(k);
-    if (v && v !== 'null') { userStr = v; break; }
-  }
-  if (!userStr) {
-    showToast('로그인이 필요합니다', 'error');
-    setTimeout(() => location.href = '../login.html', 1500);
-    return false;
-  }
-  try {
-    currentStudent = JSON.parse(userStr);
-    return true;
-  } catch (e) {
-    showToast('세션 오류', 'error');
-    return false;
-  }
-}
+      document.getElementById('examDate').value = new Date().toISOString().slice(0, 10);
 
-/* ── 토스트 ── */
-function showToast(msg, type = 'ok') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  const bg = { ok: '#163A33', error: '#b91c1c', warn: '#d97706', info: '#3b82f6' };
-  el.style.background = bg[type] || bg.ok;
-  el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2800);
-}
+      await loadInitialData();
+    });
 
-/* ── 학년 → school_type 매핑 ── */
-function getSchoolType(grade) {
-  if (!grade) return 'middle';
-  if (grade.startsWith('중')) return 'middle';
-  if (grade === '고1') return 'high_common';
-  if (grade === '고2' || grade === '고3') return 'high_elective';
-  return 'middle';
-}
+    function bindEvents() {
+      document.getElementById('reloadBtn').addEventListener('click', async () => {
+        await loadInitialData();
+      });
 
-/* ── 점수대 판정 ── */
-function getScoreBand(score) {
-  if (score >= 90) return 'top';
-  if (score >= 70) return 'mid_high';
-  if (score >= 50) return 'mid_low';
-  return 'low';
-}
-function getBandLabel(band) {
-  return { top: '100~90점', mid_high: '89~70점', mid_low: '69~50점', low: '50점 이하' }[band];
-}
+      document.getElementById('saveScoresBtn').addEventListener('click', async () => {
+        await saveScoresAndRefresh();
+      });
 
-/* ── 과목 로드 ── */
-async function loadSubjects() {
-  try {
-    const res = await fetch(`${API}/subject_catalog?limit=200`);
-    const data = await res.json();
-    allSubjects = (data.data || []).filter(s => s.is_active !== false);
+      document.getElementById('recalculateBtn').addEventListener('click', () => {
+        collectScoresFromInputs();
+        buildRecommendations();
+        renderRecommendations();
+        updateStats();
+        showToast('현재 입력값 기준으로 추천을 다시 계산했습니다.', 'ok');
+      });
 
-    const grade = currentStudent.grade || '중1';
-    const schoolType = getSchoolType(grade);
-    document.getElementById('gradeLabel').textContent = `(${grade} 기준)`;
-
-    renderSubjectArea(schoolType, grade);
-  } catch (e) {
-    document.getElementById('subjectArea').innerHTML =
-      '<div class="empty-state"><i class="fas fa-exclamation-circle"></i><p>과목을 불러올 수 없습니다.</p></div>';
-    console.error(e);
-  }
-}
-
-/* ── 과목 선택 UI 렌더 ── */
-function renderSubjectArea(schoolType, grade) {
-  const area = document.getElementById('subjectArea');
-
-  let filtered = allSubjects.filter(s => {
-    if (s.school_type !== schoolType) return false;
-    if (s.grade_levels && Array.isArray(s.grade_levels)) {
-      return s.grade_levels.includes(grade);
-    }
-    return true;
-  });
-
-  if (!filtered.length) {
-    area.innerHTML = '<div class="empty-state"><i class="fas fa-folder-open"></i><p>해당 학년에 등록된 과목이 없습니다.</p></div>';
-    return;
-  }
-
-  // 카테고리별 그룹
-  const groups = { main: [], social: [], science: [], etc: [] };
-  filtered.forEach(s => { (groups[s.category] || groups.etc).push(s); });
-
-  const labels = { main: '📚 주요 과목', social: '🌏 사회 영역', science: '🔬 과학', etc: '🎨 기타' };
-
-  let html = '';
-  ['main','social','science','etc'].forEach(cat => {
-    if (!groups[cat].length) return;
-    // 일반선택은 다시 elective_type별로 묶기
-    const generals = groups[cat].filter(s => !s.elective_type || s.elective_type === 'general');
-    const careers = groups[cat].filter(s => s.elective_type === 'career' || s.elective_type === 'fusion');
-
-    if (generals.length) {
-      html += `<div class="subject-section">
-        <div class="subject-section-label">${labels[cat]}</div>
-        <div class="subject-grid">
-          ${generals.map(s => `
-            <div class="subject-chip" data-code="${s.subject_code}" onclick="toggleSubject('${s.subject_code}')">
-              ${s.subject_name}
-            </div>`).join('')}
-        </div>
-      </div>`;
-    }
-    if (careers.length) {
-      html += `<div class="subject-section">
-        <div class="subject-section-label">🎯 ${cat === 'social' ? '사회 진로/융합선택' : '진로/융합선택'}</div>
-        <div class="subject-grid">
-          ${careers.map(s => `
-            <div class="subject-chip" data-code="${s.subject_code}" onclick="toggleSubject('${s.subject_code}')">
-              ${s.subject_name}
-            </div>`).join('')}
-        </div>
-      </div>`;
-    }
-  });
-
-  html += `<div class="action-bar">
-    <button class="btn btn-primary btn-large" onclick="goToStep(2)">
-      다음: 점수 입력 <i class="fas fa-arrow-right"></i>
-    </button>
-  </div>`;
-
-  area.innerHTML = html;
-}
-
-/* ── 과목 선택 토글 ── */
-function toggleSubject(code) {
-  const chip = document.querySelector(`.subject-chip[data-code="${code}"]`);
-  if (selectedSubjects.includes(code)) {
-    selectedSubjects = selectedSubjects.filter(c => c !== code);
-    chip.classList.remove('selected');
-  } else {
-    selectedSubjects.push(code);
-    chip.classList.add('selected');
-  }
-}
-
-/* ── 점수 입력 영역 렌더 ── */
-function renderScoreInputs() {
-  if (!selectedSubjects.length) {
-    showToast('먼저 과목을 1개 이상 선택해주세요', 'warn');
-    goToStep(1);
-    return;
-  }
-  const wrap = document.getElementById('scoreInputs');
-  wrap.innerHTML = selectedSubjects.map(code => {
-    const s = allSubjects.find(x => x.subject_code === code);
-    if (!s) return '';
-    const prev = scoresInput[code] || '';
-    return `<div class="score-row" data-code="${code}">
-      <div class="score-subject">${s.subject_name}</div>
-      <input type="number" class="score-input" min="0" max="100"
-             value="${prev}" placeholder="0~100"
-             oninput="onScoreInput('${code}', this.value)" />
-      <div class="score-band-tag" id="band-${code}">점수 입력</div>
-    </div>`;
-  }).join('');
-
-  // 시험 날짜 기본값 = 오늘
-  const dateEl = document.getElementById('examDate');
-  if (!dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
-}
-
-function onScoreInput(code, val) {
-  const n = parseInt(val, 10);
-  scoresInput[code] = isNaN(n) ? null : Math.max(0, Math.min(100, n));
-  const tag = document.getElementById(`band-${code}`);
-  if (scoresInput[code] === null || scoresInput[code] === undefined) {
-    tag.textContent = '점수 입력'; tag.className = 'score-band-tag';
-  } else {
-    const band = getScoreBand(scoresInput[code]);
-    tag.textContent = getBandLabel(band);
-    tag.className = `score-band-tag band-${band}`;
-  }
-}
-
-/* ── 점수 저장 + 추천 조회 ── */
-async function submitScores() {
-  const examType = document.getElementById('examType').value;
-  const examName = document.getElementById('examName').value.trim();
-  const examDate = document.getElementById('examDate').value;
-
-  const filled = selectedSubjects.filter(c => scoresInput[c] !== null && scoresInput[c] !== undefined);
-  if (!filled.length) { showToast('점수를 1개 이상 입력해주세요', 'warn'); return; }
-
-  showToast('💾 저장 중...', 'info');
-
-  try {
-    // 1. 점수 저장
-    for (const code of filled) {
-      await fetch(`${API}/student_scores`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          student_id: currentStudent.id,
-          subject_code: code,
-          score: scoresInput[code],
-          exam_type: examType,
-          exam_name: examName || null,
-          exam_date: examDate || new Date().toISOString().slice(0,10),
-        }),
+      document.getElementById('saveSelectedRecommendationsBtn').addEventListener('click', async () => {
+        await saveSelectedRecommendations();
       });
     }
 
-    // 2. 추천 조회
-    const grade = currentStudent.grade || '중1';
-    const matrixRes = await fetch(`${API}/recommendation_matrix?limit=300`);
-    const matrixData = await matrixRes.json();
-    const allMatrix = matrixData.data || [];
+    function normalizeText(value) {
+      return String(value ?? '').trim();
+    }
 
-    recommendations = {};
-    filled.forEach(code => {
-      const band = getScoreBand(scoresInput[code]);
-      // 정확 매칭 우선
-      let match = allMatrix.find(m => m.grade === grade && m.score_band === band && m.subject_code === code);
-      // 폴백: 같은 카테고리 첫 항목 (선택과목용)
-      if (!match) {
-        const subjInfo = allSubjects.find(s => s.subject_code === code);
-        if (subjInfo) {
-          match = allMatrix.find(m =>
-            m.grade === grade && m.score_band === band &&
-            allSubjects.find(s => s.subject_code === m.subject_code)?.category === subjInfo.category
-          );
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function showLoading(message = '불러오는 중...') {
+      document.getElementById('loadingText').textContent = message;
+      document.getElementById('loadingOverlay').classList.add('show');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+    }
+
+    function showToast(message, type = 'ok') {
+      const toast = document.getElementById('toast');
+      const colors = {
+        ok: '#163A33',
+        error: '#b91c1c',
+        warn: '#d97706',
+        info: '#1d4ed8'
+      };
+      toast.style.background = colors[type] || colors.ok;
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function getSchoolType(grade) {
+      if (!grade) return 'middle';
+      if (grade.startsWith('중')) return 'middle';
+      if (grade === '고1') return 'high_common';
+      if (grade === '고2' || grade === '고3') return 'high_elective';
+      return 'middle';
+    }
+
+    function getScoreBand(score) {
+      const n = Number(score);
+      if (n >= 90) return 'top';
+      if (n >= 70) return 'mid_high';
+      if (n >= 50) return 'mid_low';
+      return 'low';
+    }
+
+    function getBandLabel(band) {
+      return {
+        top: '상위권',
+        mid_high: '중상위권',
+        mid_low: '중위권',
+        low: '기초 보강'
+      }[band] || band;
+    }
+
+    function getBandClass(band) {
+      return {
+        top: 'band-top',
+        mid_high: 'band-mid-high',
+        mid_low: 'band-mid-low',
+        low: 'band-low'
+      }[band] || 'band-empty';
+    }
+
+    function parseFlexibleArray(value) {
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          return [];
         }
       }
-      if (match) recommendations[code] = match;
-    });
-
-    renderRecommendations();
-    goToStep(3);
-    showToast('✅ 추천이 생성되었습니다!', 'ok');
-  } catch (e) {
-    console.error(e);
-    showToast('저장 실패: ' + e.message, 'error');
-  }
-}
-
-/* ── 추천 결과 렌더 ── */
-function renderRecommendations() {
-  const wrap = document.getElementById('recommendationsArea');
-  const filled = selectedSubjects.filter(c => scoresInput[c] !== null && scoresInput[c] !== undefined);
-
-  if (!filled.length) {
-    wrap.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>추천 결과가 없습니다.</p></div>';
-    return;
-  }
-
-  selectedCourses = {};
-
-  wrap.innerHTML = filled.map(code => {
-    const subj = allSubjects.find(s => s.subject_code === code);
-    const score = scoresInput[code];
-    const band = getScoreBand(score);
-    const rec = recommendations[code];
-
-    if (!rec) {
-      return `<div class="rec-subject-card">
-        <div class="rec-subject-header">
-          <div>
-            <div class="rec-subject-name">${subj?.subject_name || code}</div>
-            <div class="rec-subject-meta">${score}점 (${getBandLabel(band)})</div>
-          </div>
-        </div>
-        <div class="empty-state" style="padding:20px;">
-          <p>이 학년·점수대 추천 데이터가 아직 없습니다.<br/>아래에 직접 강좌를 추가해주세요.</p>
-        </div>
-        <div class="rec-course-add">
-          <input type="text" placeholder="강좌명 직접 입력" id="custom-${code}" />
-          <button onclick="addCustomCourse('${code}')"><i class="fas fa-plus"></i> 추가</button>
-        </div>
-      </div>`;
+      return [];
     }
 
-    const courses = Array.isArray(rec.recommended_courses) ? rec.recommended_courses : [];
-    selectedCourses[code] = [...courses]; // 기본 전체 선택
+    function inferCourseType(name, hint = '') {
+      const text = `${normalizeText(name)} ${normalizeText(hint)}`.toLowerCase();
+      const workbookKeywords = [
+        '문제집', 'workbook', '실전책', '기출', '완자', '풍산자',
+        '자습서', '평가문제집', '독해', '문법책', '서술형'
+      ];
+      return workbookKeywords.some(k => text.includes(k.toLowerCase())) ? 'workbook' : 'lecture';
+    }
 
-    return `<div class="rec-subject-card">
-      <div class="rec-subject-header">
-        <div>
-          <div class="rec-subject-name">${subj?.subject_name || code}</div>
-          <div class="rec-subject-meta">${score}점 · ${getBandLabel(band)} · ${rec.difficulty || ''}</div>
-        </div>
-        <div class="score-band-tag band-${band}">${getBandLabel(band)}</div>
-      </div>
-      ${rec.reason ? `<div class="rec-reason">💡 ${rec.reason}</div>` : ''}
-      <div class="rec-course-list" id="courses-${code}">
-        ${courses.map((c, i) => `
-          <label class="rec-course-item">
-            <input type="checkbox" checked onchange="toggleCourse('${code}', ${i}, this.checked)" />
-            <span class="rec-course-name">${typeof c === 'string' ? c : c.name}</span>
-          </label>`).join('')}
-      </div>
-      <div class="rec-course-add">
-        <input type="text" placeholder="다른 강좌를 직접 추가 (예: ○○ 인강)" id="custom-${code}" />
-        <button onclick="addCustomCourse('${code}')"><i class="fas fa-plus"></i> 추가</button>
-      </div>
-    </div>`;
-  }).join('');
-}
+    function makeCourseKey(subjectCode, courseName) {
+      return `${normalizeText(subjectCode)}__${normalizeText(courseName).toLowerCase()}`;
+    }
 
-function toggleCourse(code, idx, checked) {
-  const rec = recommendations[code];
-  const courses = Array.isArray(rec.recommended_courses) ? rec.recommended_courses : [];
-  const courseName = typeof courses[idx] === 'string' ? courses[idx] : courses[idx].name;
-  if (checked) {
-    if (!selectedCourses[code]) selectedCourses[code] = [];
-    if (!selectedCourses[code].includes(courseName)) selectedCourses[code].push(courseName);
-  } else {
-    selectedCourses[code] = (selectedCourses[code] || []).filter(c => c !== courseName);
-  }
-}
+    function getSubjectName(code) {
+      const row = allSubjects.find(s => normalizeText(s.subject_code) === normalizeText(code));
+      return row ? row.subject_name : code;
+    }
 
-function addCustomCourse(code) {
-  const inp = document.getElementById(`custom-${code}`);
-  const name = (inp.value || '').trim();
-  if (!name) return;
-  if (!selectedCourses[code]) selectedCourses[code] = [];
-  selectedCourses[code].push(name);
+    function isAlreadySavedRecommendation(subjectCode, courseName) {
+      const key = makeCourseKey(subjectCode, courseName);
+      return confirmedCourses.some(c => makeCourseKey(c.subject_code, c.course_name) === key);
+    }
 
-  const list = document.getElementById(`courses-${code}`);
-  if (list) {
-    const lbl = document.createElement('label');
-    lbl.className = 'rec-course-item';
-    lbl.innerHTML = `
-      <input type="checkbox" checked onchange="toggleCustomCourse('${code}', '${name.replace(/'/g,"\\'")}', this.checked)" />
-      <span class="rec-course-name">${name} <em style="font-size:11px;color:var(--green-700);font-style:normal;">(직접 추가)</em></span>`;
-    list.appendChild(lbl);
-  } else {
-    // 추천이 없던 카드의 경우 목록 자체가 없으므로 알림만
-    showToast(`✅ ${name} 추가됨`, 'ok');
-  }
-  inp.value = '';
-}
+    function checkSession() {
+      const SESSION_SOURCES = [
+        { storage: sessionStorage, key: 'dvl_student_session' },
+        { storage: localStorage, key: 'dvl_student_session' },
+        { storage: sessionStorage, key: 'dvl_user' },
+        { storage: sessionStorage, key: 'dvSession' },
+        { storage: sessionStorage, key: 'dvl_session' },
+        { storage: localStorage, key: 'dvl_user' },
+        { storage: localStorage, key: 'dvl_session' }
+      ];
 
-function toggleCustomCourse(code, name, checked) {
-  if (checked) {
-    if (!selectedCourses[code]) selectedCourses[code] = [];
-    if (!selectedCourses[code].includes(name)) selectedCourses[code].push(name);
-  } else {
-    selectedCourses[code] = (selectedCourses[code] || []).filter(c => c !== name);
-  }
-}
+      let userData = null;
 
-/* ── 강좌 확정 ── */
-async function confirmCourses() {
-  const all = [];
-  Object.keys(selectedCourses).forEach(code => {
-    (selectedCourses[code] || []).forEach(name => {
-      all.push({ subject_code: code, course_name: name });
-    });
-  });
-  if (!all.length) { showToast('선택한 강좌가 없습니다', 'warn'); return; }
+      for (const source of SESSION_SOURCES) {
+        try {
+          const raw = source.storage.getItem(source.key);
+          if (!raw || raw === 'null' || raw === 'undefined' || !raw.includes('{')) continue;
 
-  showToast('💾 강좌 확정 중...', 'info');
-  try {
-    for (const item of all) {
-      await fetch(`${API}/student_courses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          student_id: currentStudent.id,
-          subject_code: item.subject_code,
-          course_name: item.course_name,
-          course_type: 'lecture',
-          source: 'recommended',
-          status: 'active',
-          added_by: currentStudent.id,
-        }),
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') continue;
+
+          const looksLikeStudent =
+            parsed.role === 'student' ||
+            !!parsed.student_id ||
+            (!!parsed.grade && !parsed.childName);
+
+          if (!looksLikeStudent) continue;
+
+          userData = parsed;
+          break;
+        } catch (e) {
+          console.warn('세션 파싱 실패:', source.key, e);
+        }
+      }
+
+      if (!userData) {
+        alert('로그인이 필요합니다.');
+        location.href = '../login.html';
+        return false;
+      }
+
+      const studentId = normalizeText(
+        userData.student_id ||
+        userData.login_id ||
+        userData.username ||
+        userData.id ||
+        ''
+      );
+
+      if (!studentId) {
+        alert('학생 계정 정보가 올바르지 않습니다. 다시 로그인해주세요.');
+        location.href = '../login.html';
+        return false;
+      }
+
+      currentStudent = {
+        id: studentId,
+        student_id: studentId,
+        name: normalizeText(userData.name || '학생'),
+        role: normalizeText(userData.role || 'student') || 'student',
+        school: normalizeText(userData.school || ''),
+        grade: normalizeText(userData.grade || ''),
+        grade_num: userData.gradeNum || userData.grade_num || null,
+        stage: normalizeText(userData.stage || '1단계') || '1단계'
+      };
+
+      if (currentStudent.role !== 'student') {
+        alert('학생 계정으로 로그인해주세요.');
+        location.href = '../login.html';
+        return false;
+      }
+
+      document.getElementById('studentChip').innerHTML = `
+        <i class="fas fa-user-graduate"></i>
+        <span>${escapeHtml(currentStudent.name)} · ${escapeHtml(currentStudent.school || '학교 미입력')} · ${escapeHtml(currentStudent.grade || '학년 미입력')}</span>
+      `;
+
+      return true;
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`API 오류 (${res.status})`);
+      return res.json();
+    }
+
+    function buildLatestScoresMap(rows) {
+      const map = {};
+      for (const row of rows) {
+        const code = normalizeText(row.subject_code);
+        if (!code) continue;
+        if (!map[code]) map[code] = row;
+      }
+      return map;
+    }
+
+    async function loadInitialData() {
+      showLoading('성적, 과목, 추천 기준을 불러오는 중...');
+      try {
+        const studentId = encodeURIComponent(currentStudent.id);
+
+        const [subjectData, scoreData, matrixData, courseData] = await Promise.all([
+          fetchJson(`${API}/subject_catalog?limit=300&sort=display_order.asc`),
+          fetchJson(`${API}/student_scores?student_id=eq.${studentId}&limit=500&sort=created_at.desc`),
+          fetchJson(`${API}/recommendation_matrix?limit=500`),
+          fetchJson(`${API}/student_courses?student_id=eq.${studentId}&limit=300&sort=created_at.desc`)
+        ]);
+
+        allSubjects = Array.isArray(subjectData.data) ? subjectData.data : [];
+        recommendationMatrix = Array.isArray(matrixData.data) ? matrixData.data : [];
+        confirmedCourses = Array.isArray(courseData.data) ? courseData.data.filter(c => c.source === 'recommended') : [];
+        latestScoresMap = buildLatestScoresMap(Array.isArray(scoreData.data) ? scoreData.data : []);
+
+        prepareFilteredSubjects();
+        renderScoreInputs();
+        buildRecommendations();
+        renderRecommendations();
+        renderSavedRecommendations();
+        updateStats();
+      } catch (e) {
+        console.error('scores 초기 로드 실패:', e);
+        document.getElementById('subjectTable').innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-circle-exclamation"></i>
+            <div style="font-weight:800;margin-bottom:8px;">성적 입력 화면을 불러오지 못했습니다</div>
+            <div>${escapeHtml(e.message)}</div>
+          </div>
+        `;
+        document.getElementById('recommendationsArea').innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-circle-exclamation"></i>
+            <div style="font-weight:800;margin-bottom:8px;">추천 데이터를 불러오지 못했습니다</div>
+            <div>${escapeHtml(e.message)}</div>
+          </div>
+        `;
+        document.getElementById('savedRecommendationsArea').innerHTML = '';
+        showToast(`불러오기 실패: ${e.message}`, 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function prepareFilteredSubjects() {
+      const grade = currentStudent.grade || '중1';
+      const schoolType = getSchoolType(grade);
+
+      filteredSubjects = allSubjects.filter(subject => {
+        if (normalizeText(subject.school_type) !== normalizeText(schoolType)) return false;
+
+        if (Array.isArray(subject.grade_levels) && subject.grade_levels.length > 0) {
+          return subject.grade_levels.includes(grade);
+        }
+
+        return true;
+      });
+
+      if (!filteredSubjects.length) {
+        filteredSubjects = allSubjects.filter(subject => subject.is_active !== false);
+      }
+
+      filteredSubjects.sort((a, b) => Number(a.display_order || 999) - Number(b.display_order || 999));
+    }
+
+    function renderScoreInputs() {
+      const wrap = document.getElementById('subjectTable');
+
+      if (!filteredSubjects.length) {
+        wrap.innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-folder-open"></i>
+            <div style="font-weight:800;margin-bottom:8px;">입력 가능한 과목이 없습니다</div>
+            <div>subject_catalog 등록 상태를 확인해주세요.</div>
+          </div>
+        `;
+        return;
+      }
+
+      wrap.innerHTML = filteredSubjects.map(subject => {
+        const latest = latestScoresMap[subject.subject_code];
+        const scoreValue = latest ? latest.score : '';
+        const band = scoreValue === '' ? '' : getScoreBand(scoreValue);
+        const bandLabel = scoreValue === '' ? '점수 입력 전' : getBandLabel(band);
+
+        return `
+          <div class="subject-row">
+            <div>
+              <div class="subject-name">${escapeHtml(subject.subject_name)}</div>
+              <div class="subject-desc">
+                ${latest ? `최근 저장 점수: ${escapeHtml(latest.score)}점` : '아직 저장된 점수가 없습니다'}
+              </div>
+            </div>
+
+            <div>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                class="score-input field-input"
+                data-subject="${escapeHtml(subject.subject_code)}"
+                value="${escapeHtml(scoreValue)}"
+                placeholder="0~100"
+              />
+            </div>
+
+            <div>
+              <div class="band-chip ${band ? getBandClass(band) : 'band-empty'}" id="band-${escapeHtml(subject.subject_code)}">
+                ${escapeHtml(bandLabel)}
+              </div>
+            </div>
+
+            <div class="tiny-note">
+              ${escapeHtml(subject.subject_code)}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      wrap.querySelectorAll('.score-input').forEach(input => {
+        input.addEventListener('input', e => {
+          updateBandChip(e.target.dataset.subject, e.target.value);
+          updateStats();
+        });
       });
     }
-    showToast(`✅ ${all.length}개 강좌가 확정되었습니다!`, 'ok');
-    setTimeout(() => location.href = 'my-courses.html', 1500);
-  } catch (e) {
-    showToast('확정 실패: ' + e.message, 'error');
-  }
-}
 
-/* ── 단계 전환 ── */
-function goToStep(n) {
-  ['section-subjects','section-scores','section-recommendations'].forEach((id, i) => {
-    document.getElementById(id).style.display = (n === i+1) ? '' : 'none';
-  });
-  ['step1','step2','step3'].forEach((id, i) => {
-    const el = document.getElementById(id);
-    el.classList.remove('active','done');
-    if (i+1 === n) el.classList.add('active');
-    else if (i+1 < n) el.classList.add('done');
-  });
-  if (n === 2) renderScoreInputs();
-}
+    function updateBandChip(subjectCode, value) {
+      const chip = document.getElementById(`band-${subjectCode}`);
+      if (!chip) return;
 
-/* ── 초기화 ── */
-document.addEventListener('DOMContentLoaded', () => {
-  if (!checkSession()) return;
-  loadSubjects();
-});
-</script>
+      const raw = normalizeText(value);
+      if (raw === '') {
+        chip.className = 'band-chip band-empty';
+        chip.textContent = '점수 입력 전';
+        return;
+      }
 
+      const score = Math.max(0, Math.min(100, Number(raw)));
+      const band = getScoreBand(score);
+      chip.className = `band-chip ${getBandClass(band)}`;
+      chip.textContent = getBandLabel(band);
+    }
+
+    function collectScoresFromInputs() {
+      const map = {};
+      document.querySelectorAll('.score-input').forEach(input => {
+        const code = input.dataset.subject;
+        const raw = normalizeText(input.value);
+        if (raw === '') return;
+        const score = Math.max(0, Math.min(100, Number(raw)));
+        if (!isNaN(score)) map[code] = score;
+      });
+      return map;
+    }
+
+    async function saveScoresAndRefresh() {
+      const scoreMap = collectScoresFromInputs();
+      const subjectCodes = Object.keys(scoreMap);
+
+      if (!subjectCodes.length) {
+        showToast('점수를 1개 이상 입력해주세요.', 'warn');
+        return;
+      }
+
+      const examType = normalizeText(document.getElementById('examType').value || 'midterm');
+      const examName = normalizeText(document.getElementById('examName').value || '');
+      const examDate = normalizeText(document.getElementById('examDate').value || new Date().toISOString().slice(0, 10));
+
+      showLoading('점수를 저장하고 추천을 갱신하는 중...');
+      try {
+        for (const code of subjectCodes) {
+          const payload = {
+            student_id: currentStudent.id,
+            subject_code: code,
+            score: scoreMap[code],
+            exam_type: examType,
+            exam_name: examName || null,
+            exam_date: examDate,
+            notes: null
+          };
+
+          const res = await fetch(`${API}/student_scores`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            throw new Error(`점수 저장 실패 (${res.status})`);
+          }
+        }
+
+        const refreshedScoreData = await fetchJson(
+          `${API}/student_scores?student_id=eq.${encodeURIComponent(currentStudent.id)}&limit=500&sort=created_at.desc`
+        );
+
+        latestScoresMap = buildLatestScoresMap(Array.isArray(refreshedScoreData.data) ? refreshedScoreData.data : []);
+
+        renderScoreInputs();
+        buildRecommendations();
+        renderRecommendations();
+        updateStats();
+
+        showToast('점수 저장 및 추천 갱신이 완료되었습니다.', 'ok');
+      } catch (e) {
+        console.error('점수 저장 실패:', e);
+        showToast(`저장 실패: ${e.message}`, 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function buildRecommendations() {
+      const scoreMap = collectScoresFromInputs();
+      recommendationGroups = [];
+      selectedRecommendationKeys = new Set();
+
+      const grade = currentStudent.grade || '중1';
+
+      Object.entries(scoreMap).forEach(([subjectCode, score]) => {
+        const band = getScoreBand(score);
+
+        let match = recommendationMatrix.find(row =>
+          normalizeText(row.grade) === normalizeText(grade) &&
+          normalizeText(row.score_band) === normalizeText(band) &&
+          normalizeText(row.subject_code) === normalizeText(subjectCode)
+        );
+
+        if (!match) {
+          const currentSubject = allSubjects.find(s => normalizeText(s.subject_code) === normalizeText(subjectCode));
+          if (currentSubject?.category) {
+            match = recommendationMatrix.find(row => {
+              if (normalizeText(row.grade) !== normalizeText(grade)) return false;
+              if (normalizeText(row.score_band) !== normalizeText(band)) return false;
+
+              const matrixSubject = allSubjects.find(s => normalizeText(s.subject_code) === normalizeText(row.subject_code));
+              return matrixSubject?.category === currentSubject.category;
+            });
+          }
+        }
+
+        const recommendedCourses = match ? parseFlexibleArray(match.recommended_courses) : [];
+        const workbookCourses = match ? parseFlexibleArray(match.workbooks) : [];
+
+        const items = [];
+
+        recommendedCourses.forEach(name => {
+          const courseName = normalizeText(name);
+          if (!courseName) return;
+
+          items.push({
+            subject_code: subjectCode,
+            subject_name: getSubjectName(subjectCode),
+            score,
+            band,
+            course_name: courseName,
+            course_type: inferCourseType(courseName, match?.course_type || ''),
+            difficulty: normalizeText(match?.difficulty || ''),
+            reason: normalizeText(match?.reason || ''),
+            key: makeCourseKey(subjectCode, courseName)
+          });
+        });
+
+        workbookCourses.forEach(name => {
+          const courseName = normalizeText(name);
+          if (!courseName) return;
+
+          items.push({
+            subject_code: subjectCode,
+            subject_name: getSubjectName(subjectCode),
+            score,
+            band,
+            course_name: courseName,
+            course_type: 'workbook',
+            difficulty: normalizeText(match?.difficulty || ''),
+            reason: normalizeText(match?.reason || ''),
+            key: makeCourseKey(subjectCode, courseName)
+          });
+        });
+
+        const uniqueMap = new Map();
+        items.forEach(item => {
+          if (!uniqueMap.has(item.key)) uniqueMap.set(item.key, item);
+        });
+
+        const uniqueItems = [...uniqueMap.values()];
+
+        uniqueItems.forEach(item => {
+          if (!isAlreadySavedRecommendation(item.subject_code, item.course_name)) {
+            selectedRecommendationKeys.add(item.key);
+          }
+        });
+
+        recommendationGroups.push({
+          subject_code: subjectCode,
+          subject_name: getSubjectName(subjectCode),
+          score,
+          band,
+          difficulty: normalizeText(match?.difficulty || ''),
+          reason: normalizeText(match?.reason || ''),
+          items: uniqueItems
+        });
+      });
+
+      recommendationGroups.sort((a, b) => a.subject_name.localeCompare(b.subject_name, 'ko'));
+    }
+
+    function renderRecommendations() {
+      const area = document.getElementById('recommendationsArea');
+
+      if (!recommendationGroups.length) {
+        area.innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <div style="font-weight:800;margin-bottom:8px;">추천 결과가 없습니다</div>
+            <div>점수를 입력한 뒤 <strong>점수 저장하고 추천 갱신</strong>을 눌러주세요.</div>
+          </div>
+        `;
+        return;
+      }
+
+      area.innerHTML = recommendationGroups.map(group => {
+        if (!group.items.length) {
+          return `
+            <div class="recommend-group">
+              <div class="recommend-head">
+                <div>
+                  <div class="recommend-subject">📘 ${escapeHtml(group.subject_name)}</div>
+                  <div class="recommend-meta">${escapeHtml(group.score)}점 · ${escapeHtml(getBandLabel(group.band))}</div>
+                </div>
+                <div class="band-chip ${getBandClass(group.band)}">${escapeHtml(getBandLabel(group.band))}</div>
+              </div>
+
+              <div class="empty-box" style="padding:18px;">
+                <div style="font-weight:800;margin-bottom:6px;">추천 데이터가 아직 없습니다</div>
+                <div>이 과목의 추천 기준이 recommendation_matrix에 없거나 연결되지 않았습니다.</div>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="recommend-group">
+            <div class="recommend-head">
+              <div>
+                <div class="recommend-subject">📘 ${escapeHtml(group.subject_name)}</div>
+                <div class="recommend-meta">
+                  ${escapeHtml(group.score)}점 · ${escapeHtml(getBandLabel(group.band))}
+                  ${group.difficulty ? ` · ${escapeHtml(group.difficulty)}` : ''}
+                </div>
+              </div>
+              <div class="band-chip ${getBandClass(group.band)}">${escapeHtml(getBandLabel(group.band))}</div>
+            </div>
+
+            ${group.reason ? `<div class="reason-box">${escapeHtml(group.reason)}</div>` : ''}
+
+            <div class="recommend-list">
+              ${group.items.map(item => {
+                const saved = isAlreadySavedRecommendation(item.subject_code, item.course_name);
+                const checked = selectedRecommendationKeys.has(item.key);
+
+                return `
+                  <div class="recommend-item">
+                    <div>
+                      <input
+                        type="checkbox"
+                        class="recommend-check"
+                        data-key="${escapeHtml(item.key)}"
+                        ${saved ? 'disabled' : ''}
+                        ${checked && !saved ? 'checked' : ''}
+                      />
+                    </div>
+
+                    <div>
+                      <div class="recommend-name">${escapeHtml(item.course_name)}</div>
+                      <div class="tag-row">
+                        <span class="tag tag-rec">🎯 추천</span>
+                        <span class="tag ${item.course_type === 'workbook' ? 'tag-workbook' : 'tag-lecture'}">
+                          ${item.course_type === 'workbook' ? '📖 문제집' : '📺 인강'}
+                        </span>
+                        ${saved ? `<span class="tag tag-saved">✅ 이미 저장됨</span>` : ''}
+                      </div>
+                    </div>
+
+                    <div>
+                      ${saved ? `<button class="btn btn-soft btn-xs" disabled>저장 완료</button>` : `<button class="btn btn-secondary btn-xs btn-toggle-one" data-key="${escapeHtml(item.key)}">선택 토글</button>`}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      area.querySelectorAll('.recommend-check').forEach(input => {
+        input.addEventListener('change', e => {
+          const key = e.target.dataset.key;
+          if (e.target.checked) selectedRecommendationKeys.add(key);
+          else selectedRecommendationKeys.delete(key);
+        });
+      });
+
+      area.querySelectorAll('.btn-toggle-one').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.key;
+          if (selectedRecommendationKeys.has(key)) selectedRecommendationKeys.delete(key);
+          else selectedRecommendationKeys.add(key);
+          renderRecommendations();
+          updateStats();
+        });
+      });
+    }
+
+    function renderSavedRecommendations() {
+      const area = document.getElementById('savedRecommendationsArea');
+
+      if (!confirmedCourses.length) {
+        area.innerHTML = `
+          <div class="empty-box">
+            <i class="fas fa-bookmark"></i>
+            <div style="font-weight:800;margin-bottom:8px;">아직 저장된 추천 강좌가 없습니다</div>
+            <div>추천 결과에서 원하는 강좌를 선택해 저장해보세요.</div>
+          </div>
+        `;
+        return;
+      }
+
+      area.innerHTML = `
+        <div class="saved-summary">
+          ${confirmedCourses.map(course => `
+            <div class="saved-item">
+              <div class="saved-name">${escapeHtml(course.course_name)}</div>
+              <div class="tag-row">
+                <span class="tag tag-saved">✅ 저장됨</span>
+                <span class="tag ${course.course_type === 'workbook' ? 'tag-workbook' : 'tag-lecture'}">
+                  ${course.course_type === 'workbook' ? '📖 문제집' : '📺 인강'}
+                </span>
+                <span class="tag">${escapeHtml(getSubjectName(course.subject_code))}</span>
+                ${course.status ? `<span class="tag">${escapeHtml(course.status)}</span>` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function updateStats() {
+      const scoreMap = collectScoresFromInputs();
+      const filledCount = Object.keys(scoreMap).length;
+      const recommendationCount = recommendationGroups.reduce((sum, group) => sum + group.items.length, 0);
+
+      document.getElementById('statSubjectCount').textContent = filteredSubjects.length;
+      document.getElementById('statFilledCount').textContent = filledCount;
+      document.getElementById('statRecommendationCount').textContent = recommendationCount;
+      document.getElementById('statSavedCount').textContent = confirmedCourses.length;
+    }
+
+    async function saveSelectedRecommendations() {
+      const allItems = recommendationGroups.flatMap(group => group.items);
+      const selectedItems = allItems.filter(item =>
+        selectedRecommendationKeys.has(item.key) &&
+        !isAlreadySavedRecommendation(item.subject_code, item.course_name)
+      );
+
+      if (!selectedItems.length) {
+        showToast('저장할 추천 강좌가 없습니다.', 'warn');
+        return;
+      }
+
+      showLoading('선택한 추천 강좌를 저장하는 중...');
+      try {
+        for (const item of selectedItems) {
+          const payload = {
+            student_id: currentStudent.id,
+            subject_code: item.subject_code,
+            course_name: item.course_name,
+            course_type: item.course_type,
+            platform: null,
+            source: 'recommended',
+            status: 'active',
+            progress: 0,
+            added_by: currentStudent.id
+          };
+
+          const res = await fetch(`${API}/student_courses`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) {
+            throw new Error(`추천 강좌 저장 실패 (${res.status})`);
+          }
+        }
+
+        const refreshedCourses = await fetchJson(
+          `${API}/student_courses?student_id=eq.${encodeURIComponent(currentStudent.id)}&limit=300&sort=created_at.desc`
+        );
+
+        confirmedCourses = Array.isArray(refreshedCourses.data)
+          ? refreshedCourses.data.filter(c => c.source === 'recommended')
+          : [];
+
+        buildRecommendations();
+        renderRecommendations();
+        renderSavedRecommendations();
+        updateStats();
+
+        showToast(`추천 강좌 ${selectedItems.length}개를 저장했습니다.`, 'ok');
+      } catch (e) {
+        console.error('추천 저장 실패:', e);
+        showToast(`저장 실패: ${e.message}`, 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+  </script>
 </body>
 </html>
